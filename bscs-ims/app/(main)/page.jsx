@@ -1,4 +1,4 @@
-// entry point of web (should be login page here)
+//demo file don't modify just study
 
 // only imported components/modules should be the code here unless if there are specific reasons why there are other codes should be here
 
@@ -6,10 +6,10 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import LoginText from '../modules/login-page/LoginText'
+import SampleText from '../modules/sample-page/SampleText'
 import Link from 'next/link'
 
-export default function LoginPage() {
+export default function SampleCrudPage() {
   const [items, setItems] = useState([])
   const [newItem, setNewItem] = useState('')
   const [loading, setLoading] = useState(false)
@@ -73,7 +73,7 @@ export default function LoginPage() {
   return (
     <div className='min-h-screen bg-gray-50 p-8'>
       <div className='max-w-2xl mx-auto'>
-        <LoginText />
+        <SampleText />
 
         <Link href='/dashboard' className='text-blue-600 hover:underline mb-6 inline-block'>
           Test redirection →
