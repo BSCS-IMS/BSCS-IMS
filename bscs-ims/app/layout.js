@@ -10,42 +10,43 @@ const inter = Inter({
 
 export const metadata = {
   title: {
-    default: 'Progresio',
-    template: '%s · Progresio'
+    default: 'EUGENE IMS',
+    template: '%s · EUGENE IMS'
   },
   description:
-    'Progresio is an AI-driven workflow and productivity platform that organizes tasks using intensity-based boards to help users prioritize intelligently, prevent overload, and work sustainably.',
-  applicationName: 'Progresio',
+    'EUGENE IMS is an integrated inventory management system designed for rice businesses to streamline tracking, reseller management, and dynamic price updates across web, desktop, and mobile platforms.',
+  applicationName: 'EUGENE IMS',
   keywords: [
-    'productivity',
-    'workflow',
-    'task management',
-    'intensity-based boards',
-    'AI productivity',
-    'workload analysis',
-    'burnout prevention'
+    'inventory management',
+    'rice business',
+    'reseller tracking',
+    'price updates',
+    'IMS',
+    'stock management',
+    'multi-platform',
+    'workflow automation'
   ],
-  authors: [{ name: 'Progresio Team' }],
-  creator: 'Progresio',
-  publisher: 'Progresio',
-  metadataBase: new URL('https://progesio.vercel.app'),
+  authors: [{ name: 'EUGENE IMS Team' }],
+  creator: 'EUGENE IMS Team',
+  publisher: 'EUGENE IMS Team',
+  metadataBase: new URL('https://your-deployment-url.vercel.app'), 
   openGraph: {
-    title: 'Progresio',
-    description: 'An intelligent productivity system with embedded AI insights for sustainable work decisions.',
-    url: 'https://progesio.vercel.app',
-    siteName: 'Progresio',
+    title: 'EUGENE IMS',
+    description:
+      'A multi-platform inventory management system for rice businesses, simplifying reseller contact, stock tracking, and price management.',
+    url: 'https://your-deployment-url.vercel.app', 
     type: 'website'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Progresio',
-    description: 'Work smarter using intensity-based task boards and AI-driven workload insights.'
+    title: 'EUGENE IMS',
+    description: 'Manage rice inventory, reseller contacts, and pricing seamlessly on web, desktop, and mobile.'
   },
   robots: {
     index: true,
     follow: true
   },
-  category: 'productivity'
+  category: 'inventory management'
 }
 
 export default function RootLayout({ children }) {
