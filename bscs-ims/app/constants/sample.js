@@ -1,5 +1,5 @@
 export const SAMPLE_DATA = {
   title: 'Welcome to BSCS-IMS',
   description: 'Inventory Management System',
-  version: '1.0.0'
+  version: '3.2.1'
 }
