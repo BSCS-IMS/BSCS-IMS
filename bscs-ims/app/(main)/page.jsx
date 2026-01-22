@@ -75,7 +75,7 @@ export default function SampleCrudPage() {
       <div className='max-w-2xl mx-auto'>
         <SampleText />
 
-        <Link href='/dashboard' className='text-blue-600 hover:underline mb-6 inline-block'>
+        <Link href='/sample' className='text-blue-600 hover:underline mb-6 inline-block'>
           Test redirection →
         </Link>
 
