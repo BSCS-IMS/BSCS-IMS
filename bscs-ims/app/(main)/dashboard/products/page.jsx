@@ -1,6 +1,34 @@
 "use client";
 
+
 import { useState } from "react";
+
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  InputAdornment,
+  Stack,
+  Tooltip,
+} from "@mui/material";
+
+
+import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import SortIcon from "@mui/icons-material/Sort";
 
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
@@ -31,76 +59,138 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-indigo-600">Products</h1>
+    <Box sx={{ bgcolor: "#f5f7fb", minHeight: "100vh", py: 4 }}>
+      {/* Centered container */}
+      <Box sx={{ maxWidth: 1100, mx: "auto", px: 2 }}>
+        {/* Header */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
+          <Typography variant="h5" fontWeight={700}>
+            Products
+          </Typography>
 
-        <button className="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition">
-          + Add Product
-        </button>
-      </div>
+          <Button variant="contained" startIcon={<AddIcon />}>
+            Add
+          </Button>
+        </Stack>
 
-      {/* Search */}
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-sm border border-gray-300 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-      </div>
+        {/* Search + Actions */}
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+           <TextField
+  placeholder="Search"
+  size="small"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  sx={{ width: 610 }}
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        <SearchIcon fontSize="small" />
+      </InputAdornment>
+    ),
+    endAdornment: (
+      <InputAdornment position="end">
+        <Button
+            variant="contained"
+            sx={{
+                backgroundColor: "#1F384C",
+                color: "#fff",
+                textTransform: "none", // keeps text normal case
+                "&:hover": {
+                backgroundColor: "#162A3F", // slightly darker on hover
+                },
+                height: "30px", // adjust height to match TextField
+            }}
+            onClick={() => {
+                console.log("Search clicked:", search);
+                // put your search function here
+            }}
+            >
+            Search
+            </Button>
+        </InputAdornment>
+        ),
+    }}
+    />
 
-      {/* Table */}
-      <div className="bg-white shadow rounded overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-indigo-500 text-white">
-            <tr>
-              <th className="px-4 py-3">Image</th>
-              <th className="px-4 py-3">Product Name</th>
-              <th className="px-4 py-3">Quantity</th>
-              <th className="px-4 py-3">Price</th>
-              <th className="px-4 py-3 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.length === 0 && (
-              <tr>
-                <td colSpan="5" className="text-center py-6 text-gray-500">
-                  No products found
-                </td>
-              </tr>
-            )}
+            <Button startIcon={<FilterListIcon />} variant="outlined">
+              Filter
+            </Button>
 
-            {filteredProducts.map((product) => (
-              <tr key={product.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-10 h-10 object-cover rounded"
-                  />
-                </td>
-                <td className="px-4 py-3 font-medium">{product.name}</td>
-                <td className="px-4 py-3">{product.quantity}</td>
-                <td className="px-4 py-3">₱{product.price}</td>
-                <td className="px-4 py-3 text-center space-x-2">
-                  <button className="px-3 py-1 text-xs bg-yellow-400 rounded hover:bg-yellow-500">
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+            <Button startIcon={<SortIcon />} variant="outlined">
+              Sort asc
+            </Button>
+
+            <Button startIcon={<SortIcon />} variant="outlined">
+              Sort desc
+            </Button>
+          </Stack>
+        </Paper>
+
+        {/* Table */}
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead sx={{ bgcolor: "#fafafa" }}>
+              <TableRow>
+                <TableCell><b>Image</b></TableCell>
+                <TableCell><b>Product Name</b></TableCell>
+                <TableCell><b>Quantity</b></TableCell>
+                <TableCell><b>Price</b></TableCell>
+                <TableCell align="center"><b>Actions</b></TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {filteredProducts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    No products found
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id} hover>
+                  <TableCell>
+                    <Avatar src={product.image} variant="rounded" />
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>
+                    {product.name}
+                  </TableCell>
+                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>₱{product.price}</TableCell>
+                  <TableCell align="center">
+                        <Tooltip title="Edit">
+                            <IconButton>
+                            <EditIcon sx={{ 
+                                fill: "#fff",       // fill white
+                                stroke: "#000",     // outline black
+                                strokeWidth: 1.5    // thickness of the outline
+                            }} />
+                            </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="Delete">
+                            <IconButton>
+                            <DeleteIcon sx={{ 
+                                fill: "#fff",
+                                stroke: "#000",
+                                strokeWidth: 1.5
+                            }} />
+                            </IconButton>
+                        </Tooltip>
+                    </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Box>
   );
 }
