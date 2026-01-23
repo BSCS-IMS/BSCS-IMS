@@ -1,6 +1,32 @@
+"use client";
+
 import { StripedPattern } from "../modules/magicui/StrippesBg";
+import { useState } from "react";
+import axios from "axios";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null)
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!email.trim() || !password.trim()) return;
+  try {
+    setError(null);
+    console.log('Logging in:', email);
+    const response = await axios.post('/api/login', {
+      email: email.trim(),
+      password: password.trim()
+    });
+    console.log('Login successful:', response.data);
+    alert("Login successful!");
+  } catch (err) {
+    console.error('Error logging in:', err);
+    setError(err.response?.data?.message || 'Login failed');
+  }
+};
+
   return (
     <div className="min-h-screen bg-gray-50 p-16 relative overflow-hidden">
       <StripedPattern 
@@ -26,7 +52,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label 
               className="block mb-2 text-sm font-medium text-indigo-500" 
@@ -39,6 +65,8 @@ export default function LoginPage() {
               type="email"
               id="email"
               placeholder="Email"
+              value={email}
+              onChange={(e)=> setEmail(e.target.value)}
             />
             <p className="text-xs text-gray-500 mt-1">
               Enter your email address
@@ -57,16 +85,20 @@ export default function LoginPage() {
               type="password"
               id="password"
               placeholder="Password"
+              value={password}
+              onChange={(e)=> setPassword(e.target.value)}
             />
             <p className="text-xs text-gray-500 mt-1">
               Enter your password
             </p>
           </div>
 
-          <button className="w-full bg-indigo-500 text-white py-3 px-4 rounded hover:bg-indigo-700 transition duration-200 font-medium mt-8">
+          <button 
+          type="submit"
+          className="w-full bg-indigo-500 text-white py-3 px-4 rounded hover:bg-indigo-700 transition duration-200 font-medium mt-8">
             Submit
           </button>
-        </div>
+        </form>
       </div>
 
       <p className="absolute bottom-8 right-16 text-indigo-500 text-sm z-10">
