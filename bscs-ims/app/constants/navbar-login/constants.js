@@ -6,5 +6,6 @@ export const LOGIN_STATIC_DATA = {
       Livelihood
     </>
   ),
-  WELCOME_TITLE: 'Welcome back!'
+  WELCOME_TITLE: 'Welcome back!',
+  LOGIN_FOOTER: 'BSCS © 2027'
 }

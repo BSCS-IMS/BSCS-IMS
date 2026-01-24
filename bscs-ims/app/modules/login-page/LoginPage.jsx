@@ -39,7 +39,7 @@ export default function LoginPage() {
 
   return (
     <div className='min-h-screen bg-linear-to-br from-gray-50 to-gray-100 flex flex-col'>
-      <div className='p-8 md:p-16'>
+      <div className='p-8 md:p-16 text-center md:text-left'>
         <h1 className='text-3xl md:text-4xl font-bold bg-linear-to-r from-indigo-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent'>
           {LOGIN_STATIC_DATA.APP_NAME}
         </h1>
@@ -87,7 +87,7 @@ export default function LoginPage() {
 
             <Button
               type='submit'
-              className='w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-medium mt-6'
+              className='cursor-pointer w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-medium mt-6'
               disabled={isLoading}
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
@@ -97,7 +97,7 @@ export default function LoginPage() {
       </div>
 
       <div className='p-8 text-center md:text-right md:pr-16'>
-        <p className='text-gray-500 text-sm'>BSCS © 2027</p>
+        <p className='text-gray-500 text-sm'>{LOGIN_STATIC_DATA.LOGIN_FOOTER}</p>
       </div>
     </div>
   )
