@@ -1,9 +1,5 @@
-// you will start here (should be login page here)
-
-import LoginPage from "@/app/components/LoginPage"
+import LoginPage from '@/app/modules/login-page/LoginPage'
 
 export default function Login() {
-  return (
-    <LoginPage/> 
-  )
+  return <LoginPage />
 }
