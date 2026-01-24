@@ -25,7 +25,8 @@ export default function LoginPage() {
       console.log("Login successful:", response.data);
 
       // ✅ REDIRECT AFTER LOGIN
-      router.push("/dashboard/products"); // change this to your target page
+      router.push("/products");
+
 
     } catch (err) {
       console.error("Error logging in:", err);

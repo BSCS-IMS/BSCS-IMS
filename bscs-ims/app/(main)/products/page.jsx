@@ -86,7 +86,7 @@ export default function ProductsPage() {
   size="small"
   value={search}
   onChange={(e) => setSearch(e.target.value)}
-  sx={{ width: 610 }}
+  sx={{ width: 700 }}
   InputProps={{
     startAdornment: (
       <InputAdornment position="start">
@@ -123,11 +123,11 @@ export default function ProductsPage() {
             </Button>
 
             <Button startIcon={<SortIcon />} variant="outlined">
-              Sort asc
+              Asc
             </Button>
 
             <Button startIcon={<SortIcon />} variant="outlined">
-              Sort desc
+              Desc
             </Button>
           </Stack>
         </Paper>
@@ -194,3 +194,6 @@ export default function ProductsPage() {
     </Box>
   );
 }
+
+
+
