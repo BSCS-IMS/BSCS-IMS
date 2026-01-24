@@ -3,29 +3,36 @@
 import { StripedPattern } from "../modules/magicui/StrippesBg";
 import { useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!email.trim() || !password.trim()) return;
-  try {
-    setError(null);
-    console.log('Logging in:', email);
-    const response = await axios.post('/api/login', {
-      email: email.trim(),
-      password: password.trim()
-    });
-    console.log('Login successful:', response.data);
-    alert("Login successful!");
-  } catch (err) {
-    console.error('Error logging in:', err);
-    setError(err.response?.data?.message || 'Login failed');
-  }
-};
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
+
+    try {
+      setError(null);
+      const response = await axios.post("/api/login", {
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      console.log("Login successful:", response.data);
+
+      // ✅ REDIRECT AFTER LOGIN
+      router.push("/products");
+
+
+    } catch (err) {
+      console.error("Error logging in:", err);
+      setError(err.response?.data?.message || "Login failed");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-16 relative overflow-hidden">
@@ -35,7 +42,7 @@ export default function LoginPage() {
         width={20}
         height={20}
       />
-      
+
       <div className="mb-16 relative z-10">
         <h1 className="text-4xl font-bold text-indigo-500">
           Murang Bigas<br />Livelihood
@@ -54,48 +61,39 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label 
-              className="block mb-2 text-sm font-medium text-indigo-500" 
-              htmlFor="email"
-            >
+            <label className="block mb-2 text-sm font-medium text-indigo-500">
               Email
             </label>
             <input
-              className="w-full border border-gray-300 p-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-300 p-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               type="email"
-              id="email"
               placeholder="Email"
               value={email}
-              onChange={(e)=> setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Enter your email address
-            </p>
           </div>
 
           <div>
-            <label 
-              className="block mb-2 text-sm font-medium text-indigo-500" 
-              htmlFor="password"
-            >
+            <label className="block mb-2 text-sm font-medium text-indigo-500">
               Password
             </label>
             <input
-              className="w-full border border-gray-300 p-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full border border-gray-300 p-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               type="password"
-              id="password"
               placeholder="Password"
               value={password}
-              onChange={(e)=> setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Enter your password
-            </p>
           </div>
 
-          <button 
-          type="submit"
-          className="w-full bg-indigo-500 text-white py-3 px-4 rounded hover:bg-indigo-700 transition duration-200 font-medium mt-8">
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            className="w-full bg-indigo-500 text-white py-3 px-4 rounded hover:bg-indigo-700 transition duration-200 font-medium mt-8"
+          >
             Submit
           </button>
         </form>
