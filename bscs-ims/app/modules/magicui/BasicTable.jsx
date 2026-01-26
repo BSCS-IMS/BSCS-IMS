@@ -27,27 +27,98 @@ function createData(id, location, products) {
 }
 
 const rows = [
-  createData(1, "Warehouse A", ["Rice 25kg", "Rice 50kg", "Sugar 1kg"]),
-  createData(2, "Warehouse B", ["Rice 25kg", "Cooking Oil 1L"]),
-  createData(3, "Store 1", ["Rice 25kg", "Rice 50kg", "Sugar 1kg", "Salt 500g"]),
-  createData(4, "Store 2", ["Rice 25kg"]),
-  createData(5, "Warehouse C", ["Rice 25kg", "Rice 50kg", "Sugar 1kg", "Cooking Oil 1L", "Salt 500g"]),
-  createData(6, "Store 3", ["Rice 25kg", "Sugar 1kg"]),
-  createData(7, "Store 4", ["Rice 50kg", "Salt 500g"]),
-  createData(8, "Warehouse D", ["Rice 25kg", "Cooking Oil 1L"]),
-  createData(9, "Store 5", ["Rice 25kg", "Rice 50kg"]),
-  createData(10, "Warehouse E", ["Sugar 1kg", "Salt 500g"]),
-  createData(11, "Store 6", ["Rice 25kg", "Cooking Oil 1L"]),
-  createData(12, "Store 7", ["Rice 50kg", "Sugar 1kg"]),
-  createData(13, "Warehouse F", ["Rice 25kg", "Rice 50kg", "Salt 500g"]),
-  createData(14, "Store 8", ["Rice 25kg", "Sugar 1kg", "Salt 500g"]),
-  createData(15, "Warehouse G", ["Rice 50kg", "Cooking Oil 1L"]),
-  createData(16, "Store 9", ["Rice 25kg"]),
-  createData(17, "Store 10", ["Sugar 1kg", "Salt 500g"]),
-  createData(18, "Warehouse H", ["Rice 25kg", "Rice 50kg", "Cooking Oil 1L"]),
-  createData(19, "Store 11", ["Rice 25kg", "Rice 50kg", "Sugar 1kg"]),
-  createData(20, "Warehouse I", ["Rice 25kg", "Rice 50kg", "Sugar 1kg", "Salt 500g"])
+  createData(1, "Warehouse A", [
+    { name: "Rice 25kg", quantity: 120 },
+    { name: "Rice 50kg", quantity: 80 },
+    { name: "Sugar 1kg", quantity: 200 }
+  ]),
+  createData(2, "Warehouse B", [
+    { name: "Rice 25kg", quantity: 60 },
+    { name: "Cooking Oil 1L", quantity: 45 }
+  ]),
+  createData(3, "Store 1", [
+    { name: "Rice 25kg", quantity: 30 },
+    { name: "Rice 50kg", quantity: 20 },
+    { name: "Sugar 1kg", quantity: 50 },
+    { name: "Salt 500g", quantity: 70 }
+  ]),
+  createData(4, "Store 2", [
+    { name: "Rice 25kg", quantity: 25 }
+  ]),
+  createData(5, "Warehouse C", [
+    { name: "Rice 25kg", quantity: 150 },
+    { name: "Rice 50kg", quantity: 100 },
+    { name: "Sugar 1kg", quantity: 180 },
+    { name: "Cooking Oil 1L", quantity: 90 },
+    { name: "Salt 500g", quantity: 130 }
+  ]),
+  createData(6, "Store 3", [
+    { name: "Rice 25kg", quantity: 35 },
+    { name: "Sugar 1kg", quantity: 60 }
+  ]),
+  createData(7, "Store 4", [
+    { name: "Rice 50kg", quantity: 18 },
+    { name: "Salt 500g", quantity: 40 }
+  ]),
+  createData(8, "Warehouse D", [
+    { name: "Rice 25kg", quantity: 90 },
+    { name: "Cooking Oil 1L", quantity: 55 }
+  ]),
+  createData(9, "Store 5", [
+    { name: "Rice 25kg", quantity: 28 },
+    { name: "Rice 50kg", quantity: 22 }
+  ]),
+  createData(10, "Warehouse E", [
+    { name: "Sugar 1kg", quantity: 160 },
+    { name: "Salt 500g", quantity: 140 }
+  ]),
+  createData(11, "Store 6", [
+    { name: "Rice 25kg", quantity: 32 },
+    { name: "Cooking Oil 1L", quantity: 20 }
+  ]),
+  createData(12, "Store 7", [
+    { name: "Rice 50kg", quantity: 24 },
+    { name: "Sugar 1kg", quantity: 45 }
+  ]),
+  createData(13, "Warehouse F", [
+    { name: "Rice 25kg", quantity: 110 },
+    { name: "Rice 50kg", quantity: 75 },
+    { name: "Salt 500g", quantity: 95 }
+  ]),
+  createData(14, "Store 8", [
+    { name: "Rice 25kg", quantity: 40 },
+    { name: "Sugar 1kg", quantity: 55 },
+    { name: "Salt 500g", quantity: 60 }
+  ]),
+  createData(15, "Warehouse G", [
+    { name: "Rice 50kg", quantity: 85 },
+    { name: "Cooking Oil 1L", quantity: 65 }
+  ]),
+  createData(16, "Store 9", [
+    { name: "Rice 25kg", quantity: 20 }
+  ]),
+  createData(17, "Store 10", [
+    { name: "Sugar 1kg", quantity: 48 },
+    { name: "Salt 500g", quantity: 52 }
+  ]),
+  createData(18, "Warehouse H", [
+    { name: "Rice 25kg", quantity: 140 },
+    { name: "Rice 50kg", quantity: 95 },
+    { name: "Cooking Oil 1L", quantity: 70 }
+  ]),
+  createData(19, "Store 11", [
+    { name: "Rice 25kg", quantity: 33 },
+    { name: "Rice 50kg", quantity: 26 },
+    { name: "Sugar 1kg", quantity: 58 }
+  ]),
+  createData(20, "Warehouse I", [
+    { name: "Rice 25kg", quantity: 160 },
+    { name: "Rice 50kg", quantity: 120 },
+    { name: "Sugar 1kg", quantity: 190 },
+    { name: "Salt 500g", quantity: 150 }
+  ])
 ];
+
 
 export default function InventoryTable() {
   const [search, setSearch] = useState("");
@@ -144,7 +215,8 @@ export default function InventoryTable() {
             <TableHead>
               <TableRow sx={{ backgroundColor: '#f9fafb' }}>
                 <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Location Name</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Products Associated</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Products</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Quantity</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#374151' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -162,9 +234,15 @@ export default function InventoryTable() {
                   </TableCell>
                   <TableCell>
                     {row.products.map((product, index) => (
-                      <div key={index}>{product}</div>
+                      <div key={index}>{product.name}</div>
                     ))}
                   </TableCell>
+                  <TableCell>
+                    {row.products.map((product, index) => (
+                      <div key={index}>{product.quantity}</div>
+                    ))}
+                  </TableCell>
+
                   <TableCell>
                     <IconButton
                       onClick={() => handleEdit(row.id)}
