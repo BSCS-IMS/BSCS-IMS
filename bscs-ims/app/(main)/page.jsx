@@ -78,6 +78,14 @@ export default function SampleCrudPage() {
         <Link href='/login' className='text-blue-600 hover:underline mb-6 inline-block'>
           LOGIN →
         </Link>
+        <br></br>
+        <Link href='/inventory' className='text-blue-600 hover:underline mb-6 inline-block'>
+          INVENTORY ONLY→
+        </Link>
+        <br></br>
+        <Link href='/test' className='text-blue-600 hover:underline mb-6 inline-block'>
+          INVENTORY w TEST NAV →
+        </Link>
 
         <div className='bg-white rounded-lg shadow-md p-6 mt-6'>
           <h2 className='text-2xl font-bold mb-4'>Firebase CRUD Demo</h2>
