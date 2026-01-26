@@ -196,9 +196,10 @@ export default function InventoryTable() {
           <Table sx={{ minWidth: 650 }} aria-label="inventory table">
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f9fafb' }}>
-              <TableCell sx={{ fontWeight: 'bold' }}>Product ID</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Product Name</TableCell>
+{     /* <TableCell sx={{ fontWeight: 'bold' }}>Product ID</TableCell>*/}
               <TableCell sx={{ fontWeight: 'bold' }}>Location</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Product Name</TableCell>
+
               <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -207,14 +208,16 @@ export default function InventoryTable() {
             {paginatedRows.flatMap((row) =>
               row.products.map((product, index) => (
                 <TableRow key={`${row.id}-${index}`} hover>
-                  {/* SKU comes from row */}
-                  <TableCell>{row.sku}</TableCell>
+                  {/* SKU comes from row
+                  <TableCell>{row.sku}</TableCell>  */}
+
+                   {/* Location */}
+                  <TableCell>{row.location}</TableCell>
 
                   {/* Product name + quantity */}
                   <TableCell>{product.name} ({product.quantity} qty)</TableCell>
 
-                  {/* Location */}
-                  <TableCell>{row.location}</TableCell>
+
 
                   {/* Actions */}
                   <TableCell>
