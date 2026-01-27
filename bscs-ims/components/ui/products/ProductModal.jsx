@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const defaultValues = {
@@ -28,28 +28,15 @@ export default function ProductModal({
   const [values, setValues] = useState(mergedDefaults);
   const [imageName, setImageName] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const firstInputRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
 
     setValues(mergedDefaults);
     setImageName("");
-    setSaving(false);
-
-    // focus first input
-    setTimeout(() => firstInputRef.current?.focus?.(), 0);
-
-    // ESC to close
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
-    window.addEventListener("keydown", onKeyDown);
+    setImagePreviewUrl("");
 
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,21 +44,11 @@ export default function ProductModal({
 
   if (!open) return null;
 
-  const setField = (key, val) => setValues((p) => ({ ...p, [key]: val }));
-
-  const setImage = (file) => {
-    setField("imageFile", file);
-    setImageName(file?.name || "");
-
-    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-    if (file) setImagePreviewUrl(URL.createObjectURL(file));
-    else setImagePreviewUrl("");
+  const setField = (key, val) => {
+    setValues((p) => ({ ...p, [key]: val }));
   };
 
-  const handleConfirm = async () => {
-    // UI-only "saving" micro-interaction (no API)
-    setSaving(true);
-
+  const handleConfirm = () => {
     console.log("Product Modal Submit:", {
       ...values,
       amount: values.amount === "" ? "" : Number(values.amount),
@@ -79,12 +56,7 @@ export default function ProductModal({
     });
 
     onConfirm?.(values);
-
-    // tiny delay so user sees feedback
-    setTimeout(() => {
-      setSaving(false);
-      onClose?.();
-    }, 300);
+    onClose?.();
   };
 
   const title = mode === "create" ? "Add Product" : "Edit Product";
@@ -110,8 +82,7 @@ export default function ProductModal({
           initial={{ opacity: 0, y: 18, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 18, scale: 0.985 }}
-          transition={{ type: "spring", stiffness: 420, damping: 34 }}
-          whileHover={{ y: -2 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
         >
           {/* Header */}
           <div className="relative border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-6 pb-5 pt-6">
@@ -151,9 +122,6 @@ export default function ProductModal({
                 <p className="mt-1 text-sm text-slate-500">
                   Fill in the product details below
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Tip: Press <span className="font-semibold">Esc</span> to close
-                </p>
               </div>
             </div>
           </div>
@@ -164,7 +132,6 @@ export default function ProductModal({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <Field label="Product Name*">
                 <Input
-                  ref={firstInputRef}
                   placeholder="Enter product name"
                   value={values.productName}
                   onChange={(e) => setField("productName", e.target.value)}
@@ -237,11 +204,19 @@ export default function ProductModal({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => setImage(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] || null;
+                        setField("imageFile", f);
+                        setImageName(f?.name || "");
+
+                        if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+                        if (f) setImagePreviewUrl(URL.createObjectURL(f));
+                        else setImagePreviewUrl("");
+                      }}
                     />
                   </label>
 
-                  <div className="relative flex h-12 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
+                  <div className="flex h-12 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
                     {imagePreviewUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -251,18 +226,6 @@ export default function ProductModal({
                       />
                     ) : (
                       "IMG"
-                    )}
-
-                    {values.imageFile && (
-                      <button
-                        type="button"
-                        onClick={() => setImage(null)}
-                        className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white"
-                        aria-label="Remove image"
-                        title="Remove"
-                      >
-                        ×
-                      </button>
                     )}
                   </div>
                 </div>
@@ -298,21 +261,18 @@ export default function ProductModal({
             <button
               type="button"
               onClick={onClose}
-              className="h-12 min-w-[160px] rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50 active:translate-y-[1px]"
-              disabled={saving}
+              className="h-12 min-w-[160px] rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50"
             >
               Cancel
             </button>
 
-            <motion.button
+            <button
               type="button"
               onClick={handleConfirm}
-              className="h-12 min-w-[160px] rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(79,70,229,0.65)] transition hover:bg-indigo-700 disabled:opacity-70"
-              whileTap={{ scale: 0.98 }}
-              disabled={saving}
+              className="h-12 min-w-[160px] rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(79,70,229,0.65)] transition hover:bg-indigo-700 active:translate-y-[1px]"
             >
-              {saving ? "Saving..." : "Confirm"}
-            </motion.button>
+              Confirm
+            </button>
           </div>
         </motion.div>
       </motion.div>
@@ -320,7 +280,6 @@ export default function ProductModal({
   );
 }
 
-/** Components */
 function Field({ label, children }) {
   return (
     <div className="w-full">
@@ -332,19 +291,14 @@ function Field({ label, children }) {
   );
 }
 
-const Input = (function InputFactory() {
-  // forwardRef without importing react-forwardRef explicitly
-  // (keeps minimal imports and avoids extra refactor)
-  return function InputInner({ ref: _ignored, ...props }) {
-    return (
-      <input
-        {...props}
-        ref={props.ref}
-        className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-      />
-    );
-  };
-})();
+function Input(props) {
+  return (
+    <input
+      {...props}
+      className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+    />
+  );
+}
 
 function PrefixInput({ prefix, ...props }) {
   return (
