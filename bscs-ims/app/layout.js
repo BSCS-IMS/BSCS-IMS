@@ -3,6 +3,8 @@
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { ConditionalLayout } from "../components/ui/conditional-layout"
+
 
 const inter = Inter({
   subsets: ['latin'],
@@ -51,13 +53,25 @@ export const metadata = {
   category: 'inventory management'
 }
 
+
 export default function RootLayout({ children }) {
   return (
     <html lang='en'>
       <body className={`${inter.variable} antialiased`}>
-        {children}
+        <ConditionalLayout>{children}</ConditionalLayout>
         <Analytics />
       </body>
     </html>
   )
 }
+
+// export default function RootLayout({ children }) {
+//   return (
+//     <html lang='en'>
+//       <body className={`${inter.variable} antialiased`}>
+//         {children}
+//         <Analytics />
+//       </body>
+//     </html>
+//   )
+// }
