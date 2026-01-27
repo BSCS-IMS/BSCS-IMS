@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import styles from "./ProductModal.module.css";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const defaultValues = {
   sku: "",
@@ -20,250 +20,342 @@ export default function ProductModal({
   onClose,
   onConfirm,
 }) {
-  const mergedDefaults = useMemo(() => {
-    return { ...defaultValues, ...(initialValues || {}) };
-  }, [initialValues]);
+  const mergedDefaults = useMemo(
+    () => ({ ...defaultValues, ...(initialValues || {}) }),
+    [initialValues]
+  );
 
   const [values, setValues] = useState(mergedDefaults);
-  const [errors, setErrors] = useState({});
   const [imageName, setImageName] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const firstInputRef = useRef(null);
 
   useEffect(() => {
-    if (open) {
-      setValues(mergedDefaults);
-      setErrors({});
-      setImageName(mergedDefaults.imageFile?.name || "");
-      setImagePreviewUrl("");
-    }
-  }, [open, mergedDefaults]);
+    if (!open) return;
 
-  useEffect(() => {
+    setValues(mergedDefaults);
+    setImageName("");
+    setSaving(false);
+
+    // focus first input
+    setTimeout(() => firstInputRef.current?.focus?.(), 0);
+
+    // ESC to close
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") onClose?.();
+    };
+    window.addEventListener("keydown", onKeyDown);
+
     return () => {
+      window.removeEventListener("keydown", onKeyDown);
       if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
     };
-  }, [imagePreviewUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mergedDefaults]);
 
   if (!open) return null;
 
-  const setField = (key, val) => {
-    setValues((p) => ({ ...p, [key]: val }));
-    setErrors((p) => {
-      const n = { ...p };
-      delete n[key];
-      return n;
-    });
+  const setField = (key, val) => setValues((p) => ({ ...p, [key]: val }));
+
+  const setImage = (file) => {
+    setField("imageFile", file);
+    setImageName(file?.name || "");
+
+    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    if (file) setImagePreviewUrl(URL.createObjectURL(file));
+    else setImagePreviewUrl("");
   };
 
-  const validate = (v) => {
-    const e = {};
-    if (!v.productName?.trim()) e.productName = "Product name is required.";
-    if (!v.sku?.trim()) e.sku = "SKU is required.";
-    if (!v.amount?.trim()) e.amount = "Amount is required.";
-    if (v.amount?.trim() && Number(v.amount) < 0) e.amount = "Amount must be ≥ 0.";
-    if (!v.priceUnit?.trim()) e.priceUnit = "Price unit is required.";
-    if (!v.status?.trim()) e.status = "Status is required.";
-    if (!v.description?.trim()) e.description = "Description is required.";
-    if (!v.imageFile) e.imageFile = "Image is required.";
-    return e;
-  };
-
-  const handleConfirm = () => {
-    const e = validate(values);
-    setErrors(e);
-    if (Object.keys(e).length) return;
+  const handleConfirm = async () => {
+    // UI-only "saving" micro-interaction (no API)
+    setSaving(true);
 
     console.log("Product Modal Submit:", {
       ...values,
-      amount: Number(values.amount),
+      amount: values.amount === "" ? "" : Number(values.amount),
       imageFileName: values.imageFile?.name || "",
     });
 
     onConfirm?.(values);
-    onClose?.();
+
+    // tiny delay so user sees feedback
+    setTimeout(() => {
+      setSaving(false);
+      onClose?.();
+    }, 300);
   };
 
-  const handleBackdropMouseDown = (e) => {
-    if (e.target === e.currentTarget) onClose?.();
-  };
+  const title = mode === "create" ? "Add Product" : "Edit Product";
 
   return (
-    <div
-      className={styles.backdrop}
-      onMouseDown={handleBackdropMouseDown}
-      role="dialog"
-      aria-modal="true"
-      aria-label={mode === "create" ? "Product Create Modal" : "Product Edit Modal"}
-    >
-      <div className={styles.modal}>
-        <div className={styles.topRow}>
-          <div className={styles.iconChip} aria-hidden>
-            {/* Lucide-style icon */}
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+    <AnimatePresence>
+      {/* Backdrop */}
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) onClose?.();
+        }}
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* Modal */}
+        <motion.div
+          className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-[0_24px_70px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/5"
+          initial={{ opacity: 0, y: 18, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 18, scale: 0.985 }}
+          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+          whileHover={{ y: -2 }}
+        >
+          {/* Header */}
+          <div className="relative border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-6 pb-5 pt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-slate-600 shadow-sm ring-1 ring-slate-200 hover:bg-white hover:text-slate-900"
+              aria-label="Close"
             >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-            </svg>
-          </div>
+              <span className="text-xl leading-none">×</span>
+            </button>
 
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            ×
-          </button>
-        </div>
+            <div className="flex items-start gap-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 text-indigo-600">
+                {/* grid icon */}
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+              </div>
 
-        <div className={styles.header}>
-          <h2 className={styles.title}>
-            {mode === "create" ? "Product Create" : "Product Edit"}
-          </h2>
-          <p className={styles.subtitle}>Share where you’ve worked on your profile.</p>
-        </div>
-
-        {/* Product Name + SKU (same row / same style) */}
-        <div className={styles.grid2}>
-          <div className={styles.field}>
-            <label className={styles.label}>Product Name*</label>
-            <input
-              className={`${styles.input} ${errors.productName ? styles.inputError : ""}`}
-              value={values.productName}
-              onChange={(e) => setField("productName", e.target.value)}
-              placeholder="Enter product name"
-            />
-            {errors.productName && <div className={styles.error}>{errors.productName}</div>}
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>SKU*</label>
-            <input
-              className={`${styles.input} ${errors.sku ? styles.inputError : ""}`}
-              value={values.sku}
-              onChange={(e) => setField("sku", e.target.value)}
-              placeholder="e.g. RICE-5KG-001"
-            />
-            {errors.sku && <div className={styles.error}>{errors.sku}</div>}
-          </div>
-        </div>
-
-        {/* Amount + Price Unit */}
-        <div className={styles.grid2}>
-          <div className={styles.field}>
-            <label className={styles.label}>Amount*</label>
-            <div className={`${styles.inputGroup} ${errors.amount ? styles.groupError : ""}`}>
-              <span className={styles.prefix}>$$</span>
-              <input
-                className={styles.inputGroupInput}
-                value={values.amount}
-                onChange={(e) => setField("amount", e.target.value.replace(/[^\d.]/g, ""))}
-                inputMode="decimal"
-                placeholder="0"
-              />
-            </div>
-            {errors.amount && <div className={styles.error}>{errors.amount}</div>}
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Price Unit*</label>
-            <div className={`${styles.inputGroup} ${errors.priceUnit ? styles.groupError : ""}`}>
-              <span className={styles.prefix}>Kg</span>
-              <input
-                className={styles.inputGroupInput}
-                value={values.priceUnit}
-                onChange={(e) => setField("priceUnit", e.target.value)}
-                placeholder="Kg"
-              />
-            </div>
-            {errors.priceUnit && <div className={styles.error}>{errors.priceUnit}</div>}
-          </div>
-        </div>
-
-        {/* Upload + Status */}
-        <div className={styles.grid2}>
-          <div className={styles.field}>
-            <label className={styles.label}>Upload image*</label>
-
-            <div className={styles.uploadRow}>
-              <label className={`${styles.uploadBox} ${errors.imageFile ? styles.groupError : ""}`}>
-                <span className={styles.uploadIcon}>↑</span>
-                <span className={styles.uploadText}>
-                  {imageName ? imageName : "Choose an image"}
-                </span>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  className={styles.hiddenFile}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-
-                    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-
-                    setField("imageFile", f);
-                    setImageName(f?.name || "");
-
-                    if (f) setImagePreviewUrl(URL.createObjectURL(f));
-                    else setImagePreviewUrl("");
-                  }}
-                />
-              </label>
-
-              <div className={styles.thumb}>
-                {imagePreviewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={imagePreviewUrl} alt="Preview" className={styles.thumbImg} />
-                ) : (
-                  <div className={styles.thumbPlaceholder}>IMG</div>
-                )}
+              <div className="min-w-0">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+                  {title}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Fill in the product details below
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Tip: Press <span className="font-semibold">Esc</span> to close
+                </p>
               </div>
             </div>
-
-            {errors.imageFile && <div className={styles.error}>{errors.imageFile}</div>}
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label}>Status*</label>
-            <select
-              className={`${styles.select} ${errors.status ? styles.inputError : ""}`}
-              value={values.status}
-              onChange={(e) => setField("status", e.target.value)}
+          {/* Body */}
+          <div className="px-6 py-6">
+            {/* Product Name + SKU */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <Field label="Product Name*">
+                <Input
+                  ref={firstInputRef}
+                  placeholder="Enter product name"
+                  value={values.productName}
+                  onChange={(e) => setField("productName", e.target.value)}
+                />
+              </Field>
+
+              <Field label="SKU*">
+                <Input
+                  placeholder="e.g. RICE-5KG-001"
+                  value={values.sku}
+                  onChange={(e) => setField("sku", e.target.value)}
+                />
+              </Field>
+            </div>
+
+            {/* Amount + Price Unit */}
+            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+              <Field label="Amount*">
+                <PrefixInput
+                  prefix="$$"
+                  placeholder="0"
+                  value={values.amount}
+                  onChange={(e) =>
+                    setField("amount", e.target.value.replace(/[^\d.]/g, ""))
+                  }
+                />
+              </Field>
+
+              <Field label="Price Unit*">
+                <PrefixInput
+                  prefix="Kg"
+                  placeholder="Kg"
+                  value={values.priceUnit}
+                  onChange={(e) => setField("priceUnit", e.target.value)}
+                />
+              </Field>
+            </div>
+
+            {/* Upload image + Status */}
+            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+              <Field label="Upload image*">
+                <div className="flex items-center gap-3">
+                  <label className="group flex h-12 w-full cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50 focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-100">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm transition group-hover:bg-indigo-700">
+                      {/* upload arrow */}
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 19V5" />
+                        <path d="M7 10l5-5 5 5" />
+                      </svg>
+                    </span>
+
+                    <span className="min-w-0 flex-1 truncate text-slate-600">
+                      {imageName || "Choose an image"}
+                    </span>
+
+                    <span className="hidden text-xs text-slate-400 md:inline">
+                      PNG/JPG
+                    </span>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setImage(e.target.files?.[0] || null)}
+                    />
+                  </label>
+
+                  <div className="relative flex h-12 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
+                    {imagePreviewUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imagePreviewUrl}
+                        alt="preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      "IMG"
+                    )}
+
+                    {values.imageFile && (
+                      <button
+                        type="button"
+                        onClick={() => setImage(null)}
+                        className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white"
+                        aria-label="Remove image"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </Field>
+
+              <Field label="Status*">
+                <select
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+                  value={values.status}
+                  onChange={(e) => setField("status", e.target.value)}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </Field>
+            </div>
+
+            {/* Description */}
+            <div className="mt-5">
+              <Field label="Description*">
+                <textarea
+                  className="min-h-[160px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+                  placeholder="Write a short description..."
+                  value={values.description}
+                  onChange={(e) => setField("description", e.target.value)}
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-4 border-t border-slate-100 bg-white px-6 py-5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-12 min-w-[160px] rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50 active:translate-y-[1px]"
+              disabled={saving}
             >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-            {errors.status && <div className={styles.error}>{errors.status}</div>}
+              Cancel
+            </button>
+
+            <motion.button
+              type="button"
+              onClick={handleConfirm}
+              className="h-12 min-w-[160px] rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(79,70,229,0.65)] transition hover:bg-indigo-700 disabled:opacity-70"
+              whileTap={{ scale: 0.98 }}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Confirm"}
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
-        {/* Description */}
-        <div className={styles.field}>
-          <label className={styles.label}>Description*</label>
-          <textarea
-            className={`${styles.textarea} ${errors.description ? styles.inputError : ""}`}
-            value={values.description}
-            onChange={(e) => setField("description", e.target.value)}
-            placeholder="Write a short description..."
-          />
-          {errors.description && <div className={styles.error}>{errors.description}</div>}
-        </div>
+/** Components */
+function Field({ label, children }) {
+  return (
+    <div className="w-full">
+      <label className="mb-2 block text-sm font-semibold text-slate-900">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
 
-        {/* Footer */}
-        <div className={styles.footer}>
-          <button type="button" className={styles.cancelBtn} onClick={onClose}>
-            Cancel
-          </button>
-          <button type="button" className={styles.confirmBtn} onClick={handleConfirm}>
-            Confirm
-          </button>
-        </div>
+const Input = (function InputFactory() {
+  // forwardRef without importing react-forwardRef explicitly
+  // (keeps minimal imports and avoids extra refactor)
+  return function InputInner({ ref: _ignored, ...props }) {
+    return (
+      <input
+        {...props}
+        ref={props.ref}
+        className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+      />
+    );
+  };
+})();
+
+function PrefixInput({ prefix, ...props }) {
+  return (
+    <div className="flex h-12 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_0_rgba(0,0,0,0.02)] transition focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-100">
+      <div className="flex items-center justify-center border-r border-slate-200 px-4 text-sm text-slate-600">
+        {prefix}
       </div>
+      <input
+        {...props}
+        className="h-full w-full px-4 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+      />
     </div>
   );
 }
