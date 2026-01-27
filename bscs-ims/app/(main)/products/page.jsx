@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import ProductModal from '../../modules/products/ProductModal'
 
 import {
   Box,
@@ -18,7 +19,8 @@ import {
   Avatar,
   InputAdornment,
   Stack,
-  Tooltip
+  Tooltip,
+  Chip
 } from '@mui/material'
 
 import SearchIcon from '@mui/icons-material/Search'
@@ -30,29 +32,68 @@ import SortIcon from '@mui/icons-material/Sort'
 
 export default function ProductsPage() {
   const [search, setSearch] = useState('')
+  const [sortOrder, setSortOrder] = useState(null)
   const [products, setProducts] = useState([
     {
       id: 1,
       image: 'https://via.placeholder.com/50',
-      name: 'Rice 5kg',
-      quantity: 20,
-      price: 250
+      sku: 'Sinan5KG',
+      name: 'Sinandomeng',
+      unit: 'Kilo',
+      price: 250,
+      status: 'Available'
     },
     {
       id: 2,
       image: 'https://via.placeholder.com/50',
-      name: 'Rice 10kg',
-      quantity: 15,
-      price: 480
+      sku: 'Coco10KG',
+      name: 'Coco Pandan',
+      unit: 'Kilo',
+      price: 480,
+      status: 'Not Available'
     }
   ])
 
-  const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+  // ✅ modal state (minimal)
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false)
+  const [productModalMode, setProductModalMode] = useState('create') // "create" | "edit"
+  const [productModalInitialValues, setProductModalInitialValues] = useState({})
 
   const handleDelete = (id) => {
     if (!confirm('Delete this product?')) return
     setProducts(products.filter((p) => p.id !== id))
   }
+
+  const filteredProducts = products
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (!sortOrder) return 0
+      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
+      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
+      return 0
+    })
+  // ✅ open create
+  const openCreateModal = () => {
+    setProductModalMode('create')
+    setProductModalInitialValues({})
+    setIsProductModalOpen(true)
+  }
+
+  // ✅ open edit (prefill from row)
+  const openEditModal = (product) => {
+    setProductModalMode('edit')
+    setProductModalInitialValues({
+      productName: product?.name ?? '',
+      amount: String(product?.price ?? ''), // using price as amount in your UI for now
+      priceUnit: 'Kg',
+      status: 'Active',
+      description: '',
+      imageFile: null // cannot prefill file input
+    })
+    setIsProductModalOpen(true)
+  }
+
+  const closeModal = () => setIsProductModalOpen(false)
 
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
@@ -63,8 +104,24 @@ export default function ProductsPage() {
             Products
           </Typography>
 
-          <Button variant='contained' startIcon={<AddIcon />}>
-            Add
+          {/* Add button (icon top, text bottom) */}
+          <Button
+            variant='contained'
+            disableElevation
+            onClick={openCreateModal}
+            sx={{
+              flexDirection: 'column',
+              px: 1.5,
+              py: 1,
+              minWidth: 60,
+              textTransform: 'none',
+              bgcolor: '#f5f7fb',
+              color: '#000000',
+              '&:hover': { bgcolor: '#f0f0f0' }
+            }}
+          >
+            <AddIcon />
+            <Typography fontSize={14}>Add</Typography>
           </Button>
         </Stack>
 
@@ -90,15 +147,9 @@ export default function ProductsPage() {
                       sx={{
                         backgroundColor: '#1F384C',
                         color: '#fff',
-                        textTransform: 'none', // keeps text normal case
-                        '&:hover': {
-                          backgroundColor: '#162A3F' // slightly darker on hover
-                        },
-                        height: '30px' // adjust height to match TextField
-                      }}
-                      onClick={() => {
-                        console.log('Search clicked:', search)
-                        // put your search function here
+                        textTransform: 'none',
+                        '&:hover': { backgroundColor: '#162A3F' },
+                        height: '30px'
                       }}
                     >
                       Search
@@ -108,15 +159,16 @@ export default function ProductsPage() {
               }}
             />
 
+            {/* Restored Buttons */}
             <Button startIcon={<FilterListIcon />} variant='outlined'>
               Filter
             </Button>
 
-            <Button startIcon={<SortIcon />} variant='outlined'>
+            <Button startIcon={<SortIcon />} variant='outlined' onClick={() => setSortOrder('asc')}>
               Asc
             </Button>
 
-            <Button startIcon={<SortIcon />} variant='outlined'>
+            <Button startIcon={<SortIcon />} variant='outlined' onClick={() => setSortOrder('desc')}>
               Desc
             </Button>
           </Stack>
@@ -127,17 +179,20 @@ export default function ProductsPage() {
           <Table>
             <TableHead sx={{ bgcolor: '#fafafa' }}>
               <TableRow>
-                <TableCell>
+                <TableCell align='center'>
                   <b>Image</b>
                 </TableCell>
-                <TableCell>
-                  <b>Product Name</b>
+                <TableCell align='center'>
+                  <b>Product Name (SKU)</b>
                 </TableCell>
-                <TableCell>
-                  <b>Quantity</b>
+                <TableCell align='center'>
+                  <b>Unit</b>
                 </TableCell>
-                <TableCell>
+                <TableCell align='center'>
                   <b>Price</b>
+                </TableCell>
+                <TableCell align='center'>
+                  <b>Status</b>
                 </TableCell>
                 <TableCell align='center'>
                   <b>Actions</b>
@@ -148,42 +203,48 @@ export default function ProductsPage() {
             <TableBody>
               {filteredProducts.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align='center' sx={{ py: 6 }}>
+                  <TableCell colSpan={6} align='center' sx={{ py: 6 }}>
                     No products found
                   </TableCell>
                 </TableRow>
               )}
 
               {filteredProducts.map((product) => (
-                <TableRow key={product.id} hover>
-                  <TableCell>
+                <TableRow key={product.id} hover sx={{ height: 72 }}>
+                  <TableCell align='center'>
                     <Avatar src={product.image} variant='rounded' />
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{product.name}</TableCell>
-                  <TableCell>{product.quantity}</TableCell>
-                  <TableCell>₱{product.price}</TableCell>
+
+                  <TableCell align='center'>
+                    <Box>
+                      <Typography fontWeight={600}>{product.name}</Typography>
+                      <Typography variant='caption' color='text.secondary'>
+                        ({product.sku})
+                      </Typography>
+                    </Box>
+                  </TableCell>
+
+                  <TableCell align='center'>{product.unit}</TableCell>
+                  <TableCell align='center'>₱{product.price}</TableCell>
+
+                  <TableCell align='center'>
+                    <Chip
+                      label={product.status}
+                      size='small'
+                      color={product.status === 'Available' ? 'success' : 'warning'}
+                    />
+                  </TableCell>
+
                   <TableCell align='center'>
                     <Tooltip title='Edit'>
-                      <IconButton>
-                        <EditIcon
-                          sx={{
-                            fill: '#fff', // fill white
-                            stroke: '#000', // outline black
-                            strokeWidth: 1.5 // thickness of the outline
-                          }}
-                        />
+                      <IconButton onClick={() => openEditModal(product)}>
+                        <EditIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
                       </IconButton>
                     </Tooltip>
 
                     <Tooltip title='Delete'>
-                      <IconButton>
-                        <DeleteIcon
-                          sx={{
-                            fill: '#fff',
-                            stroke: '#000',
-                            strokeWidth: 1.5
-                          }}
-                        />
+                      <IconButton onClick={() => handleDelete(product.id)}>
+                        <DeleteIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -193,6 +254,14 @@ export default function ProductsPage() {
           </Table>
         </TableContainer>
       </Box>
+
+      {/* ✅ render modal once (UI-only) */}
+      <ProductModal
+        open={isProductModalOpen}
+        mode={productModalMode}
+        initialValues={productModalInitialValues}
+        onClose={closeModal}
+      />
     </Box>
   )
 }
