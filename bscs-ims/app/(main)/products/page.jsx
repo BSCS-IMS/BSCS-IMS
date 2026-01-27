@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import ProductModal from '../../../components/ui/products/ProductModal'
+
+
 
 import {
   Box,
@@ -47,12 +50,40 @@ export default function ProductsPage() {
     }
   ])
 
+  // ✅ modal state (minimal)
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false)
+  const [productModalMode, setProductModalMode] = useState('create') // "create" | "edit"
+  const [productModalInitialValues, setProductModalInitialValues] = useState({})
+
   const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
 
   const handleDelete = (id) => {
     if (!confirm('Delete this product?')) return
     setProducts(products.filter((p) => p.id !== id))
   }
+
+  // ✅ open create
+  const openCreateModal = () => {
+    setProductModalMode('create')
+    setProductModalInitialValues({})
+    setIsProductModalOpen(true)
+  }
+
+  // ✅ open edit (prefill from row)
+  const openEditModal = (product) => {
+    setProductModalMode('edit')
+    setProductModalInitialValues({
+      productName: product?.name ?? '',
+      amount: String(product?.price ?? ''), // using price as amount in your UI for now
+      priceUnit: 'Kg',
+      status: 'Active',
+      description: '',
+      imageFile: null // cannot prefill file input
+    })
+    setIsProductModalOpen(true)
+  }
+
+  const closeModal = () => setIsProductModalOpen(false)
 
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
@@ -63,7 +94,8 @@ export default function ProductsPage() {
             Products
           </Typography>
 
-          <Button variant='contained' startIcon={<AddIcon />}>
+          {/* ✅ wire Add button */}
+          <Button variant='contained' startIcon={<AddIcon />} onClick={openCreateModal}>
             Add
           </Button>
         </Stack>
@@ -164,7 +196,8 @@ export default function ProductsPage() {
                   <TableCell>₱{product.price}</TableCell>
                   <TableCell align='center'>
                     <Tooltip title='Edit'>
-                      <IconButton>
+                      {/* ✅ wire Edit icon */}
+                      <IconButton onClick={() => openEditModal(product)}>
                         <EditIcon
                           sx={{
                             fill: '#fff', // fill white
@@ -176,7 +209,8 @@ export default function ProductsPage() {
                     </Tooltip>
 
                     <Tooltip title='Delete'>
-                      <IconButton>
+                      {/* keep delete behavior unchanged */}
+                      <IconButton onClick={() => handleDelete(product.id)}>
                         <DeleteIcon
                           sx={{
                             fill: '#fff',
@@ -193,6 +227,14 @@ export default function ProductsPage() {
           </Table>
         </TableContainer>
       </Box>
+
+      {/* ✅ render modal once (UI-only) */}
+      <ProductModal
+        open={isProductModalOpen}
+        mode={productModalMode}
+        initialValues={productModalInitialValues}
+        onClose={closeModal}
+      />
     </Box>
   )
 }
