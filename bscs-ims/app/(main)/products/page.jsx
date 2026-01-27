@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import ProductModal from '../../../components/ui/products/ProductModal'
+import ProductModal from '../../modules/products/ProductModal'
 
 
 

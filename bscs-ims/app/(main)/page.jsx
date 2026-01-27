@@ -30,7 +30,7 @@ export default function SampleCrudPage() {
       console.error('Error fetching items:', err)
       setError(err.response?.data?.error || 'Failed to fetch items')
     } finally {
-      setLoading(false) // test
+      setLoading(false) 
     }
   }
 
