@@ -30,7 +30,7 @@ export default function SampleCrudPage() {
       console.error('Error fetching items:', err)
       setError(err.response?.data?.error || 'Failed to fetch items')
     } finally {
-      setLoading(false)
+      setLoading(false) // test
     }
   }
 
@@ -77,6 +77,14 @@ export default function SampleCrudPage() {
 
         <Link href='/login' className='text-blue-600 hover:underline mb-6 inline-block'>
           LOGIN →
+        </Link>
+        <br></br>
+        <Link href='/inventory' className='text-blue-600 hover:underline mb-6 inline-block'>
+          INVENTORY ONLY→
+        </Link>
+        <br></br>
+        <Link href='/test' className='text-blue-600 hover:underline mb-6 inline-block'>
+          INVENTORY w TEST NAV →
         </Link>
 
         <div className='bg-white rounded-lg shadow-md p-6 mt-6'>
