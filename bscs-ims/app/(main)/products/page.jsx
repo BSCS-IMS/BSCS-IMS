@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-
 import {
   Box,
   Typography,
@@ -31,6 +30,7 @@ import SortIcon from '@mui/icons-material/Sort'
 
 export default function ProductsPage() {
   const [search, setSearch] = useState('')
+  const [sortOrder, setSortOrder] = useState(null)
   const [products, setProducts] = useState([
     {
       id: 1,
@@ -52,27 +52,49 @@ export default function ProductsPage() {
     }
   ])
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  )
-
   const handleDelete = (id) => {
     if (!confirm('Delete this product?')) return
     setProducts(products.filter((p) => p.id !== id))
   }
 
+  const filteredProducts = products
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (!sortOrder) return 0
+      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
+      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
+      return 0
+    })
+
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: 2 }}>
+
         {/* Header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={700}>
             Products
           </Typography>
 
-          <Button variant="contained" startIcon={<AddIcon />}>
-            Add
+          {/* Add button (icon top, text bottom) */}
+          <Button
+            variant="contained"
+            disableElevation
+            sx={{
+              flexDirection: 'column',
+              px: 1.5,
+              py: 1,
+              minWidth: 60,
+              textTransform: 'none',
+              bgcolor: '#f5f7fb',
+              color: '#000000',
+              '&:hover': { bgcolor: '#f0f0f0' },
+            }}
+          >
+            <AddIcon />
+            <Typography fontSize={14}>Add</Typography>
           </Button>
+
         </Stack>
 
         {/* Search + Actions */}
@@ -109,15 +131,24 @@ export default function ProductsPage() {
               }}
             />
 
+            {/* Restored Buttons */}
             <Button startIcon={<FilterListIcon />} variant="outlined">
               Filter
             </Button>
 
-            <Button startIcon={<SortIcon />} variant="outlined">
+            <Button
+              startIcon={<SortIcon />}
+              variant="outlined"
+              onClick={() => setSortOrder('asc')}
+            >
               Asc
             </Button>
 
-            <Button startIcon={<SortIcon />} variant="outlined">
+            <Button
+              startIcon={<SortIcon />}
+              variant="outlined"
+              onClick={() => setSortOrder('desc')}
+            >
               Desc
             </Button>
           </Stack>
@@ -148,12 +179,10 @@ export default function ProductsPage() {
 
               {filteredProducts.map((product) => (
                 <TableRow key={product.id} hover sx={{ height: 72 }}>
-                  {/* Image */}
                   <TableCell align="center">
                     <Avatar src={product.image} variant="rounded" />
                   </TableCell>
 
-                  {/* Product Name + SKU (Merged & Centered) */}
                   <TableCell align="center">
                     <Box>
                       <Typography fontWeight={600}>{product.name}</Typography>
@@ -163,13 +192,9 @@ export default function ProductsPage() {
                     </Box>
                   </TableCell>
 
-                  {/* Unit */}
                   <TableCell align="center">{product.unit}</TableCell>
-
-                  {/* Price */}
                   <TableCell align="center">₱{product.price}</TableCell>
 
-                  {/* Status */}
                   <TableCell align="center">
                     <Chip
                       label={product.status}
@@ -178,7 +203,6 @@ export default function ProductsPage() {
                     />
                   </TableCell>
 
-                  {/* Actions */}
                   <TableCell align="center">
                     <Tooltip title="Edit">
                       <IconButton>
