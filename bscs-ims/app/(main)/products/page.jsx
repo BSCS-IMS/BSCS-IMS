@@ -1,6 +1,7 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from "react"
+import axios from "axios"
 import ProductModal from '../../modules/products/ProductModal'
 
 import {
@@ -33,67 +34,80 @@ import SortIcon from '@mui/icons-material/Sort'
 export default function ProductsPage() {
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      image: 'https://via.placeholder.com/50',
-      sku: 'Sinan5KG',
-      name: 'Sinandomeng',
-      unit: 'Kilo',
-      price: 250,
-      status: 'Available'
-    },
-    {
-      id: 2,
-      image: 'https://via.placeholder.com/50',
-      sku: 'Coco10KG',
-      name: 'Coco Pandan',
-      unit: 'Kilo',
-      price: 480,
-      status: 'Not Available'
-    }
-  ])
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // ✅ modal state (minimal)
+  // ✅ modal state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [productModalMode, setProductModalMode] = useState('create') // "create" | "edit"
   const [productModalInitialValues, setProductModalInitialValues] = useState({})
 
-  const handleDelete = (id) => {
+  // Fetch products from API
+  const fetchProducts = async () => {
+    setLoading(true)
+    try {
+      const res = await axios.get('/api/products')
+      if (res.data.success) {
+        setProducts(res.data.products.map(p => ({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          image: p.imageUrl,
+          price: p.currentPrice,
+          priceUnit: p.priceUnit,
+          status: p.isActive ? 'Available' : 'Not Available'
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  // Delete product (UI-only for now)
+  const handleDelete = async (id) => {
     if (!confirm('Delete this product?')) return
+    // TODO: call DELETE API when implemented
     setProducts(products.filter((p) => p.id !== id))
   }
 
-  const filteredProducts = products
-    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (!sortOrder) return 0
-      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
-      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
-      return 0
-    })
-  // ✅ open create
+  // Open create modal
   const openCreateModal = () => {
     setProductModalMode('create')
     setProductModalInitialValues({})
     setIsProductModalOpen(true)
   }
 
-  // ✅ open edit (prefill from row)
+  // Open edit modal
   const openEditModal = (product) => {
     setProductModalMode('edit')
     setProductModalInitialValues({
-      productName: product?.name ?? '',
-      amount: String(product?.price ?? ''), // using price as amount in your UI for now
-      priceUnit: 'Kg',
-      status: 'Active',
-      description: '',
-      imageFile: null // cannot prefill file input
+      productName: product.name,
+      amount: product.price,
+      priceUnit: product.priceUnit,
+      sku: product.sku,
+      status: product.status,
+      imageFile: null
     })
     setIsProductModalOpen(true)
   }
 
   const closeModal = () => setIsProductModalOpen(false)
+
+  // Filter + sort products
+  const filteredProducts = products
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (!sortOrder) return 0
+      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
+      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
+      return 0
+    })
 
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
@@ -104,7 +118,7 @@ export default function ProductsPage() {
             Products
           </Typography>
 
-          {/* Add button (icon top, text bottom) */}
+          {/* Add button */}
           <Button
             variant='contained'
             disableElevation
@@ -151,6 +165,7 @@ export default function ProductsPage() {
                         '&:hover': { backgroundColor: '#162A3F' },
                         height: '30px'
                       }}
+                      onClick={fetchProducts} // refresh search
                     >
                       Search
                     </Button>
@@ -159,7 +174,6 @@ export default function ProductsPage() {
               }}
             />
 
-            {/* Restored Buttons */}
             <Button startIcon={<FilterListIcon />} variant='outlined'>
               Filter
             </Button>
@@ -179,24 +193,12 @@ export default function ProductsPage() {
           <Table>
             <TableHead sx={{ bgcolor: '#fafafa' }}>
               <TableRow>
-                <TableCell align='center'>
-                  <b>Image</b>
-                </TableCell>
-                <TableCell align='center'>
-                  <b>Product Name (SKU)</b>
-                </TableCell>
-                <TableCell align='center'>
-                  <b>Unit</b>
-                </TableCell>
-                <TableCell align='center'>
-                  <b>Price</b>
-                </TableCell>
-                <TableCell align='center'>
-                  <b>Status</b>
-                </TableCell>
-                <TableCell align='center'>
-                  <b>Actions</b>
-                </TableCell>
+                <TableCell align='center'><b>Image</b></TableCell>
+                <TableCell align='center'><b>Product Name (SKU)</b></TableCell>
+                <TableCell align='center'><b>Unit</b></TableCell>
+                <TableCell align='center'><b>Price</b></TableCell>
+                <TableCell align='center'><b>Status</b></TableCell>
+                <TableCell align='center'><b>Actions</b></TableCell>
               </TableRow>
             </TableHead>
 
@@ -204,7 +206,7 @@ export default function ProductsPage() {
               {filteredProducts.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} align='center' sx={{ py: 6 }}>
-                    No products found
+                    {loading ? 'Loading...' : 'No products found'}
                   </TableCell>
                 </TableRow>
               )}
@@ -224,7 +226,7 @@ export default function ProductsPage() {
                     </Box>
                   </TableCell>
 
-                  <TableCell align='center'>{product.unit}</TableCell>
+                  <TableCell align='center'>{product.priceUnit}</TableCell>
                   <TableCell align='center'>₱{product.price}</TableCell>
 
                   <TableCell align='center'>
@@ -255,12 +257,13 @@ export default function ProductsPage() {
         </TableContainer>
       </Box>
 
-      {/* ✅ render modal once (UI-only) */}
+      {/* Product modal */}
       <ProductModal
         open={isProductModalOpen}
         mode={productModalMode}
         initialValues={productModalInitialValues}
         onClose={closeModal}
+        onSave={fetchProducts} // refresh products after save
       />
     </Box>
   )
