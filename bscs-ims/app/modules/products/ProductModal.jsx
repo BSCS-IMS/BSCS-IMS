@@ -85,7 +85,7 @@ export default function ProductModal({
           transition={{ duration: 0.22, ease: "easeOut" }}
         >
           {/* Header */}
-          <div className="relative border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-6 pb-5 pt-6 flex-shrink-0">
+          <div className="relative border-b border-slate-100 bg-linear-to-b from-slate-50 to-white px-6 pb-5 pt-6 shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -245,7 +245,7 @@ export default function ProductModal({
             <div className="mt-5">
               <Field label="Description*">
                 <textarea
-                  className="min-h-[160px] w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
+                  className="min-h-40 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
                   placeholder="Write a short description..."
                   value={values.description}
                   onChange={(e) => setField("description", e.target.value)}
@@ -255,11 +255,11 @@ export default function ProductModal({
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 flex items-center justify-end gap-4 border-t border-slate-100 bg-white px-6 py-5">
+          <div className="shrink-0 flex items-center justify-end gap-4 border-t border-slate-100 bg-white px-6 py-5">
             <button
               type="button"
               onClick={onClose}
-              className="h-12 min-w-[160px] rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50"
+              className="h-12 min-w-40 rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50"
             >
               Cancel
             </button>
@@ -267,7 +267,7 @@ export default function ProductModal({
             <button
               type="button"
               onClick={handleConfirm}
-              className="h-12 min-w-[160px] rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(79,70,229,0.65)] transition hover:bg-indigo-700 active:translate-y-[1px]"
+              className="h-12 min-w-40 rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(79,70,229,0.65)] transition hover:bg-indigo-700 active:translate-y-px"
             >
               Confirm
             </button>
