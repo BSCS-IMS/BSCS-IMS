@@ -78,14 +78,14 @@ export default function ProductModal({
       >
         {/* Modal */}
         <motion.div
-          className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-[0_24px_70px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/5"
+          className="w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_24px_70px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/5"
           initial={{ opacity: 0, y: 18, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 18, scale: 0.985 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
         >
           {/* Header */}
-          <div className="relative border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-6 pb-5 pt-6">
+          <div className="relative border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-6 pb-5 pt-6 flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -127,7 +127,7 @@ export default function ProductModal({
           </div>
 
           {/* Body */}
-          <div className="px-6 py-6">
+          <div className="flex-1 overflow-y-auto px-6 py-6">
             {/* Product Name + SKU */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <Field label="Product Name*">
@@ -176,7 +176,6 @@ export default function ProductModal({
                 <div className="flex items-center gap-3">
                   <label className="group flex h-12 w-full cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50 focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-100">
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm transition group-hover:bg-indigo-700">
-                      {/* upload arrow */}
                       <svg
                         width="18"
                         height="18"
@@ -218,7 +217,6 @@ export default function ProductModal({
 
                   <div className="flex h-12 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400">
                     {imagePreviewUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={imagePreviewUrl}
                         alt="preview"
@@ -257,7 +255,7 @@ export default function ProductModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-4 border-t border-slate-100 bg-white px-6 py-5">
+          <div className="flex-shrink-0 flex items-center justify-end gap-4 border-t border-slate-100 bg-white px-6 py-5">
             <button
               type="button"
               onClick={onClose}
