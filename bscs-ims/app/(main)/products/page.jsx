@@ -1,6 +1,7 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from "react"
+import axios from "axios"
 import ProductModal from '../../modules/products/ProductModal'
 
 // MUI
@@ -44,17 +45,45 @@ export default function ProductsPage() {
   const [expandedId, setExpandedId] = useState(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-  const [products, setProducts] = useState([
-    { id: 1, image: 'https://via.placeholder.com/50', sku: 'Sinan5KG', name: 'Sinandomeng', unit: 'Kilo', price: 250, status: 'Available' },
-    { id: 2, image: 'https://via.placeholder.com/50', sku: 'Coco10KG', name: 'Coco Pandan', unit: 'Kilo', price: 480, status: 'Not Available' }
-  ])
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
 
+  // ✅ modal state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [productModalMode, setProductModalMode] = useState('create')
   const [productModalInitialValues, setProductModalInitialValues] = useState({})
 
-  const handleDelete = (id) => {
+  // Fetch products from API
+  const fetchProducts = async () => {
+    setLoading(true)
+    try {
+      const res = await axios.get('/api/products')
+      if (res.data.success) {
+        setProducts(res.data.products.map(p => ({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          image: p.imageUrl,
+          price: p.currentPrice,
+          priceUnit: p.priceUnit,
+          status: p.isActive ? 'Available' : 'Not Available'
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  // Delete product (UI-only for now)
+  const handleDelete = async (id) => {
     if (!confirm('Delete this product?')) return
+    // TODO: call DELETE API when implemented
     setProducts(products.filter((p) => p.id !== id))
   }
 
@@ -73,14 +102,15 @@ export default function ProductsPage() {
     setIsProductModalOpen(true)
   }
 
+  // Open edit modal
   const openEditModal = (product) => {
     setProductModalMode('edit')
     setProductModalInitialValues({
-      productName: product?.name ?? '',
-      amount: String(product?.price ?? ''),
-      priceUnit: 'Kg',
-      status: product?.status ?? 'Active',
-      description: '',
+      productName: product.name,
+      amount: product.price,
+      priceUnit: product.priceUnit,
+      sku: product.sku,
+      status: product.status,
       imageFile: null
     })
     setIsProductModalOpen(true)
@@ -243,6 +273,9 @@ export default function ProductsPage() {
   // =========================
   // DESKTOP VIEW
   // =========================
+  // Filter + sort products
+
+
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: 2 }}>
@@ -250,6 +283,7 @@ export default function ProductsPage() {
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={700}>Products</Typography>
 
+          {/* Add button */}
           <Button
             variant="contained"
             disableElevation
@@ -296,6 +330,7 @@ export default function ProductsPage() {
                         '&:hover': { backgroundColor: '#162A3F' },
                         height: '30px'
                       }}
+                      onClick={fetchProducts} // refresh search
                     >
                       Search
                     </Button>
@@ -303,9 +338,18 @@ export default function ProductsPage() {
                 )
               }}
             />
-            <Button startIcon={<FilterListIcon />} variant="outlined">Filter</Button>
-            <Button startIcon={<SortIcon />} variant="outlined" onClick={() => setSortOrder('asc')}>Asc</Button>
-            <Button startIcon={<SortIcon />} variant="outlined" onClick={() => setSortOrder('desc')}>Desc</Button>
+
+            <Button startIcon={<FilterListIcon />} variant='outlined'>
+              Filter
+            </Button>
+
+            <Button startIcon={<SortIcon />} variant='outlined' onClick={() => setSortOrder('asc')}>
+              Asc
+            </Button>
+
+            <Button startIcon={<SortIcon />} variant='outlined' onClick={() => setSortOrder('desc')}>
+              Desc
+            </Button>
           </Stack>
         </Paper>
 
@@ -325,8 +369,8 @@ export default function ProductsPage() {
             <TableBody>
               {filteredProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                    No products found
+                  <TableCell colSpan={6} align='center' sx={{ py: 6 }}>
+                    {loading ? 'Loading...' : 'No products found'}
                   </TableCell>
                 </TableRow>
               ) : filteredProducts.map(product => (
@@ -342,9 +386,11 @@ export default function ProductsPage() {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell align="center">{product.unit}</TableCell>
-                  <TableCell align="center">₱{product.price}</TableCell>
-                  <TableCell align="center">
+
+                  <TableCell align='center'>{product.priceUnit}</TableCell>
+                  <TableCell align='center'>₱{product.price}</TableCell>
+
+                  <TableCell align='center'>
                     <Chip
                       label={product.status}
                       size="small"
@@ -370,13 +416,13 @@ export default function ProductsPage() {
         </TableContainer>
       </Box>
 
-      {/* Modal */}
+      {/* Product modal */}
       <ProductModal
         open={isProductModalOpen}
         mode={productModalMode}
         initialValues={productModalInitialValues}
         onClose={closeModal}
-        fullScreen={!isDesktop}
+        onSave={fetchProducts} // refresh products after save
       />
     </Box>
   )
