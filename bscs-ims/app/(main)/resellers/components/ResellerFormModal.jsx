@@ -15,21 +15,6 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
   const [products, setProducts] = useState([]) // <-- products state
   const [selectedProductId, setSelectedProductId] = useState('')
 
-  // Pre-fill form kapag Edit mode
-  useEffect(() => {
-    if (reseller) {
-      setForm({
-        businessName: reseller.businessName || '',
-        contactNumber: reseller.contactNumber || '',
-        address: reseller.address || '',
-        status: reseller.status || 'active',
-        description: reseller.notes || '',
-        assignedProduct: reseller.assignedProduct || '',
-        image: null
-      })
-    }
-  }, [reseller])
-
   // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {

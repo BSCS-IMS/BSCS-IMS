@@ -428,11 +428,12 @@ export default function ProductsPage() {
 
       {/* Product modal */}
       <ProductModal
-        open={isProductModalOpen}
-        mode={productModalMode}
-        initialValues={productModalInitialValues}
-        onClose={closeModal}
-        onSave={fetchProducts}
+        key={open ? (initialValues?.id ?? 'create') : 'closed'}
+        open={open}
+        mode={mode}
+        initialValues={initialValues}
+        onClose={onClose}
+        onConfirm={onConfirm}
       />
     </Box>
   )

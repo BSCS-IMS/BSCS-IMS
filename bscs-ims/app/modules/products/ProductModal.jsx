@@ -14,23 +14,13 @@ const defaultValues = {
 }
 
 export default function ProductModal({ open, mode = 'create', initialValues, onClose, onConfirm }) {
-  const mergedDefaults = useMemo(() => ({ ...defaultValues, ...(initialValues || {}) }), [initialValues])
+  const [values, setValues] = useState(() => ({
+    ...defaultValues,
+    ...(initialValues || {})
+  }))
 
-  const [values, setValues] = useState(mergedDefaults)
   const [imageName, setImageName] = useState('')
   const [imagePreviewUrl, setImagePreviewUrl] = useState('')
-
-  useEffect(() => {
-    if (!open) return
-
-    setValues(mergedDefaults)
-    setImageName('')
-    setImagePreviewUrl('')
-
-    return () => {
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
-    }
-  }, [open, mergedDefaults])
 
   if (!open) return null
 
