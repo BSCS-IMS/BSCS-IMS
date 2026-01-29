@@ -28,16 +28,38 @@ export default function ProductModal({ open, mode = 'create', initialValues, onC
     setValues((p) => ({ ...p, [key]: val }))
   }
 
-  const handleConfirm = () => {
-    console.log('Product Modal Submit:', {
-      ...values,
-      amount: values.amount === '' ? '' : Number(values.amount),
-      imageFileName: values.imageFile?.name || ''
-    })
+  const handleConfirm = async () => {
+  try {
+    const payload = {
+      name: values.productName.trim(),
+      sku: values.sku.trim(),
+      currentPrice: Number(values.amount),
+      priceUnit: values.priceUnit,
+      imageUrl: imagePreviewUrl || "", // temporary until Firebase Storage
+      isActive: values.status === "Active",
+    };
 
-    onConfirm?.(values)
-    onClose?.()
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.error);
+      return;
+    }
+
+    onConfirm?.(data.products); // pass updated list back
+    onClose?.();
+  } catch (err) {
+    console.error("Save failed:", err);
+    alert("Failed to save product");
   }
+};
+
 
   const title = mode === 'create' ? 'Add Product' : 'Edit Product'
 
