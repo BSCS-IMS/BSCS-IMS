@@ -1,5 +1,5 @@
-import InventoryPage from '@/app/components/InventoryPage'
+import InventoryTable from '@/app/modules/inventory-page/InventoryTable'
 
 export default function Inventory() {
-  return <InventoryPage />
+  return <InventoryTable />
 }
