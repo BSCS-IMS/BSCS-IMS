@@ -70,7 +70,16 @@ export default function InventoryTable({
           {paginatedRows.length > 0 ? (
             paginatedRows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell sx={{ color: '#1F384C', py: 2.5, borderRight: '1px solid #e5e7eb', boxShadow: 'none' }}>
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  {' '}
                   {row.location}
                 </TableCell>
                 <TableCell sx={{ color: '#374151', py: 2.5, borderRight: '1px solid #e5e7eb', boxShadow: 'none' }}>
