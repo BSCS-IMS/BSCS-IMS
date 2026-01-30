@@ -7,7 +7,7 @@ const inter = Inter({
 })
 
 const MainLayout = ({ children }) => {
-  return <div className={`flex-1 flex flex-col bg-[#F8FAFC] ${inter.variable} antialiased`}>{children}</div>
+  return <div className={`flex-1 flex flex-col ${inter.variable} antialiased`}>{children}</div>
 }
 
 export default MainLayout
