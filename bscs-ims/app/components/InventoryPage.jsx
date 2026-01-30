@@ -5,6 +5,6 @@ export default function InventoryPage() {
     return (
         <div>
             <BasicTable />
-        </div>
+        </div> // test
     );
 }
