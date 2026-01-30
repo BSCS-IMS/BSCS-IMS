@@ -3,7 +3,7 @@ import Typography from '@mui/material/Typography'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 
-export default function SortFilter({ anchorEl, open, onClose, sortOrder, onSortSelect }) {
+export default function InventorySortDialog({ anchorEl, open, onClose, sortOrder, onSortSelect }) {
   return (
     <Menu
       anchorEl={anchorEl}
