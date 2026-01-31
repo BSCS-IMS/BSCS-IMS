@@ -177,7 +177,7 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
                       </div>
                       <div>
                         <span className='text-[#6b7280]'>Product</span>
-                        <p className='font-medium text-[#1e40af] underline'>{row.product.name}</p>
+                        <p className='font-medium text-[#1F384C]'>{row.product.name}</p>
                       </div>
                       <div>
                         <span className='text-[#6b7280]'>Quantity</span>
