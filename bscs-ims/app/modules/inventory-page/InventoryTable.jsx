@@ -8,6 +8,7 @@ import TableRow from '@mui/material/TableRow'
 import TablePagination from '@mui/material/TablePagination'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
+import Skeleton from '@mui/material/Skeleton'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 
@@ -24,7 +25,7 @@ export default function InventoryTable({
 }) {
   return (
     <TableContainer component={Paper} sx={{ border: '1px solid #e5e7eb', boxShadow: 'none' }}>
-      <Table sx={{ minWidth: 650 }}>
+      <Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
         <TableHead>
           <TableRow>
             <TableCell
@@ -32,6 +33,7 @@ export default function InventoryTable({
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
+                width: '25%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -44,6 +46,7 @@ export default function InventoryTable({
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
+                width: '55%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -57,6 +60,7 @@ export default function InventoryTable({
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
+                width: '20%',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
@@ -67,7 +71,21 @@ export default function InventoryTable({
         </TableHead>
 
         <TableBody>
-          {paginatedRows.length > 0 ? (
+          {loading ? (
+            Array.from({ length: rowsPerPage }).map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell align='center' sx={{ py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : paginatedRows.length > 0 ? (
             paginatedRows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell
@@ -79,7 +97,6 @@ export default function InventoryTable({
                     fontWeight: 600
                   }}
                 >
-                  {' '}
                   {row.location}
                 </TableCell>
                 <TableCell sx={{ color: '#374151', py: 2.5, borderRight: '1px solid #e5e7eb', boxShadow: 'none' }}>
@@ -101,7 +118,7 @@ export default function InventoryTable({
           ) : (
             <TableRow>
               <TableCell colSpan={3} align='center' sx={{ py: 8, color: '#6b7280', boxShadow: 'none' }}>
-                {loading ? 'Loading...' : 'No inventory found'}
+                No inventory found
               </TableCell>
             </TableRow>
           )}

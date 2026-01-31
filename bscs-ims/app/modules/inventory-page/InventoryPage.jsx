@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { useMediaQuery } from '@mui/material'
+import { useMediaQuery, useTheme } from '@mui/material'
 import Box from '@mui/material/Box'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
@@ -14,7 +14,13 @@ import InventorySortDialog from './InventorySortDialog'
 import InventoryMobileView from './InventoryMobileView'
 
 export default function InventoryPage() {
-  const isDesktop = useMediaQuery('(min-width:900px)')
+  const theme = useTheme()
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
@@ -98,6 +104,9 @@ export default function InventoryPage() {
   })
 
   const paginatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  // Wait until mounted so useMediaQuery has the actual window width
+  if (!mounted) return null
 
   if (!isDesktop) {
     return <InventoryMobileView rows={rows} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
