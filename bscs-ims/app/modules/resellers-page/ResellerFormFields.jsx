@@ -94,20 +94,6 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
           </SelectContent>
         </Select>
       </div>
-
-      {/* Description */}
-      <div className='space-y-1.5'>
-        <Label className='text-sm font-medium text-[#374151]'>
-          Description <span className='text-[#991b1b]'>*</span>
-        </Label>
-        <textarea
-          rows={3}
-          placeholder='Add a brief description...'
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className='w-full border border-[#e5e7eb] rounded-md px-3 py-2 text-sm text-[#374151] placeholder-[#9ca3af] resize-none outline-none'
-        />
-      </div>
     </div>
   )
 }
