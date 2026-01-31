@@ -145,7 +145,7 @@ export function AppSidebar() {
               onClick={handleLogout}
               className='h-12 px-3 text-base transition-colors rounded-lg text-[#1e40af] font-normal hover:bg-[#1e40af]/8'
             >
-              <div className='flex items-center gap-3 w-full'>
+              <div className='flex items-center gap-3 w-full cursor-pointer'>
                 <LogOut className='w-5 h-5 shrink-0' />
                 <span className='truncate'>Logout</span>
               </div>
