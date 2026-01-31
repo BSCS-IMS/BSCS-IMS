@@ -28,8 +28,7 @@ import SortIcon from '@mui/icons-material/Sort'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
-
-import CreateResellerModal from './components/ResellerFormModal'
+import ResellerFormModal from '@/app/modules/resellers-page/ResellerFormModal'
 
 function AssignedProductsCell({ resellerId }) {
   const [products, setProducts] = useState([])
@@ -267,7 +266,7 @@ export default function ResellersPage() {
 
       {/* Form Modal (Add/Edit) */}
       {openForm && (
-        <CreateResellerModal
+        <ResellerFormModal
           reseller={editingReseller} // null → Add, object → Edit
           onClose={() => {
             setOpenForm(false)
