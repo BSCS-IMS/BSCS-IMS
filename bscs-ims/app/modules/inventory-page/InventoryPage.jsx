@@ -2,6 +2,7 @@
 
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import { useMediaQuery } from '@mui/material'
 import Box from '@mui/material/Box'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
@@ -10,8 +11,11 @@ import AddIcon from '@mui/icons-material/Add'
 import InventoryFilters from './InventoryFilters'
 import InventoryTable from './InventoryTable'
 import InventorySortDialog from './InventorySortDialog'
+import InventoryMobileView from './InventoryMobileView'
 
 export default function InventoryPage() {
+  const isDesktop = useMediaQuery('(min-width:900px)')
+
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(5)
@@ -94,6 +98,10 @@ export default function InventoryPage() {
   })
 
   const paginatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  if (!isDesktop) {
+    return <InventoryMobileView rows={rows} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', py: 6 }}>
