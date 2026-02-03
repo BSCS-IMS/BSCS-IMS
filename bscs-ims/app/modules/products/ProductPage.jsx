@@ -76,17 +76,18 @@ export default function ProductPage() {
   }
 
   const openEditModal = (product) => {
-    setProductModalMode('edit')
-    setProductModalInitialValues({
-      productName: product.name,
-      amount: product.price,
-      priceUnit: product.priceUnit,
-      sku: product.sku,
-      status: product.status,
-      imageFile: null
-    })
-    setIsProductModalOpen(true)
-  }
+  setProductModalMode('edit')
+  setProductModalInitialValues({
+    id: product.id,
+    name: product.name,
+    sku: product.sku,
+    currentPrice: product.price,
+    priceUnit: product.priceUnit,
+    isActive: product.status === 'Available',
+    imageUrl: product.image
+  })
+  setIsProductModalOpen(true)
+}
 
   const closeModal = () => setIsProductModalOpen(false)
 

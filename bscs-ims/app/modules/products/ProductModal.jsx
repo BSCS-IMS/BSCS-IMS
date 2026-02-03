@@ -9,18 +9,42 @@ const defaultValues = {
   amount: '',
   priceUnit: 'Kg',
   status: 'Active',
-  description: '',
-  imageFile: null
+  imageFile: null,
+  imageUrl: ''
 }
 
 export default function ProductModal({ open, mode = 'create', initialValues, onClose, onConfirm }) {
-  const [values, setValues] = useState(() => ({
-    ...defaultValues,
-    ...(initialValues || {})
-  }))
-
+  const [values, setValues] = useState(defaultValues)
   const [imageName, setImageName] = useState('')
   const [imagePreviewUrl, setImagePreviewUrl] = useState('')
+
+  // ✅ Update values when initialValues change (for edit mode)
+  useEffect(() => {
+    if (open && mode === 'edit' && initialValues) {
+      console.log('initialValues:', initialValues) // Debug log
+      
+      setValues({
+        sku: initialValues.sku || '',
+        productName: initialValues.name || '',
+        amount: initialValues.currentPrice?.toString() || '',
+        priceUnit: initialValues.priceUnit || 'Kg',
+        status: initialValues.isActive ? 'Active' : 'Inactive',
+        imageFile: null,
+        imageUrl: initialValues.imageUrl || ''
+      })
+      
+      // Set existing image preview
+      if (initialValues.imageUrl) {
+        setImagePreviewUrl(initialValues.imageUrl)
+        setImageName('Current image')
+      }
+    } else if (open && mode === 'create') {
+      // Reset for create mode
+      setValues(defaultValues)
+      setImagePreviewUrl('')
+      setImageName('')
+    }
+  }, [open, mode, initialValues])
 
   if (!open) return null
 
@@ -28,50 +52,61 @@ export default function ProductModal({ open, mode = 'create', initialValues, onC
     setValues((p) => ({ ...p, [key]: val }))
   }
 
-const handleConfirm = async () => {
-  try {
-    const formData = new FormData()
-    
-    formData.append('name', values.productName.trim())
-    formData.append('sku', values.sku.trim())
-    formData.append('currentPrice', values.amount)
-    formData.append('priceUnit', values.priceUnit)
-    
-    if (values.imageFile) {
-      formData.append('file', values.imageFile)
-    } else {
-      alert('Please upload an image')
-      return
+  const handleConfirm = async () => {
+    try {
+      const formData = new FormData()
+      
+      formData.append('name', values.productName.trim())
+      formData.append('sku', values.sku.trim())
+      formData.append('currentPrice', values.amount)
+      formData.append('priceUnit', values.priceUnit)
+      formData.append('isActive', values.status === 'Active' ? 'true' : 'false')
+
+      // For edit mode, include existing imageUrl if no new file
+      if (mode === 'edit') {
+        formData.append('imageUrl', values.imageUrl)
+      }
+      
+      // Add new image file if selected
+      if (values.imageFile) {
+        formData.append('file', values.imageFile)
+      } else if (mode === 'create') {
+        alert('Please upload an image')
+        return
+      }
+
+      const url = mode === 'edit' ? `/api/products/${initialValues.id}` : '/api/products'
+      const method = mode === 'edit' ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        body: formData,
+      })
+
+      const data = await res.json()
+
+      if (!data.success) {
+        alert(data.error)
+        return
+      }
+
+      // ✅ Fetch updated products list
+      const listRes = await fetch("/api/products")
+      const listData = await listRes.json()
+      
+      if (listData.success) {
+        onConfirm?.(listData.products)
+      }
+      
+      onClose?.()
+    } catch (err) {
+      console.error("Save failed:", err)
+      alert("Failed to save product")
     }
-
-    const res = await fetch("/api/products", {
-      method: "POST",
-      body: formData,
-    })
-
-    const data = await res.json()
-
-    if (!data.success) {
-      alert(data.error)
-      return
-    }
-
-    // ✅ Fetch updated products list
-    const listRes = await fetch("/api/products")
-    const listData = await listRes.json()
-    
-    if (listData.success) {
-      onConfirm?.(listData.products) // ✅ Pass the array
-    }
-    
-    onClose?.()
-  } catch (err) {
-    console.error("Save failed:", err)
-    alert("Failed to save product")
   }
-}
 
   const title = mode === 'create' ? 'Add Product' : 'Edit Product'
+  const isEditMode = mode === 'edit'
 
   return (
     <AnimatePresence>
@@ -129,7 +164,9 @@ const handleConfirm = async () => {
 
               <div className='min-w-0'>
                 <h2 className='text-2xl font-semibold tracking-tight text-slate-900'>{title}</h2>
-                <p className='mt-1 text-sm text-slate-500'>Fill in the product details below</p>
+                <p className='mt-1 text-sm text-slate-500'>
+                  {isEditMode ? 'Update the product details below' : 'Fill in the product details below'}
+                </p>
               </div>
             </div>
           </div>
@@ -143,6 +180,8 @@ const handleConfirm = async () => {
                   placeholder='Enter product name'
                   value={values.productName}
                   onChange={(e) => setField('productName', e.target.value)}
+                  disabled={isEditMode}
+                  className={isEditMode ? 'bg-slate-50 cursor-not-allowed opacity-60' : ''}
                 />
               </Field>
 
@@ -151,6 +190,8 @@ const handleConfirm = async () => {
                   placeholder='e.g. RICE-5KG-001'
                   value={values.sku}
                   onChange={(e) => setField('sku', e.target.value)}
+                  disabled={isEditMode}
+                  className={isEditMode ? 'bg-slate-50 cursor-not-allowed opacity-60' : ''}
                 />
               </Field>
             </div>
@@ -159,7 +200,7 @@ const handleConfirm = async () => {
             <div className='mt-5 grid grid-cols-1 gap-5 md:grid-cols-2'>
               <Field label='Amount*'>
                 <PrefixInput
-                  prefix='$$'
+                  prefix='₱'
                   placeholder='0'
                   value={values.amount}
                   onChange={(e) => setField('amount', e.target.value.replace(/[^\d.]/g, ''))}
@@ -167,8 +208,7 @@ const handleConfirm = async () => {
               </Field>
 
               <Field label='Price Unit*'>
-                <PrefixInput
-                  prefix='Kg'
+                <Input
                   placeholder='Kg'
                   value={values.priceUnit}
                   onChange={(e) => setField('priceUnit', e.target.value)}
@@ -178,7 +218,7 @@ const handleConfirm = async () => {
 
             {/* Upload image + Status */}
             <div className='mt-5 grid grid-cols-1 gap-5 md:grid-cols-2'>
-              <Field label='Upload image*'>
+              <Field label={isEditMode ? 'Update image (optional)' : 'Upload image*'}>
                 <div className='flex items-center gap-3'>
                   <label className='group flex h-12 w-full cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.02)] transition hover:bg-slate-50 focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-100'>
                     <span className='inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm transition group-hover:bg-indigo-700'>
@@ -197,7 +237,9 @@ const handleConfirm = async () => {
                       </svg>
                     </span>
 
-                    <span className='min-w-0 flex-1 truncate text-slate-600'>{imageName || 'Choose an image'}</span>
+                    <span className='min-w-0 flex-1 truncate text-slate-600'>
+                      {imageName || (isEditMode ? 'Change image' : 'Choose an image')}
+                    </span>
 
                     <span className='hidden text-xs text-slate-400 md:inline'>PNG/JPG</span>
 
@@ -210,9 +252,16 @@ const handleConfirm = async () => {
                         setField('imageFile', f)
                         setImageName(f?.name || '')
 
-                        if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl)
+                        if (imagePreviewUrl && !values.imageUrl) {
+                          URL.revokeObjectURL(imagePreviewUrl)
+                        }
                         if (f) setImagePreviewUrl(URL.createObjectURL(f))
-                        else setImagePreviewUrl('')
+                        else if (values.imageUrl) {
+                          setImagePreviewUrl(values.imageUrl)
+                          setImageName('Current image')
+                        } else {
+                          setImagePreviewUrl('')
+                        }
                       }}
                     />
                   </label>
@@ -238,18 +287,6 @@ const handleConfirm = async () => {
                 </select>
               </Field>
             </div>
-
-            {/* Description */}
-            <div className='mt-5'>
-              <Field label='Description*'>
-                <textarea
-                  className='min-h-40 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100'
-                  placeholder='Write a short description...'
-                  value={values.description}
-                  onChange={(e) => setField('description', e.target.value)}
-                />
-              </Field>
-            </div>
           </div>
 
           {/* Footer */}
@@ -267,7 +304,7 @@ const handleConfirm = async () => {
               onClick={handleConfirm}
               className='h-12 min-w-40 rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_22px_-12px_rgba(79,70,229,0.65)] transition hover:bg-indigo-700 active:translate-y-px'
             >
-              Confirm
+              {isEditMode ? 'Update' : 'Confirm'}
             </button>
           </div>
         </motion.div>
@@ -285,11 +322,11 @@ function Field({ label, children }) {
   )
 }
 
-function Input(props) {
+function Input({ className = '', ...props }) {
   return (
     <input
       {...props}
-      className='h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100'
+      className={`h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.02)] outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100 ${className}`}
     />
   )
 }
