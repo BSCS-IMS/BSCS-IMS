@@ -1,11 +1,7 @@
- // test redirection
-
-export default function DashboardPage() {
-  return <>
-
-    <h1>hi</h1>
-
-
-
-  </>
+export default function DashboardPage() { 
+  return <> 
+    <h1>
+      hi
+    </h1> 
+    </> 
 }
