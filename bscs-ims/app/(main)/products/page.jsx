@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import ProductModal from '../../modules/products/ProductModal'
+import ProductModal from '../../modules/products/ProductFormModal'
 
 import {
   Box,
@@ -110,14 +110,19 @@ export default function ProductsPage() {
 
   const openEditModal = (product) => {
     setProductModalMode('edit')
+
+    // ✅ CHANGED: shape matches ProductFormModal's expected "product" object
     setProductModalInitialValues({
-      productName: product.name,
-      amount: product.price,
-      priceUnit: product.priceUnit,
+      id: product.id,
+      name: product.name,
       sku: product.sku,
-      status: product.status,
-      imageFile: null
+      currentPrice: product.price,
+      priceUnit: product.priceUnit,
+      isActive: product.status === 'Available',
+      imageUrl: product.image,
+      description: '' // not currently in your list; keep empty for now
     })
+
     setIsProductModalOpen(true)
   }
 
@@ -169,14 +174,18 @@ export default function ProductsPage() {
               <div className='flex gap-2 mt-2'>
                 <button
                   onClick={() => setSortOrder('asc')}
-                  className={`flex-1 border rounded-md py-2 text-sm flex items-center justify-center gap-1 ${sortOrder === 'asc' ? 'bg-gray-100' : ''}`}
+                  className={`flex-1 border rounded-md py-2 text-sm flex items-center justify-center gap-1 ${
+                    sortOrder === 'asc' ? 'bg-gray-100' : ''
+                  }`}
                 >
                   <ArrowUpAZ size={16} />
                   Asc
                 </button>
                 <button
                   onClick={() => setSortOrder('desc')}
-                  className={`flex-1 border rounded-md py-2 text-sm flex items-center justify-center gap-1 ${sortOrder === 'desc' ? 'bg-gray-100' : ''}`}
+                  className={`flex-1 border rounded-md py-2 text-sm flex items-center justify-center gap-1 ${
+                    sortOrder === 'desc' ? 'bg-gray-100' : ''
+                  }`}
                 >
                   <ArrowDownAZ size={16} />
                   Desc
@@ -213,15 +222,16 @@ export default function ProductsPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-y-2">
-                        <div><span className="text-gray-500">Unit:</span> {product.priceUnit}</div>
-                        <div><span className="text-gray-500">Price:</span> ₱{product.price}</div>
+                      <div className='grid grid-cols-2 gap-y-2'>
                         <div>
-                          <span className='text-gray-500'>Unit:</span> {product.unit}
+                          <span className='text-gray-500'>Unit:</span> {product.priceUnit}
                         </div>
                         <div>
                           <span className='text-gray-500'>Price:</span> ₱{product.price}
                         </div>
+
+                        {/* ✅ CHANGED: removed product.unit duplicate (it doesn't exist) */}
+
                         <div>
                           <span className='text-gray-500'>Status:</span>{' '}
                           <span
@@ -260,25 +270,26 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Modal */}
-        <ProductModal
-          open={isProductModalOpen}
-          mode={productModalMode}
-          initialValues={productModalInitialValues}
-          onClose={closeModal}
-          onConfirm={(updatedProducts) => {
-            setProducts(updatedProducts.map(p => ({
-              id: p.id,
-              name: p.name,
-              sku: p.sku,
-              image: p.imageUrl,
-              price: p.currentPrice,
-              priceUnit: p.priceUnit,
-              status: p.isActive ? 'Available' : 'Not Available'
-            })));
-          }}
-        />
-
+        {/* ✅ CHANGED: modal render matches reseller pattern (conditional render + product prop) */}
+        {isProductModalOpen && (
+          <ProductModal
+            onClose={closeModal}
+            product={productModalMode === 'edit' ? productModalInitialValues : null}
+            onConfirm={(updatedProducts) => {
+              setProducts(
+                updatedProducts.map((p) => ({
+                  id: p.id,
+                  name: p.name,
+                  sku: p.sku,
+                  image: p.imageUrl,
+                  price: p.currentPrice,
+                  priceUnit: p.priceUnit,
+                  status: p.isActive ? 'Available' : 'Not Available'
+                }))
+              )
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -439,25 +450,26 @@ export default function ProductsPage() {
         </TableContainer>
       </Box>
 
-      {/* Product modal */}
-      <ProductModal
-        open={isProductModalOpen}
-        mode={productModalMode}
-        initialValues={productModalInitialValues}
-        onClose={closeModal}
-        onConfirm={(updatedProducts) => {
-          setProducts(updatedProducts.map(p => ({
-            id: p.id,
-            name: p.name,
-            sku: p.sku,
-            image: p.imageUrl,
-            price: p.currentPrice,
-            priceUnit: p.priceUnit,
-            status: p.isActive ? 'Available' : 'Not Available'
-          })));
-        }}
-      />
-
+      {/* ✅ CHANGED: modal render matches reseller pattern (conditional render + product prop) */}
+      {isProductModalOpen && (
+        <ProductModal
+          onClose={closeModal}
+          product={productModalMode === 'edit' ? productModalInitialValues : null}
+          onConfirm={(updatedProducts) => {
+            setProducts(
+              updatedProducts.map((p) => ({
+                id: p.id,
+                name: p.name,
+                sku: p.sku,
+                image: p.imageUrl,
+                price: p.currentPrice,
+                priceUnit: p.priceUnit,
+                status: p.isActive ? 'Available' : 'Not Available'
+              }))
+            )
+          }}
+        />
+      )}
     </Box>
   )
 }
