@@ -7,9 +7,9 @@ import AddIcon from '@mui/icons-material/Add'
 
 import ProductTable from './ProductTable'
 import ProductMobile from './ProductMobile'
-import ProductModal from './ProductModal'
 import ProductFilter from './ProductFilter'
 import ProductSortDialog from './ProductSortDialog'
+import ProductFormModal from './ProductFormModal'
 
 export default function ProductPage() {
   const isDesktop = useMediaQuery('(min-width:900px)')
@@ -25,7 +25,7 @@ export default function ProductPage() {
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [productModalMode, setProductModalMode] = useState('create')
-  const [productModalInitialValues, setProductModalInitialValues] = useState({})
+  const [productModalInitialValues, setProductModalInitialValues] = useState(null)
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -57,7 +57,7 @@ export default function ProductPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this product?')) return
-    setProducts(products.filter((p) => p.id !== id))
+    setProducts((prev) => prev.filter((p) => p.id !== id))
   }
 
   const filteredProducts = products
@@ -71,20 +71,25 @@ export default function ProductPage() {
 
   const openCreateModal = () => {
     setProductModalMode('create')
-    setProductModalInitialValues({})
+    setProductModalInitialValues(null)
     setIsProductModalOpen(true)
   }
 
   const openEditModal = (product) => {
     setProductModalMode('edit')
+
+    // shape ProductFormModal expects
     setProductModalInitialValues({
-      productName: product.name,
-      amount: product.price,
-      priceUnit: product.priceUnit,
+      id: product.id,
+      name: product.name,
       sku: product.sku,
-      status: product.status,
-      imageFile: null
+      currentPrice: product.price,
+      priceUnit: product.priceUnit,
+      isActive: product.status === 'Available',
+      imageUrl: product.image,
+      description: '' // keep empty for now
     })
+
     setIsProductModalOpen(true)
   }
 
@@ -128,12 +133,7 @@ export default function ProductPage() {
               onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
             />
 
-            <ProductTable
-              products={filteredProducts}
-              loading={loading}
-              onEdit={openEditModal}
-              onDelete={handleDelete}
-            />
+            <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={handleDelete} />
           </Box>
         </Box>
       ) : (
@@ -160,25 +160,26 @@ export default function ProductPage() {
         }}
       />
 
-      <ProductModal
-        open={isProductModalOpen}
-        mode={productModalMode}
-        initialValues={productModalInitialValues}
-        onClose={closeModal}
-        onConfirm={(updatedProducts) => {
-          setProducts(
-            updatedProducts.map((p) => ({
-              id: p.id,
-              name: p.name,
-              sku: p.sku,
-              image: p.imageUrl,
-              price: p.currentPrice,
-              priceUnit: p.priceUnit,
-              status: p.isActive ? 'Available' : 'Not Available'
-            }))
-          )
-        }}
-      />
+      {/* modal does NOT use open/mode/initialValues props */}
+      {isProductModalOpen && (
+        <ProductFormModal
+          onClose={closeModal}
+          product={productModalMode === 'edit' ? productModalInitialValues : null}
+          onConfirm={(updatedProducts) => {
+            setProducts(
+              updatedProducts.map((p) => ({
+                id: p.id,
+                name: p.name,
+                sku: p.sku,
+                image: p.imageUrl,
+                price: p.currentPrice,
+                priceUnit: p.priceUnit,
+                status: p.isActive ? 'Available' : 'Not Available'
+              }))
+            )
+          }}
+        />
+      )}
     </>
   )
 }
