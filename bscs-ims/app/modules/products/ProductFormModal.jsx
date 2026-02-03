@@ -16,11 +16,7 @@ const defaultValues = {
   imageFile: null
 }
 
-export default function ProductFormModal({
-  onClose,
-  product = null,
-  onConfirm
-}) {
+export default function ProductFormModal({ onClose, product = null, onConfirm }) {
   const [form, setForm] = useState({
     ...defaultValues,
     ...(product
@@ -39,34 +35,28 @@ export default function ProductFormModal({
   const [imagePreviewUrl, setImagePreviewUrl] = useState('')
 
   useEffect(() => {
-    if (product?.imageUrl && !imagePreviewUrl) {
+    if (product?.imageUrl) {
       setImagePreviewUrl(product.imageUrl)
       setImageName('Current image')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product])
 
   const title = product ? 'Edit Product' : 'Create Product'
   const subtitle = product ? 'Update the product details.' : 'Fill out the details for the new product.'
 
-  // ✅ FIX: Only require description + image on CREATE, not on EDIT
   const isValid = useMemo(() => {
     if (!form.productName?.trim()) return false
     if (!form.sku?.trim()) return false
+
     if (String(form.amount).trim() === '') return false
     const n = Number(form.amount)
     if (Number.isNaN(n)) return false
+
     if (!form.priceUnit?.trim()) return false
     if (!form.status?.trim()) return false
-
-    // Create-only required fields
-    if (!product) {
-      if (!form.description?.trim()) return false
-      if (!imagePreviewUrl && !form.imageFile) return false
-    }
-
+    if (!form.description?.trim()) return false
     return true
-  }, [form, imagePreviewUrl, product])
+  }, [form])
 
   const handleImageChange = (e) => {
     const f = e.target.files?.[0] || null
@@ -89,7 +79,7 @@ export default function ProductFormModal({
         sku: form.sku.trim(),
         currentPrice: Number(form.amount),
         priceUnit: form.priceUnit,
-        imageUrl: imagePreviewUrl || '',
+        imageUrl: imagePreviewUrl || '', // temporary until real upload
         isActive: form.status === 'Active',
         description: form.description
       }
@@ -116,8 +106,8 @@ export default function ProductFormModal({
   }
 
   return (
-    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-[1400]'>
-      <div className='bg-white w-full max-w-[680px] max-h-[90vh] overflow-y-auto rounded-xl shadow-xl relative'>
+    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
+      <div className='bg-white w-170 max-h-[90vh] overflow-y-auto rounded-xl shadow-xl relative'>
         {/* Header */}
         <div className='flex items-center justify-between px-7 pt-6 pb-1'>
           <div>
@@ -136,7 +126,6 @@ export default function ProductFormModal({
 
         <Separator className='my-4 mx-7' />
 
-        {/* Fields */}
         <ProductFormFields
           form={form}
           setForm={setForm}
@@ -145,7 +134,6 @@ export default function ProductFormModal({
           onImageChange={handleImageChange}
         />
 
-        {/* Footer */}
         <Separator />
         <div className='flex items-center justify-end gap-3 px-7 py-4'>
           <Button
@@ -159,7 +147,8 @@ export default function ProductFormModal({
           <Button
             onClick={handleSubmit}
             disabled={!isValid}
-            className='bg-[#1e40af] text-white hover:bg-[#1e3a8a] px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
+           className='bg-[#1F384C] text-white hover:bg-[#162A3F] px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
+
           >
             {product ? 'Update' : 'Confirm'}
           </Button>
