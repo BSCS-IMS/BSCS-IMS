@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
+
 import {
 	Box,
 	Typography,
@@ -28,8 +29,11 @@ import SortIcon from '@mui/icons-material/Sort'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
-
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined'
 import CreateResellerModal from './components/ResellerFormModal'
+import Avatar from '@mui/material/Avatar'
+import ImageIcon from '@mui/icons-material/Image'
+
 
 function AssignedProductsCell({ resellerId }) {
 	const [products, setProducts] = useState([])
@@ -62,6 +66,8 @@ export default function ResellersPage() {
 	const [resellers, setResellers] = useState([])
 	const [openForm, setOpenForm] = useState(false)
 	const [editingReseller, setEditingReseller] = useState(null)
+	const [sortOrder, setSortOrder] = useState('asc')
+
 
 	// 🔥 SINGLE SOURCE OF TRUTH - Resellers
 	const fetchResellers = async () => {
@@ -81,9 +87,17 @@ export default function ResellersPage() {
 	}, [])
 
 	// Search filter
-	const filtered = resellers.filter(r =>
+	const filtered = resellers
+	.filter(r =>
 		r.businessName?.toLowerCase().includes(search.toLowerCase())
 	)
+	.sort((a, b) => {
+		if (sortOrder === 'asc') {
+			return a.businessName.localeCompare(b.businessName)
+		}
+		return b.businessName.localeCompare(a.businessName)
+	})
+
 
 	// Delete reseller
 	async function handleDelete(id) {
@@ -124,145 +138,336 @@ export default function ResellersPage() {
 		<Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
 			<Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
 				{/* Header */}
-				<Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-					<Typography variant="h5" fontWeight={700}>
+				<Stack
+					direction="row"
+					justifyContent="space-between"
+					alignItems="center"
+					mb={5}
+				>
+					<Typography
+						variant="h4"
+						fontWeight={700}
+						sx={{ color: '#1F384C' }}
+					>
 						Resellers
 					</Typography>
 
 					<Button
-						startIcon={<AddIcon />}
 						variant="text"
-						sx={{ textTransform: 'none', fontWeight: 500 }}
+						sx={{
+							color: '#1F384C',
+							flexDirection: 'column',
+							minWidth: 'auto',
+							textTransform: 'none',
+							px: 1.5,
+							py: 1,
+							'&:hover': {
+								bgcolor: '#f3f4f6'
+							}
+						}}
 						onClick={() => {
 							setEditingReseller(null)
 							setOpenForm(true)
 						}}
 					>
-						Add
+						<AddIcon sx={{ fontSize: 24 }} />
+						Create
 					</Button>
 				</Stack>
 
+
 				{/* Search */}
-				<Paper sx={{ p: 2, mb: 2 }}>
+				<Box sx={{ mb: 5 }}>
 					<Stack direction="row" spacing={2} alignItems="center">
 						<TextField
-							placeholder="Search"
+							placeholder="Search reseller..."
 							size="small"
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
-							sx={{ width: 700 }}
+							sx={{ flexGrow: 1 }}
 							InputProps={{
 								startAdornment: (
 									<InputAdornment position="start">
-										<SearchIcon fontSize="small" />
+										<SearchIcon fontSize="small" sx={{ color: '#6b7280' }} />
 									</InputAdornment>
 								),
 								endAdornment: (
 									<InputAdornment position="end">
 										<Button
 											variant="contained"
+											size="small"
 											sx={{
-												backgroundColor: '#1F384C',
+												bgcolor: '#1F384C',
+												color: '#fff',
 												textTransform: 'none',
-												height: 30,
-												'&:hover': { backgroundColor: '#162A3F' }
+												minWidth: '70px',
+												borderRadius: 1.5,
+												'&:hover': { bgcolor: '#162A3F' }
 											}}
 										>
 											Search
 										</Button>
 									</InputAdornment>
-								)
+								),
+								sx: {
+									pr: 1,
+									borderRadius: 2,
+									height: '48px'
+								}
 							}}
 						/>
 
-						<Button startIcon={<FilterListIcon />} variant="outlined">
+						<Button
+							variant="text"
+							sx={{
+								color: '#1F384C',
+								flexDirection: 'column',
+								minWidth: 'auto',
+								textTransform: 'none',
+								height: '48px',
+								px: 2,
+								'&:hover': { bgcolor: '#f3f4f6' }
+							}}
+						>
+							<FilterAltOutlinedIcon sx={{ fontSize: 18 }} />
 							Filter
 						</Button>
 
-						<Button startIcon={<SortIcon />} variant="outlined">
-							Sort asc
-						</Button>
-
-						<Button startIcon={<SortIcon />} variant="outlined">
-							Sort desc
+						<Button
+							onClick={() =>
+								setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))
+							}
+							variant="text"
+							sx={{
+								color: '#1F384C',
+								flexDirection: 'column',
+								minWidth: 'auto',
+								textTransform: 'none',
+								height: '48px',
+								px: 2,
+								'&:hover': { bgcolor: '#f3f4f6' }
+							}}
+						>
+							<SortIcon sx={{ fontSize: 18 }} />
+							{sortOrder === 'asc' ? 'Sort A–Z' : 'Sort Z–A'}
 						</Button>
 					</Stack>
-				</Paper>
+				</Box>
+
 
 				{/* Table */}
-				<TableContainer component={Paper}>
-					<Table>
-						<TableHead sx={{ bgcolor: '#fafafa' }}>
+				<TableContainer component={Paper} sx={{ border: '1px solid #e5e7eb', boxShadow: 'none' }}>
+					<Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
+
+						<TableHead>
 							<TableRow>
-								<TableCell><b>Reseller</b></TableCell>
-								<TableCell><b>Products Owned</b></TableCell>
-								<TableCell><b>Contact number</b></TableCell>
-								<TableCell><b>Status</b></TableCell>
-								<TableCell align="center"><b>Actions</b></TableCell>
+								<TableCell
+									align="center"
+									sx={{
+										fontWeight: 600,
+										color: '#374151',
+										py: 2,
+										width: '10%',
+										borderRight: '1px solid #e5e7eb',
+										borderBottom: '2px solid #e5e7eb'
+									}}
+								>
+									Image
+								</TableCell>
+
+								<TableCell
+									sx={{
+										fontWeight: 600,
+										color: '#374151',
+										py: 2,
+										width: '25%',
+										borderRight: '1px solid #e5e7eb',
+										borderBottom: '2px solid #e5e7eb',
+										boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+									}}
+								>
+									Reseller
+								</TableCell>
+
+								<TableCell
+									sx={{
+										fontWeight: 600,
+										color: '#374151',
+										py: 2,
+										width: '35%',
+										borderRight: '1px solid #e5e7eb',
+										borderBottom: '2px solid #e5e7eb',
+										boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+									}}
+								>
+									Products Owned
+								</TableCell>
+
+								<TableCell
+									sx={{
+										fontWeight: 600,
+										color: '#374151',
+										py: 2,
+										width: '20%',
+										borderRight: '1px solid #e5e7eb',
+										borderBottom: '2px solid #e5e7eb',
+										boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+									}}
+								>
+									Contact Number
+								</TableCell>
+
+								<TableCell
+									align="center"
+									sx={{
+										fontWeight: 600,
+										color: '#374151',
+										py: 2,
+										width: '15%',
+										borderRight: '1px solid #e5e7eb',
+										borderBottom: '2px solid #e5e7eb',
+										boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+									}}
+								>
+									Status
+								</TableCell>
+
+
+								<TableCell
+									align="center"
+									sx={{
+										fontWeight: 600,
+										color: '#374151',
+										py: 2,
+										width: '15%',
+										borderBottom: '2px solid #e5e7eb',
+										boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+									}}
+								>
+									Actions
+								</TableCell>
 							</TableRow>
 						</TableHead>
 
 						<TableBody>
 							{filtered
 								.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-								.map((row) => {
+								.map((row) => (
+									<TableRow key={row.id}>
 
-									
-									return (
-										<TableRow key={row.id} hover>
-											<TableCell>{row.businessName}</TableCell>
-
-											{/* ✅ DITO NA LALABAS ANG ASSIGNED PRODUCT */}
-											<TableCell>
-												<AssignedProductsCell resellerId={row.id} />
-											</TableCell>
-
-
-											<TableCell>{row.contactNumber}</TableCell>
-
-											<TableCell>
-												<Chip
-													label={row.status === 'active' ? 'Active' : 'Not Active'}
-													size="small"
+										<TableCell
+											align="center"
+											sx={{
+												py: 2.5,
+												borderRight: '1px solid #e5e7eb'
+											}}
+										>
+											{row.imageUrl ? (
+												<Avatar
+													src={row.imageUrl}
+													alt={row.businessName}
 													sx={{
-														backgroundColor: row.status === 'active' ? '#2e7d32' : '#c62828',
-														color: '#fff',
-														fontWeight: 400,
-														borderRadius: '999px',
-														minWidth: 90,
-														textAlign: 'center'
+														width: 42,
+														height: 42,
+														mx: 'auto'
 													}}
 												/>
-											</TableCell>
+											) : (
+												<Avatar
+													sx={{
+														width: 42,
+														height: 42,
+														mx: 'auto',
+														bgcolor: '#E8F1FA',
+														color: '#1F384C'
+													}}
+												>
+													<ImageIcon fontSize="small" />
+												</Avatar>
+											)}
+										</TableCell>
 
 
+										<TableCell
+											sx={{
+												color: '#374151',
+												py: 2.5,
+												borderRight: '1px solid #e5e7eb',
+												fontWeight: 600
+											}}
+										>
+											{row.businessName}
+										</TableCell>
 
-											<TableCell align="center">
-												<Tooltip title="Edit">
-													<IconButton
-														onClick={() => {
-															setEditingReseller(row)
-															setOpenForm(true)
-														}}
-													>
-														<EditIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
-													</IconButton>
-												</Tooltip>
+										
 
-												<Tooltip title="Delete">
-													<IconButton onClick={() => handleDelete(row.id)}>
-														<DeleteIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
-													</IconButton>
-												</Tooltip>
-											</TableCell>
-										</TableRow>
-									)
-								})}
+										<TableCell
+											sx={{
+												color: '#374151',
+												py: 2.5,
+												borderRight: '1px solid #e5e7eb'
+											}}
+										>
+											<AssignedProductsCell resellerId={row.id} />
+										</TableCell>
+
+										<TableCell
+											sx={{
+												color: '#374151',
+												py: 2.5,
+												borderRight: '1px solid #e5e7eb'
+											}}
+										>
+											{row.contactNumber}
+										</TableCell>
+
+										<TableCell
+											align="center"
+											sx={{
+												
+												py: 2.5,
+												borderRight: '1px solid #e5e7eb'
+											}}
+										>
+											<Chip
+												label={row.status === 'active' ? 'Active' : 'Not Active'}
+												size="small"
+												sx={{
+													backgroundColor: row.status === 'active' ? '#2e7d32' : '#c62828',
+													color: '#fff',
+													fontWeight: 400,
+													borderRadius: '999px',
+													minWidth: 90,
+													textAlign: 'center'
+												}}
+											/>
+										</TableCell>
+
+										<TableCell align="center" sx={{ py: 2.5 }}>
+											<IconButton
+												onClick={() => {
+													setEditingReseller(row)
+													setOpenForm(true)
+												}}
+												sx={{ color: '#1F384C', mr: 1 }}
+											>
+												<EditIcon />
+											</IconButton>
+
+											<IconButton
+												onClick={() => handleDelete(row.id)}
+												sx={{ color: '#991b1b' }}
+											>
+												<DeleteIcon />
+											</IconButton>
+										</TableCell>
+									</TableRow>
+								))}
 						</TableBody>
-
 					</Table>
 
 					<TablePagination
+						rowsPerPageOptions={[5, 10, 25]}
 						component="div"
 						count={filtered.length}
 						page={page}
@@ -272,9 +477,9 @@ export default function ResellersPage() {
 							setRowsPerPage(parseInt(e.target.value, 10))
 							setPage(0)
 						}}
-						rowsPerPageOptions={[5, 10, 25]}
 					/>
 				</TableContainer>
+
 			</Box>
 
 			{/* Form Modal (Add/Edit) */}

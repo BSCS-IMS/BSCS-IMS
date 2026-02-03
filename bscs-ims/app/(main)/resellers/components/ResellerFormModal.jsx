@@ -15,6 +15,10 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
 
 	const [products, setProducts] = useState([]) // <-- products state
 	const [selectedProductId, setSelectedProductId] = useState('')
+	const [showProductDropdown, setShowProductDropdown] = useState(false)
+	const [previewImage, setPreviewImage] = useState(null)
+
+
 
 
 	// Pre-fill form kapag Edit mode
@@ -191,9 +195,17 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
 							<div className="border rounded-md p-2 flex items-center gap-2">
 								<input
 									type="file"
+									accept="image/*"
 									className="text-sm"
-									onChange={e => setForm({ ...form, image: e.target.files[0] })}
+									onChange={e => {
+										const file = e.target.files[0]
+										if (!file) return
+
+										setForm({ ...form, image: file })
+										setPreviewImage(URL.createObjectURL(file))
+									}}
 								/>
+
 							</div>
 						</div>
 
@@ -211,58 +223,79 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
 					</div>
 
 					{/* Assigned Products */}
-					<div>
-						<label className="text-sm font-medium">Assigned Products</label>
-						<div className="border rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
-						{products.map(p => (
-							<label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer">
-								<input
-									type="checkbox"
-									checked={
-										Array.isArray(form.assignedProducts) &&
-										form.assignedProducts.includes(p.id)
-									}
-									onChange={() => {
-										setForm(prev => {
-											const current = Array.isArray(prev.assignedProducts)
-												? prev.assignedProducts
-												: []
+						<div className="relative">
+							<label className="text-sm font-medium">Assigned Products</label>
 
-											const exists = current.includes(p.id)
+							{/* Input-like box */}
+							<div
+								onClick={() => setShowProductDropdown(prev => !prev)}
+								className="w-full border rounded-md px-3 py-2 mt-1 min-h-[42px]
+									flex flex-wrap gap-2 items-center cursor-pointer"
+							>
+								{form.assignedProducts.length === 0 && (
+									<span className="text-sm text-gray-400">Select products</span>
+								)}
 
-											return {
-												...prev,
-												assignedProducts: exists
-													? current.filter(id => id !== p.id)
-													: [...current, p.id]
-											}
-										})
-									}}
-								/>
-								{p.name}
-							</label>
-						))}
-
-					</div>
-
-						{Array.isArray(form.assignedProducts) && form.assignedProducts.length > 0 && (
-
-							<div className="mt-2 flex flex-wrap gap-2">
 								{products
 									.filter(p => form.assignedProducts.includes(p.id))
 									.map(p => (
 										<span
-											key={p.id}
-											className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full"
+											className="flex items-center gap-1 text-xs px-2 py-1
+												bg-[#E8F1FA] text-[#1F384C] rounded-full"
 										>
+
 											{p.name}
+											<button
+												onClick={e => {
+													e.stopPropagation()
+													setForm(prev => ({
+														...prev,
+														assignedProducts: prev.assignedProducts.filter(id => id !== p.id)
+													}))
+												}}
+												className="w-4 h-4 flex items-center justify-center
+													rounded-full text-[10px]
+													bg-[#D6E8F7] text-[#1F384C]
+													hover:bg-[#1F384C] hover:text-white
+													active:scale-90 transition cursor-pointer"
+											>
+												✕
+											</button>
+
 										</span>
 									))}
 							</div>
-						)}
 
+							{/* Dropdown */}
+							{showProductDropdown && (
+								<div className="absolute z-10 w-full mt-1 bg-white border rounded-md
+									shadow-md max-h-40 overflow-y-auto">
+									{products.map(p => {
+										const selected = form.assignedProducts.includes(p.id)
 
-					</div>
+										return (
+											<div
+												key={p.id}
+												onClick={() => {
+													setForm(prev => ({
+														...prev,
+														assignedProducts: selected
+															? prev.assignedProducts.filter(id => id !== p.id)
+															: [...prev.assignedProducts, p.id]
+													}))
+												}}
+												className={`px-3 py-2 text-sm cursor-pointer
+													hover:bg-[#1F384C]/10
+													${selected ? 'font-medium text-[#1F384C]' : ''}`}
+											>
+												{p.name}
+											</div>
+										)
+									})}
+								</div>
+							)}
+						</div>
+
 
 					{/* Description */}
 					<div>
@@ -287,7 +320,7 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
 
 					<button
 						onClick={handleSubmit}
-						className="px-5 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+						className="px-5 py-2 bg-[#1F384C] text-white rounded-md hover:bg-[#162A3F]"
 					>
 						Confirm
 					</button>
