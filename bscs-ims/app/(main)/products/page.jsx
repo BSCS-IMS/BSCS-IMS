@@ -89,7 +89,6 @@ export default function ProductsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this product?')) return
-
     setProducts(products.filter((p) => p.id !== id))
   }
 
@@ -110,8 +109,7 @@ export default function ProductsPage() {
 
   const openEditModal = (product) => {
     setProductModalMode('edit')
-
-    // ✅ CHANGED: shape matches ProductFormModal's expected "product" object
+    // shape matches ProductFormModal's expected "product" object
     setProductModalInitialValues({
       id: product.id,
       name: product.name,
@@ -122,21 +120,19 @@ export default function ProductsPage() {
       imageUrl: product.image,
       description: '' // not currently in your list; keep empty for now
     })
-
     setIsProductModalOpen(true)
   }
 
   const closeModal = () => setIsProductModalOpen(false)
   const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id))
 
+  // Mobile layout
   if (!isDesktop) {
     return (
       <div className='min-h-screen bg-[#f5f7fb] py-6 px-3 sm:px-6 relative'>
         <div className='max-w-6xl mx-auto space-y-4'>
-          {/* Header */}
           <h1 className='text-xl font-bold'>Products</h1>
 
-          {/* Floating Add Button */}
           <button
             onClick={openCreateModal}
             className='fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#1F384C] text-white shadow-lg flex items-center justify-center hover:bg-[#162A3F] active:scale-95 transition'
@@ -144,7 +140,6 @@ export default function ProductsPage() {
             <Plus size={24} />
           </button>
 
-          {/* Search + Filter */}
           <div className='bg-white rounded-lg p-3 shadow-sm space-y-2'>
             <div className='flex items-center gap-2'>
               <div className='flex-1 relative'>
@@ -194,10 +189,11 @@ export default function ProductsPage() {
             )}
           </div>
 
-          {/* Products */}
           <div className='space-y-3'>
             {filteredProducts.length === 0 && (
-              <div className='bg-white rounded-lg py-10 text-center text-gray-500 shadow-sm'>No products found</div>
+              <div className='bg-white rounded-lg py-10 text-center text-gray-500 shadow-sm'>
+                {loading ? 'Loading...' : 'No products found'}
+              </div>
             )}
 
             {filteredProducts.map((product) => {
@@ -215,6 +211,7 @@ export default function ProductsPage() {
                   {isOpen && (
                     <div className='px-4 pb-4 space-y-3 text-sm border-t'>
                       <div className='flex items-center gap-3 pt-3'>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={product.image} alt='' className='w-12 h-12 rounded-md object-cover' />
                         <div>
                           <div className='font-medium'>{product.name}</div>
@@ -229,9 +226,6 @@ export default function ProductsPage() {
                         <div>
                           <span className='text-gray-500'>Price:</span> ₱{product.price}
                         </div>
-
-                        {/* ✅ CHANGED: removed product.unit duplicate (it doesn't exist) */}
-
                         <div>
                           <span className='text-gray-500'>Status:</span>{' '}
                           <span
@@ -270,7 +264,6 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* ✅ CHANGED: modal render matches reseller pattern (conditional render + product prop) */}
         {isProductModalOpen && (
           <ProductModal
             onClose={closeModal}
@@ -294,16 +287,15 @@ export default function ProductsPage() {
     )
   }
 
+  // Desktop layout
   return (
     <Box sx={{ bgcolor: '#f5f7fb', minHeight: '100vh', py: 4 }}>
       <Box sx={{ maxWidth: 1100, mx: 'auto', px: 2 }}>
-        {/* Header */}
         <Stack direction='row' justifyContent='space-between' alignItems='center' mb={3}>
           <Typography variant='h5' fontWeight={700}>
             Products
           </Typography>
 
-          {/* Add button */}
           <Button
             variant='contained'
             disableElevation
@@ -324,7 +316,6 @@ export default function ProductsPage() {
           </Button>
         </Stack>
 
-        {/* Search + Actions */}
         <Paper sx={{ p: 2, mb: 2 }}>
           <Stack direction='row' spacing={2} alignItems='center'>
             <TextField
@@ -373,7 +364,6 @@ export default function ProductsPage() {
           </Stack>
         </Paper>
 
-        {/* Table */}
         <TableContainer component={Paper}>
           <Table>
             <TableHead sx={{ bgcolor: '#fafafa' }}>
@@ -398,6 +388,7 @@ export default function ProductsPage() {
                 </TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {filteredProducts.length === 0 ? (
                 <TableRow>
@@ -411,6 +402,7 @@ export default function ProductsPage() {
                     <TableCell align='center'>
                       <Avatar src={product.image} variant='rounded' />
                     </TableCell>
+
                     <TableCell align='center'>
                       <Box>
                         <Typography fontWeight={600}>{product.name}</Typography>
@@ -430,12 +422,14 @@ export default function ProductsPage() {
                         color={product.status === 'Available' ? 'success' : 'warning'}
                       />
                     </TableCell>
+
                     <TableCell align='center'>
                       <Tooltip title='Edit'>
                         <IconButton onClick={() => openEditModal(product)}>
                           <EditIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
                         </IconButton>
                       </Tooltip>
+
                       <Tooltip title='Delete'>
                         <IconButton onClick={() => handleDelete(product.id)}>
                           <DeleteIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
@@ -450,7 +444,6 @@ export default function ProductsPage() {
         </TableContainer>
       </Box>
 
-      {/* ✅ CHANGED: modal render matches reseller pattern (conditional render + product prop) */}
       {isProductModalOpen && (
         <ProductModal
           onClose={closeModal}
