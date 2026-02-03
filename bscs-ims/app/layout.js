@@ -4,6 +4,8 @@ import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { ConditionalLayout } from "../components/ui/conditional-layout"
+import TokenRefresher from "../components/ui/token-refresher";
+
 
 
 const inter = Inter({
@@ -58,6 +60,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang='en'>
       <body className={`${inter.variable} antialiased`}>
+        <TokenRefresher />
         <ConditionalLayout>{children}</ConditionalLayout>
         <Analytics />
       </body>
