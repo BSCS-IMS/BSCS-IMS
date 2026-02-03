@@ -28,38 +28,48 @@ export default function ProductModal({ open, mode = 'create', initialValues, onC
     setValues((p) => ({ ...p, [key]: val }))
   }
 
-  const handleConfirm = async () => {
+const handleConfirm = async () => {
   try {
-    const payload = {
-      name: values.productName.trim(),
-      sku: values.sku.trim(),
-      currentPrice: Number(values.amount),
-      priceUnit: values.priceUnit,
-      imageUrl: imagePreviewUrl || "", // temporary until Firebase Storage
-      isActive: values.status === "Active",
-    };
+    const formData = new FormData()
+    
+    formData.append('name', values.productName.trim())
+    formData.append('sku', values.sku.trim())
+    formData.append('currentPrice', values.amount)
+    formData.append('priceUnit', values.priceUnit)
+    
+    if (values.imageFile) {
+      formData.append('file', values.imageFile)
+    } else {
+      alert('Please upload an image')
+      return
+    }
 
     const res = await fetch("/api/products", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      body: formData,
+    })
 
-    const data = await res.json();
+    const data = await res.json()
 
     if (!data.success) {
-      alert(data.error);
-      return;
+      alert(data.error)
+      return
     }
 
-    onConfirm?.(data.products); // pass updated list back
-    onClose?.();
+    // ✅ Fetch updated products list
+    const listRes = await fetch("/api/products")
+    const listData = await listRes.json()
+    
+    if (listData.success) {
+      onConfirm?.(listData.products) // ✅ Pass the array
+    }
+    
+    onClose?.()
   } catch (err) {
-    console.error("Save failed:", err);
-    alert("Failed to save product");
+    console.error("Save failed:", err)
+    alert("Failed to save product")
   }
-};
-
+}
 
   const title = mode === 'create' ? 'Add Product' : 'Edit Product'
 

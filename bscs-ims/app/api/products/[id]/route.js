@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
 import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
+import { supabase } from '@/app/lib/supabaseClient'
+
+// Helper function to extract file path from Supabase URL
+function getFilePathFromUrl(url) {
+  try {
+    
+    const parts = url.split('/productimages/')
+    return parts[1] // Returns: products/1234-image.jpg
+  } catch (error) {
+    console.error('Error parsing URL:', error)
+    return null
+  }
+}
 
 // ----- GET single product for edit/update modal -----
 export async function GET(request) {
@@ -40,26 +53,17 @@ export async function PUT(request) {
     const url = new URL(request.url)
     const id = url.pathname.split('/').pop()
 
-    const body = await request.json()
-    const { name, imageUrl, currentPrice, priceUnit, isActive } = body
+    const formData = await request.formData()
+    const name = formData.get('name')
+    const currentPrice = parseFloat(formData.get('currentPrice'))
+    const priceUnit = formData.get('priceUnit')
+    const isActive = formData.get('isActive') === 'true'
+    const file = formData.get('file')
 
-    if (!name || !imageUrl || !priceUnit) {
+    // Basic validation
+    if (!name || !priceUnit || isNaN(currentPrice)) {
       return NextResponse.json(
-        { success: false, error: 'Name, imageUrl, and priceUnit are required' },
-        { status: 400 }
-      )
-    }
-
-    if (typeof currentPrice !== 'number') {
-      return NextResponse.json(
-        { success: false, error: 'currentPrice must be a number' },
-        { status: 400 }
-      )
-    }
-
-    if (typeof isActive !== 'boolean') {
-      return NextResponse.json(
-        { success: false, error: 'isActive must be boolean' },
+        { success: false, error: 'Name, currentPrice, and priceUnit are required' },
         { status: 400 }
       )
     }
@@ -74,11 +78,47 @@ export async function PUT(request) {
       )
     }
 
+    const existingProduct = snapshot.data()
+    let imageUrl = existingProduct.imageUrl
+
+    // If a new file is uploaded, handle image replacement
+    if (file && file.size > 0) {
+      // Delete old image from Supabase
+      const oldFilePath = getFilePathFromUrl(existingProduct.imageUrl)
+      if (oldFilePath) {
+        const { error: deleteError } = await supabase.storage
+          .from('productimages')
+          .remove([oldFilePath])
+        
+        if (deleteError) {
+          console.error('Error deleting old image:', deleteError)
+        }
+      }
+
+      // Upload new image to Supabase
+      const fileName = `products/${Date.now()}-${file.name}`
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('productimages')
+        .upload(fileName, file, { contentType: file.type })
+
+      if (uploadError) {
+        return NextResponse.json(
+          { success: false, error: `Image upload failed: ${uploadError.message}` },
+          { status: 500 }
+        )
+      }
+
+      // Get new public URL
+      const { data } = supabase.storage.from('productimages').getPublicUrl(fileName)
+      imageUrl = data.publicUrl
+    }
+
+    // Update Firestore document
     await updateDoc(docRef, {
       name: name.trim(),
-      imageUrl: imageUrl.trim(),
+      imageUrl,
       currentPrice,
-      priceUnit,
+      priceUnit: priceUnit.trim(),
       isActive,
       updatedAt: serverTimestamp()
     })
@@ -114,6 +154,22 @@ export async function DELETE(request) {
       )
     }
 
+    const product = snapshot.data()
+
+    // Delete image from Supabase
+    const filePath = getFilePathFromUrl(product.imageUrl)
+    if (filePath) {
+      const { error: deleteError } = await supabase.storage
+        .from('productimages')
+        .remove([filePath])
+      
+      if (deleteError) {
+        console.error('Error deleting image from Supabase:', deleteError)
+        // Continue with Firestore deletion even if image deletion fails
+      }
+    }
+
+    // Delete document from Firestore
     await deleteDoc(docRef)
 
     return NextResponse.json({
