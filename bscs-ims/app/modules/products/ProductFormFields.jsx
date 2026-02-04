@@ -1,8 +1,7 @@
-'use client'
-
 import { Upload } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function ProductFormFields({
@@ -77,12 +76,21 @@ export default function ProductFormFields({
             {!isEditMode && <span className='text-[#991b1b]'>*</span>}
           </Label>
 
-          <label className='cursor-pointer'>
+          <label className='cursor-pointer block'>
             <input type='file' accept='image/*' className='hidden' onChange={onImageChange} />
-            <span className='inline-flex items-center gap-2 w-full h-9 px-3 rounded-md border border-[#e5e7eb] bg-white text-sm text-[#374151] hover:bg-[#f3f4f6] transition cursor-pointer'>
-              <Upload size={15} className='text-[#6b7280] shrink-0' />
-              {imageName || (isEditMode ? 'Change image' : 'Browse')}
-            </span>
+            <Button
+              type='button'
+              variant='outline'
+              className='w-full h-9 justify-start gap-2 font-normal border-[#e5e7eb] hover:bg-[#f3f4f6]'
+              asChild
+            >
+              <span>
+                <Upload size={15} className='text-[#6b7280] shrink-0' />
+                <span className='truncate flex-1 text-left'>
+                  {imageName || (isEditMode ? 'Change image' : 'Browse')}
+                </span>
+              </span>
+            </Button>
           </label>
 
           <p className='text-xs text-[#9ca3af]'>PNG/JPG</p>
@@ -129,7 +137,7 @@ export default function ProductFormFields({
           <div className='h-12 w-16 overflow-hidden rounded-md border border-[#e5e7eb] bg-[#f3f4f6]'>
             <img src={imagePreviewUrl} alt='preview' className='h-full w-full object-cover' />
           </div>
-          <div className='text-xs text-[#6b7280]'>{imageName || 'Selected image'}</div>
+          <div className='text-xs text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
         </div>
       )}
     </div>
