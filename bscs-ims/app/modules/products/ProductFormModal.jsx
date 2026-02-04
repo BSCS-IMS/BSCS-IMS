@@ -13,24 +13,29 @@ const defaultValues = {
   priceUnit: 'Kg',
   status: 'Active',
   description: '',
-  imageFile: null
+  imageFile: null,
+  imageUrl: ''
 }
 
 export default function ProductFormModal({ onClose, product = null, onConfirm }) {
-  const [form, setForm] = useState({
-    ...defaultValues,
-    ...(product
-      ? {
-          sku: product.sku ?? '',
-          productName: product.name ?? product.productName ?? '',
-          amount: product.currentPrice ?? product.amount ?? '',
-          priceUnit: product.priceUnit ?? 'Kg',
-          status: product.isActive === false ? 'Inactive' : 'Active',
-          description: product.description ?? ''
-        }
-      : {})
-  })
+  // Initialize state based on product prop
+  const initialFormState = useMemo(() => {
+    if (product) {
+      return {
+        sku: product.sku ?? '',
+        productName: product.name ?? product.productName ?? '',
+        amount: product.currentPrice ?? product.amount ?? '',
+        priceUnit: product.priceUnit ?? 'Kg',
+        status: product.isActive === false ? 'Inactive' : 'Active',
+        description: product.description ?? '',
+        imageFile: null,
+        imageUrl: product.imageUrl || ''
+      }
+    }
+    return defaultValues
+  }, [product])
 
+  const [form, setForm] = useState(initialFormState)
   const [imageName, setImageName] = useState(product?.imageUrl ? 'Current image' : '')
   const [imagePreviewUrl, setImagePreviewUrl] = useState(product?.imageUrl || '')
 
@@ -48,8 +53,12 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
     if (!form.priceUnit?.trim()) return false
     if (!form.status?.trim()) return false
     if (!form.description?.trim()) return false
+
+    // For create mode, image is required
+    if (!product && !form.imageFile) return false
+
     return true
-  }, [form])
+  }, [form, product])
 
   const handleImageChange = (e) => {
     const f = e.target.files?.[0] || null
@@ -57,30 +66,53 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
     setForm((p) => ({ ...p, imageFile: f }))
     setImageName(f?.name || '')
 
+    // Clean up old blob URL
     if (imagePreviewUrl && imagePreviewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreviewUrl)
     }
 
-    if (f) setImagePreviewUrl(URL.createObjectURL(f))
-    else setImagePreviewUrl(product?.imageUrl || '')
+    if (f) {
+      setImagePreviewUrl(URL.createObjectURL(f))
+    } else if (form.imageUrl) {
+      // Revert to existing image if file is cleared in edit mode
+      setImagePreviewUrl(form.imageUrl)
+      setImageName('Current image')
+    } else {
+      setImagePreviewUrl('')
+    }
   }
 
   async function handleSubmit() {
     try {
-      const payload = {
-        name: form.productName.trim(),
-        sku: form.sku.trim(),
-        currentPrice: Number(form.amount),
-        priceUnit: form.priceUnit,
-        imageUrl: imagePreviewUrl || '',
-        isActive: form.status === 'Active',
-        description: form.description
+      const formData = new FormData()
+
+      formData.append('name', form.productName.trim())
+      formData.append('sku', form.sku.trim())
+      formData.append('currentPrice', form.amount)
+      formData.append('priceUnit', form.priceUnit)
+      formData.append('isActive', form.status === 'Active' ? 'true' : 'false')
+      formData.append('description', form.description)
+
+      // For edit mode, include existing imageUrl if no new file
+      if (product) {
+        formData.append('imageUrl', form.imageUrl)
       }
 
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      // Add new image file if selected
+      if (form.imageFile) {
+        formData.append('file', form.imageFile)
+      } else if (!product) {
+        // This shouldn't happen due to validation, but just in case
+        alert('Please upload an image')
+        return
+      }
+
+      const url = product ? `/api/products/${product.id}` : '/api/products'
+      const method = product ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        body: formData
       })
 
       const data = await res.json()
@@ -90,7 +122,14 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
         return
       }
 
-      onConfirm?.(data.products)
+      // Fetch updated products list
+      const listRes = await fetch('/api/products')
+      const listData = await listRes.json()
+
+      if (listData.success) {
+        onConfirm?.(listData.products)
+      }
+
       onClose?.()
     } catch (err) {
       console.error('Save failed:', err)
@@ -125,6 +164,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
           imageName={imageName}
           imagePreviewUrl={imagePreviewUrl}
           onImageChange={handleImageChange}
+          isEditMode={!!product}
         />
 
         <Separator />

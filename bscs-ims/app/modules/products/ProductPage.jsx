@@ -83,7 +83,6 @@ export default function ProductPage() {
 
   const openEditModal = (product) => {
     setProductModalMode('edit')
-
     setProductModalInitialValues({
       id: product.id,
       name: product.name,
@@ -94,7 +93,6 @@ export default function ProductPage() {
       imageUrl: product.image,
       description: ''
     })
-
     setIsProductModalOpen(true)
   }
 

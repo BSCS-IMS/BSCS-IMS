@@ -1,5 +1,5 @@
 'use client'
-
+import axios from 'axios'
 import { usePathname } from 'next/navigation'
 import {
   Sidebar,
@@ -54,9 +54,14 @@ const otheritems = [
 export function AppSidebar() {
   const pathname = usePathname()
 
-  const handleLogout = () => {
-    console.log('Logout clicked')
+  const handleLogout = async () => {
+  try {
+    const response = await axios.post('/api/logout')
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
   }
+}
 
   return (
     <Sidebar className='bg-[#F8F9FA]'>
