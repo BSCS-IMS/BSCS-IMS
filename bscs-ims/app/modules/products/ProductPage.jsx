@@ -139,7 +139,7 @@ export default function ProductPage() {
   return (
     <>
       <Box sx={{ minHeight: '100vh', py: 6 }}>
-        <Box sx={{ mx: 'auto', px: 5 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
           <Stack direction='row' justifyContent='space-between' alignItems='center' mb={5}>
             <Typography variant='h4' fontWeight={700} sx={{ color: '#1F384C' }}>
               Products
