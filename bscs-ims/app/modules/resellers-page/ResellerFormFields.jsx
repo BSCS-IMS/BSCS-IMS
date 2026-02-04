@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { Upload } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function ResellerFormFields({ form, setForm, products, imagePreview, onImageChange }) {
+  const [showProductDropdown, setShowProductDropdown] = useState(false)
+
   return (
     <div className='px-7 pb-6 space-y-5'>
-      {/* Reseller Name */}
       <div className='space-y-1.5'>
         <Label className='text-sm font-medium text-[#374151]'>
           Reseller Name <span className='text-[#991b1b]'>*</span>
@@ -19,7 +21,6 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         />
       </div>
 
-      {/* Contact + Address */}
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>Contact Number</Label>
@@ -41,7 +42,6 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         </div>
       </div>
 
-      {/* Upload Image + Status */}
       <div className='grid grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>Upload Image</Label>
@@ -74,25 +74,80 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         </div>
       </div>
 
-      {/* Assigned Products */}
-      <div className='space-y-1.5'>
-        <Label className='text-sm font-medium text-[#374151]'>Assigned Product</Label>
-        <Select value={form.assignedProduct} onValueChange={(value) => setForm({ ...form, assignedProduct: value })}>
-          <SelectTrigger className='w-full border-[#e5e7eb] cursor-pointer'>
-            <SelectValue placeholder='Select a product' />
-          </SelectTrigger>
-          <SelectContent>
+      <div className='relative space-y-1.5'>
+        <Label className='text-sm font-medium text-[#374151]'>Assigned Products</Label>
+        <div
+          onClick={() => setShowProductDropdown((prev) => !prev)}
+          className='w-full border border-[#e5e7eb] rounded-md px-3 py-2 min-h-[42px] flex flex-wrap gap-2 items-center cursor-pointer bg-white hover:bg-[#f9fafb] transition'
+        >
+          {form.assignedProducts.length === 0 && <span className='text-sm text-[#6b7280]'>Select products</span>}
+
+          {products
+            .filter((p) => form.assignedProducts.includes(p.id))
+            .map((p) => (
+              <span
+                key={p.id}
+                className='flex items-center gap-1 text-xs px-2 py-1 bg-[#E8F1FA] text-[#1F384C] rounded-full'
+              >
+                {p.name}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setForm((prev) => ({
+                      ...prev,
+                      assignedProducts: prev.assignedProducts.filter((id) => id !== p.id)
+                    }))
+                  }}
+                  className='w-4 h-4 flex items-center justify-center rounded-full text-[10px] bg-[#D6E8F7] text-[#1F384C] hover:bg-[#1F384C] hover:text-white active:scale-90 transition cursor-pointer'
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+        </div>
+
+        {showProductDropdown && (
+          <div className='absolute z-10 w-full mt-1 bg-white border border-[#e5e7eb] rounded-md shadow-md max-h-40 overflow-y-auto'>
             {products.length === 0 ? (
               <div className='px-3 py-4 text-center text-sm text-[#6b7280]'>No products available</div>
             ) : (
-              products.map((p) => (
-                <SelectItem key={p.id} value={p.id} className='cursor-pointer'>
-                  {p.name}
-                </SelectItem>
-              ))
+              products.map((p) => {
+                const selected = form.assignedProducts.includes(p.id)
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => {
+                      setForm((prev) => ({
+                        ...prev,
+                        assignedProducts: selected
+                          ? prev.assignedProducts.filter((id) => id !== p.id)
+                          : [...prev.assignedProducts, p.id]
+                      }))
+                    }}
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#1F384C]/10 ${
+                      selected ? 'font-medium text-[#1F384C]' : ''
+                    }`}
+                  >
+                    {p.name}
+                  </div>
+                )
+              })
             )}
-          </SelectContent>
-        </Select>
+          </div>
+        )}
+      </div>
+
+      <div className='space-y-1.5'>
+        <Label className='text-sm font-medium text-[#374151]'>
+          Description <span className='text-[#991b1b]'>*</span>
+        </Label>
+        <textarea
+          rows='3'
+          className='w-full border border-[#e5e7eb] rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1e40af]'
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder='Enter description'
+        />
       </div>
     </div>
   )
