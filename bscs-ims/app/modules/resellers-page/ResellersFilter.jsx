@@ -79,7 +79,7 @@ export default function ResellersFilters({ search, setSearch, onSortClick, sortO
           }}
         >
           <SortIcon sx={{ fontSize: 18 }} />
-          {sortOrder === 'asc' ? 'Sort A–Z' : 'Sort Z–A'}
+          Sort
         </Button>
       </Stack>
     </Box>
