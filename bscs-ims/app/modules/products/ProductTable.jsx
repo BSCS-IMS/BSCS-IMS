@@ -1,16 +1,20 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Avatar,
   Box,
   Chip,
   IconButton,
   Paper,
+  Skeleton,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   Tooltip,
   Typography
@@ -20,138 +24,228 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 
-export default function ProductTable({
-  products,
-  loading,
-  onEdit,
-  onDelete,
-  onAdd,
-  onMinus
-}) {
+export default function ProductTable({ products, loading, onEdit, onDelete, onAdd, onMinus }) {
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const paginatedProducts = products.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead sx={{ bgcolor: '#fafafa' }}>
+    <TableContainer component={Paper} sx={{ border: '1px solid #e5e7eb', boxShadow: 'none' }}>
+      <Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
+        <TableHead>
           <TableRow>
-            <TableCell align="center"><b>Image</b></TableCell>
-            <TableCell align="center"><b>Product Name (SKU)</b></TableCell>
-            <TableCell align="center"><b>Unit</b></TableCell>
-            <TableCell align="center"><b>Price</b></TableCell>
-            <TableCell align="center"><b>Status</b></TableCell>
-            <TableCell align="center"><b>Actions</b></TableCell>
+            <TableCell
+              align='center'
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '10%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Image
+            </TableCell>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '30%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Product Name (SKU)
+            </TableCell>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '15%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Price
+            </TableCell>
+            <TableCell
+              align='center'
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '15%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Status
+            </TableCell>
+            <TableCell
+              align='center'
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '30%',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Actions
+            </TableCell>
           </TableRow>
         </TableHead>
 
         <TableBody>
-          {products.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rounded' width={40} height={40} sx={{ mx: 'auto' }} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell align='center' sx={{ py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                {loading ? 'Loading...' : 'No products found'}
+              <TableCell colSpan={5} align='center' sx={{ py: 8, color: '#6b7280', boxShadow: 'none' }}>
+                No products found
               </TableCell>
             </TableRow>
           ) : (
-            products.map((product) => (
-              <TableRow key={product.id} hover sx={{ height: 72 }}>
-                <TableCell align="center">
-                  <Avatar src={product.image} variant="rounded" />
+            paginatedProducts.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell
+                  align='center'
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <Avatar src={product.image} variant='rounded' sx={{ mx: 'auto' }} />
                 </TableCell>
-
-                {/* ✅ CLICKABLE PRODUCT NAME */}
-                <TableCell align="center">
-                  <Box>
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <Stack
+                    spacing={0}
+                    tabIndex={0}
+                    role='button'
+                    onClick={() => onEdit(product)}
+                    onKeyDown={(e) => e.key === 'Enter' && onEdit(product)}
+                    sx={{
+                      cursor: 'pointer'
+                    }}
+                  >
                     <Typography
-                      tabIndex={0}
-                      role="button"
-                      onClick={() => onEdit(product)}
-                      onKeyDown={(e) => e.key === 'Enter' && onEdit(product)}
                       sx={{
                         fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-block',
-                        px: 0.5,
-                        borderRadius: 1,
-                        transition: 'all .2s ease',
-                        color: 'primary.main',
+                        color: '#1e40af',
                         '&:hover': {
-                          transform: 'scale(1.03)'
-                        },
-                        '&:focus-visible': {
-                          outline: '2px solid',
-                          outlineColor: 'primary.main',
-                          outlineOffset: 2,
-                          boxShadow: '0 0 8px rgba(25,118,210,.6)'
+                          textDecoration: 'underline'
                         }
                       }}
                     >
                       {product.name}
                     </Typography>
-        
-                    <Typography variant="caption" color="text.secondary"
-                      className="sku"
+                    <Typography
+                      component='span'
+                      variant='body2'
                       sx={{
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-block',
-                        px: 0.5,
-                        borderRadius: 1,
-                        transition: 'all .2s ease',
-                        color: 'primary.main',
-                        '&:hover': {
-                          transform: 'scale(1.03)'
-                        },
-                        '&:focus-visible': {
-                          outline: '2px solid',
-                          outlineColor: 'primary.main',
-                          outlineOffset: 2,
-                          boxShadow: '0 0 8px rgba(25,118,210,.6)'
-                        }
+                        color: '#1e40af',
+                        fontSize: '0.875rem'
                       }}
                     >
                       ({product.sku})
                     </Typography>
-                  </Box>
+                  </Stack>
                 </TableCell>
-
-                <TableCell align="center">{product.priceUnit}</TableCell>
-                <TableCell align="center">₱{product.price}</TableCell>
-
-                <TableCell align="center">
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  ₱
+                  {Number(product.price).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </TableCell>
+                <TableCell
+                  align='center'
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
                   <Chip
                     label={product.status}
-                    size="small"
-                    color={product.status === 'Available' ? 'success' : 'warning'}
+                    size='small'
+                    sx={{
+                      bgcolor: product.status === 'Available' ? '#e8f5e9' : '#fff3e0',
+                      color: product.status === 'Available' ? '#2e7d32' : '#e65100',
+                      fontWeight: 500,
+                      border: 'none'
+                    }}
                   />
                 </TableCell>
-
-                {/* ACTIONS */}
-                <TableCell align="center">
-                  <Tooltip title="Add">
-                    <IconButton onClick={() => onAdd(product)}>
-                      <AddIcon
-                        sx={{
-                          color: '#00c853',
-                          filter: 'drop-shadow(0 0 6px #00e676)',
-                          fontSize: 28
-                        }}
-                      />
+                <TableCell align='center' sx={{ py: 2.5, boxShadow: 'none' }}>
+                  <Tooltip title='Add'>
+                    <IconButton onClick={() => onAdd(product)} size='medium' sx={{ color: '#00c853', mr: 1 }}>
+                      <AddIcon />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Minus">
-                    <IconButton onClick={() => onMinus(product.id)}>
-                      <RemoveIcon
-                        sx={{
-                          color: '#d50000',
-                          filter: 'drop-shadow(0 0 6px #ff1744)',
-                          fontSize: 28
-                        }}
-                      />
+                  <Tooltip title='Minus'>
+                    <IconButton onClick={() => onMinus(product.id)} size='medium' sx={{ color: '#d50000', mr: 1 }}>
+                      <RemoveIcon />
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Delete">
-                    <IconButton onClick={() => onDelete(product.id)}>
-                      <DeleteIcon sx={{ fill: '#fff', stroke: '#000', strokeWidth: 1.5 }} />
+                  <Tooltip title='Delete'>
+                    <IconButton onClick={() => onDelete(product.id)} size='medium' sx={{ color: '#991b1b' }}>
+                      <DeleteIcon />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
@@ -160,6 +254,16 @@ export default function ProductTable({
           )}
         </TableBody>
       </Table>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        component='div'
+        count={products.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
     </TableContainer>
   )
 }

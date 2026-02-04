@@ -203,22 +203,22 @@ export default function ResellersTable({
                 </TableCell>
 
                 <TableCell
-                  align='center'
                   sx={{
+                    color: '#374151',
                     py: 2.5,
-                    borderRight: '1px solid #e5e7eb'
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
                   }}
+                  align='center'
                 >
                   <Chip
                     label={row.status === 'active' ? 'Active' : 'Not Active'}
                     size='small'
                     sx={{
-                      backgroundColor: row.status === 'active' ? '#2e7d32' : '#c62828',
-                      color: '#fff',
-                      fontWeight: 400,
-                      borderRadius: '999px',
-                      minWidth: 90,
-                      textAlign: 'center'
+                      bgcolor: row.status === 'active' ? '#e8f5e9' : '#fff3e0',
+                      color: row.status === 'active' ? '#2e7d32' : '#e65100',
+                      fontWeight: 500,
+                      border: 'none'
                     }}
                   />
                 </TableCell>
