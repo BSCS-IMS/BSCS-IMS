@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -31,15 +31,8 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
       : {})
   })
 
-  const [imageName, setImageName] = useState('')
-  const [imagePreviewUrl, setImagePreviewUrl] = useState('')
-
-  useEffect(() => {
-    if (product?.imageUrl) {
-      setImagePreviewUrl(product.imageUrl)
-      setImageName('Current image')
-    }
-  }, [product])
+  const [imageName, setImageName] = useState(product?.imageUrl ? 'Current image' : '')
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(product?.imageUrl || '')
 
   const title = product ? 'Edit Product' : 'Create Product'
   const subtitle = product ? 'Update the product details.' : 'Fill out the details for the new product.'
@@ -79,7 +72,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
         sku: form.sku.trim(),
         currentPrice: Number(form.amount),
         priceUnit: form.priceUnit,
-        imageUrl: imagePreviewUrl || '', // temporary until real upload
+        imageUrl: imagePreviewUrl || '',
         isActive: form.status === 'Active',
         description: form.description
       }
@@ -106,10 +99,10 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
   }
 
   return (
-    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
-      <div className='bg-white w-170 max-h-[90vh] overflow-y-auto rounded-xl shadow-xl relative'>
+    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4'>
+      <div className='bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-xl relative'>
         {/* Header */}
-        <div className='flex items-center justify-between px-7 pt-6 pb-1'>
+        <div className='flex items-center justify-between px-4 sm:px-7 pt-6 pb-1'>
           <div>
             <h2 className='text-lg font-semibold text-[#1F384C]'>{title}</h2>
             <p className='text-sm text-[#6b7280] mt-0.5'>{subtitle}</p>
@@ -124,7 +117,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
           </Button>
         </div>
 
-        <Separator className='my-4 mx-7' />
+        <Separator className='my-4 mx-4 sm:mx-7' />
 
         <ProductFormFields
           form={form}
@@ -135,7 +128,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
         />
 
         <Separator />
-        <div className='flex items-center justify-end gap-3 px-7 py-4'>
+        <div className='flex items-center justify-end gap-3 px-4 sm:px-7 py-4'>
           <Button
             variant='outline'
             onClick={onClose}
@@ -147,8 +140,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
           <Button
             onClick={handleSubmit}
             disabled={!isValid}
-           className='bg-[#1F384C] text-white hover:bg-[#162A3F] px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
-
+            className='bg-[#1F384C] text-white hover:bg-[#162A3F] px-5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed'
           >
             {product ? 'Update' : 'Confirm'}
           </Button>

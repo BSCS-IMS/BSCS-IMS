@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function ProductFormFields({ form, setForm, imageName, imagePreviewUrl, onImageChange }) {
   return (
-    <div className='px-7 pb-6 space-y-5'>
+    <div className='px-4 sm:px-7 pb-6 space-y-5'>
       {/* Product Name + SKU */}
-      <div className='grid grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>
             Product Name <span className='text-[#991b1b]'>*</span>
@@ -36,7 +36,7 @@ export default function ProductFormFields({ form, setForm, imageName, imagePrevi
       </div>
 
       {/* Amount + Price Unit */}
-      <div className='grid grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>
             Amount <span className='text-[#991b1b]'>*</span>
@@ -63,7 +63,7 @@ export default function ProductFormFields({ form, setForm, imageName, imagePrevi
       </div>
 
       {/* Upload Image + Status */}
-      <div className='grid grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>Upload Image</Label>
 
@@ -114,11 +114,9 @@ export default function ProductFormFields({ form, setForm, imageName, imagePrevi
         />
       </div>
 
-      {/* Preview box (optional but matches your old UI) */}
       {imagePreviewUrl && (
         <div className='flex items-center gap-3'>
           <div className='h-12 w-16 overflow-hidden rounded-md border border-[#e5e7eb] bg-[#f3f4f6]'>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={imagePreviewUrl} alt='preview' className='h-full w-full object-cover' />
           </div>
           <div className='text-xs text-[#6b7280]'>{imageName || 'Selected image'}</div>
