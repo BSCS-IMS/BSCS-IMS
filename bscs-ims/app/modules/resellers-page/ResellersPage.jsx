@@ -22,12 +22,14 @@ export default function ResellersPage() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [resellers, setResellers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [openForm, setOpenForm] = useState(false)
   const [editingReseller, setEditingReseller] = useState(null)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
   const [sortOrder, setSortOrder] = useState('asc')
 
   const fetchResellers = async () => {
+    setLoading(true)
     try {
       const res = await fetch('/api/resellers', { cache: 'no-store' })
       if (!res.ok) throw new Error('Failed to fetch resellers')
@@ -35,6 +37,8 @@ export default function ResellersPage() {
       setResellers(data)
     } catch (err) {
       console.error(err)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -160,6 +164,7 @@ export default function ResellersPage() {
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
           onEdit={handleEdit}
+          loading={loading}
           onDelete={handleDelete}
         />
 

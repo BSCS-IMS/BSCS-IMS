@@ -10,7 +10,8 @@ import {
   TablePagination,
   IconButton,
   Chip,
-  Avatar
+  Avatar,
+  Skeleton
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -36,6 +37,7 @@ function AssignedProductsCell({ resellerId }) {
 export default function ResellersTable({
   paginatedResellers,
   sortedResellers,
+  loading,
   page,
   rowsPerPage,
   onChangePage,
@@ -136,7 +138,30 @@ export default function ResellersTable({
         </TableHead>
 
         <TableBody>
-          {paginatedResellers.length > 0 ? (
+          {loading ? (
+            Array.from({ length: rowsPerPage }).map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='circular' width={42} height={42} sx={{ mx: 'auto' }} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell align='center' sx={{ py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : paginatedResellers.length > 0 ? (
             paginatedResellers.map((row) => (
               <TableRow key={row.id}>
                 <TableCell
