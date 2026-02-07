@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { LOGIN_STATIC_DATA } from '@/app/constants/navbar-login/constants'
 import { Eye, EyeOff } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -41,22 +42,31 @@ export default function LoginPage() {
 
   return (
     <div className='min-h-screen bg-linear-to-br from-gray-50 to-gray-100 flex flex-col'>
-      <div className='p-8 md:p-16 text-center md:text-left'>
-        <h1 className='text-3xl md:text-4xl font-bold bg-linear-to-r from-indigo-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent'>
+      <div className="flex items-center justify-center md:justify-start gap-1 p-5 md:pl-5">
+        <Image
+          src="/LOGO_CLEAR.png"
+          alt="BSCS Logo"
+          width={150}
+          height={150}
+          className="object-contain"
+          priority
+        />
+
+        <h1 className="text-3xl md:text-4xl font-bold text-[#5A67BA]">
           {LOGIN_STATIC_DATA.APP_NAME}
         </h1>
       </div>
 
       <div className='flex-1 flex items-center justify-center px-4 pb-30'>
-        <div className='w-full max-w-md'>
-          <div className='text-center mb-8'>
-            <h2 className='text-2xl font-semibold text-gray-900 mb-2'>{LOGIN_STATIC_DATA.WELCOME_TITLE}</h2>
-            <p className='text-gray-600 text-sm'>Please enter your details to sign in.</p>
+        <div className='w-full max-w-xl'>
+          <div className='text-center mb-10'>
+            <h2 className='text-3xl font-semibold text-[#5A67BA] mb-3'>{LOGIN_STATIC_DATA.WELCOME_TITLE}</h2>
+            <p className='text-gray-600 text-base'>Please enter your details to sign in.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className='space-y-5'>
-            <div className='space-y-2'>
-              <Label htmlFor='email' className='text-gray-700'>
+          <form onSubmit={handleSubmit} className='space-y-6'>
+            <div className='space-y-3'>
+              <Label htmlFor='email' className='text-[#5A67BA] text-base'>
                 Email
               </Label>
               <Input
@@ -65,13 +75,13 @@ export default function LoginPage() {
                 placeholder='Enter your email'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className='h-11'
+                className='h-14 text-base'
                 required
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='password' className='text-gray-700'>
+            <div className='space-y-3'>
+              <Label htmlFor='password' className='text-[#5A67BA] text-base'>
                 Password
               </Label>
               <div className='relative'>
@@ -81,24 +91,24 @@ export default function LoginPage() {
                   placeholder='Enter your password'
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className='h-11 pr-10'
+                  className='h-14 text-base pr-12'
                   required
                 />
                 <button
                   type='button'
                   onClick={() => setShowPassword(!showPassword)}
-                  className='cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors'
+                  className='cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors'
                 >
-                  {showPassword ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
+                  {showPassword ? <EyeOff className='h-5 w-5' /> : <Eye className='h-5 w-5' />}
                 </button>
               </div>
             </div>
 
-            {error && <p className='text-red-500 text-sm text-center bg-red-50 py-2 px-3 rounded-md'>{error}</p>}
+            {error && <p className='text-red-500 text-base text-center bg-red-50 py-3 px-4 rounded-md'>{error}</p>}
 
             <Button
               type='submit'
-              className='cursor-pointer w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-medium mt-6'
+              className='cursor-pointer w-full h-14 text-base bg-[#5A67BA] hover:bg-[#293582] text-white font-medium mt-8'
               disabled={isLoading}
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
@@ -108,7 +118,7 @@ export default function LoginPage() {
       </div>
 
       <div className='p-8 text-center md:text-right md:pr-16'>
-        <p className='text-gray-500 text-sm'>{LOGIN_STATIC_DATA.LOGIN_FOOTER}</p>
+        <p className='text-[#5A67BA] text-sm'>{LOGIN_STATIC_DATA.LOGIN_FOOTER}</p>
       </div>
     </div>
   )
