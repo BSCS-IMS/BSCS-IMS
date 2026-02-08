@@ -41,11 +41,11 @@ export default function ProductFormFields({
         </div>
       </div>
 
-      {/* Amount + Price Unit */}
+      {/* Amount + Price Unit (no asterisk) */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>
-            Amount <span className='text-[#991b1b]'>*</span>
+            Amount
           </Label>
           <Input
             placeholder='0'
@@ -57,7 +57,7 @@ export default function ProductFormFields({
 
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>
-            Price Unit <span className='text-[#991b1b]'>*</span>
+            Price Unit
           </Label>
           <Input
             placeholder='Kg'
@@ -68,12 +68,11 @@ export default function ProductFormFields({
         </div>
       </div>
 
-      {/* Upload Image + Status */}
+      {/* Upload Image + Status (no asterisk) */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>
-            {isEditMode ? 'Update image (optional)' : 'Upload image'}{' '}
-            {!isEditMode && <span className='text-[#991b1b]'>*</span>}
+            {isEditMode ? 'Update image (optional)' : 'Upload image'}
           </Label>
 
           <label className='cursor-pointer block'>
@@ -98,7 +97,7 @@ export default function ProductFormFields({
 
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>
-            Status <span className='text-[#991b1b]'>*</span>
+            Status
           </Label>
 
           <Select value={form.status || 'Active'} onValueChange={(value) => setForm({ ...form, status: value })}>
@@ -107,23 +106,16 @@ export default function ProductFormFields({
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value='Active' className='cursor-pointer'>
-                Active
-              </SelectItem>
-              <SelectItem value='Inactive' className='cursor-pointer'>
-                Inactive
-              </SelectItem>
+              <SelectItem value='Active' className='cursor-pointer'>Active</SelectItem>
+              <SelectItem value='Inactive' className='cursor-pointer'>Inactive</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* Description */}
+      {/* Description (no asterisk) */}
       <div className='space-y-1.5'>
-        <Label className='text-sm font-medium text-[#374151]'>
-          Description <span className='text-[#991b1b]'>*</span>
-        </Label>
-
+        <Label className='text-sm font-medium text-[#374151]'>Description</Label>
         <textarea
           className='min-h-28 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] outline-none focus:ring-2 focus:ring-[#c7d2fe]'
           placeholder='Write a short description...'
