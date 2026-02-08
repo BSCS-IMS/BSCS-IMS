@@ -60,13 +60,13 @@ export default function LoginPage() {
       <div className='flex-1 flex items-center justify-center px-4 pb-30'>
         <div className='w-full max-w-xl'>
           <div className='text-center mb-10'>
-            <h2 className='text-3xl font-semibold text-[#5A67BA] mb-3'>{LOGIN_STATIC_DATA.WELCOME_TITLE}</h2>
+            <h2 className='text-3xl font-semibold text-gray-900 mb-3'>{LOGIN_STATIC_DATA.WELCOME_TITLE}</h2>
             <p className='text-gray-600 text-base'>Please enter your details to sign in.</p>
           </div>
 
           <form onSubmit={handleSubmit} className='space-y-6'>
             <div className='space-y-3'>
-              <Label htmlFor='email' className='text-[#5A67BA] text-base'>
+              <Label htmlFor='email' className='text-gray-900 text-base'>
                 Email
               </Label>
               <Input
@@ -81,7 +81,7 @@ export default function LoginPage() {
             </div>
 
             <div className='space-y-3'>
-              <Label htmlFor='password' className='text-[#5A67BA] text-base'>
+              <Label htmlFor='password' className='text-gray-900 text-base'>
                 Password
               </Label>
               <div className='relative'>
