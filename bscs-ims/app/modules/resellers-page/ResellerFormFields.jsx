@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-export default function ResellerFormFields({ form, setForm, products, imagePreview, onImageChange }) {
+export default function ResellerFormFields({ form, setForm, products, imagePreview, onImageChange, errors }) {
   const [showProductDropdown, setShowProductDropdown] = useState(false)
 
   return (
@@ -17,8 +17,15 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
           placeholder='Enter reseller name'
           value={form.businessName}
           onChange={(e) => setForm({ ...form, businessName: e.target.value })}
-          className='border-[#e5e7eb]'
+          className={`border ${errors?.businessName ? 'border-red-500' : 'border-[#e5e7eb]'}`}
         />
+
+        {errors?.businessName && (
+          <p className='text-xs text-red-600 mt-1'>
+            {errors.businessName}
+          </p>
+        )}
+
       </div>
 
       <div className='grid grid-cols-2 gap-4'>
@@ -27,9 +34,19 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
           <Input
             placeholder='e.g. 09123456789'
             value={form.contactNumber}
-            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-            className='border-[#e5e7eb]'
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, '')
+              setForm({ ...form, contactNumber: value })
+            }}
+            className={`border ${errors?.contactNumber ? 'border-red-500' : 'border-[#e5e7eb]'}`}
           />
+
+          {errors?.contactNumber && (
+            <p className='text-xs text-red-600 mt-1'>
+              {errors.contactNumber}
+            </p>
+          )}
+
         </div>
         <div className='space-y-1.5'>
           <Label className='text-sm font-medium text-[#374151]'>Address</Label>

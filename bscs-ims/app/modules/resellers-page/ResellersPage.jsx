@@ -8,6 +8,8 @@ import ResellersTable from './ResellersTable'
 import ResellersSortDialog from './ResellersSortDialog'
 import ResellersMobileView from './ResellersMobileView'
 import CreateResellerModal from './ResellerFormModal'
+import { toast } from 'react-toastify'
+
 
 export default function ResellersPage() {
   const theme = useTheme()
@@ -32,15 +34,17 @@ export default function ResellersPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/resellers', { cache: 'no-store' })
-      if (!res.ok) throw new Error('Failed to fetch resellers')
+      if (!res.ok) throw new Error()
+
       const data = await res.json()
       setResellers(data)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      toast.error('Failed to load resellers')
     } finally {
       setLoading(false)
     }
   }
+
 
   useEffect(() => {
     fetchResellers()
@@ -63,14 +67,17 @@ export default function ResellersPage() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this reseller?')) return
 
-    const res = await fetch(`/api/resellers/${id}`, { method: 'DELETE' })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.message || 'Delete failed')
-      return
+    try {
+      const res = await fetch(`/api/resellers/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error()
+
+      setResellers(prev => prev.filter(r => r.id !== id))
+      toast.success('Reseller deleted')
+    } catch {
+      toast.error('Delete failed')
     }
-    setResellers((prev) => prev.filter((r) => r.id !== id))
   }
+
 
   const handleSortClick = (event) => {
     setSortAnchorEl(event.currentTarget)
@@ -113,11 +120,21 @@ export default function ResellersPage() {
         {openForm && (
           <CreateResellerModal
             reseller={editingReseller}
-            onClose={() => {
-              setOpenForm(false)
+            onSuccess={(mode) => {
+              toast.success(
+                mode === 'edit'
+                  ? 'Reseller updated successfully'
+                  : 'Reseller created successfully'
+              )
               fetchResellers()
+              setOpenForm(false)
             }}
+            onError={(msg) => {
+              toast.error(msg || 'Something went wrong')
+            }}
+            onClose={() => setOpenForm(false)}
           />
+
         )}
       </>
     )
@@ -180,11 +197,21 @@ export default function ResellersPage() {
       {openForm && (
         <CreateResellerModal
           reseller={editingReseller}
-          onClose={() => {
-            setOpenForm(false)
+          onSuccess={(mode) => {
+            toast.success(
+              mode === 'edit'
+                ? 'Reseller updated successfully'
+                : 'Reseller created successfully'
+            )
             fetchResellers()
+            setOpenForm(false)
           }}
+          onError={(msg) => {
+            toast.error(msg || 'Something went wrong')
+          }}
+          onClose={() => setOpenForm(false)}
         />
+
       )}
     </Box>
   )

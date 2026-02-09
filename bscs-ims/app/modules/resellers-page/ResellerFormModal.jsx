@@ -6,7 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import ResellerFormFields from './ResellerFormFields'
 
-export default function ResellerFormModal({ onClose, reseller = null }) {
+export default function ResellerFormModal({
+	onClose,
+	onSuccess,
+	onError,
+	reseller = null
+}) {
+
   const [form, setForm] = useState({
     businessName: reseller?.businessName || '',
     contactNumber: reseller?.contactNumber || '',
@@ -18,6 +24,8 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
   })
   const [products, setProducts] = useState([])
   const [imagePreview, setImagePreview] = useState(null)
+  const [errors, setErrors] = useState({})
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -62,53 +70,82 @@ export default function ResellerFormModal({ onClose, reseller = null }) {
     }
   }
 
+    const validateForm = () => {
+    const newErrors = {}
+
+    if (!form.businessName.trim()) {
+      newErrors.businessName = 'Business name is required'
+    }
+
+    if (!form.contactNumber.trim()) {
+      newErrors.contactNumber = 'Contact number is required'
+    } else if (!/^\d+$/.test(form.contactNumber)) {
+      newErrors.contactNumber = 'Contact number must contain numbers only'
+    }
+
+    setErrors(newErrors)
+
+    if (Object.keys(newErrors).length > 0) {
+      onError?.('Please fix the highlighted errors')
+      return false
+    }
+
+    return true
+  }
+
+
   async function handleSubmit() {
-    const method = reseller ? 'PATCH' : 'POST'
-    const url = reseller ? `/api/resellers/${reseller.id}` : '/api/resellers'
+    if (!validateForm()) return
+    try {
+      const method = reseller ? 'PATCH' : 'POST'
+      const url = reseller ? `/api/resellers/${reseller.id}` : '/api/resellers'
 
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        businessName: form.businessName,
-        contactNumber: form.contactNumber,
-        address: form.address,
-        status: form.status,
-        notes: form.description,
-        userId: 'SYSTEM'
-      })
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      alert('Failed to save reseller')
-      return
-    }
-
-    const resellerId = reseller ? reseller.id : data.id
-
-    if (reseller) {
-      await fetch(`/api/resellers-product/${resellerId}`, {
-        method: 'DELETE'
-      })
-    }
-
-    for (const productId of form.assignedProducts) {
-      await fetch('/api/resellers-product', {
-        method: 'POST',
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          resellerId,
-          productId,
-          isActive: true,
+          businessName: form.businessName,
+          contactNumber: form.contactNumber,
+          address: form.address,
+          status: form.status,
+          notes: form.description,
           userId: 'SYSTEM'
         })
       })
-    }
 
-    onClose()
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Failed to save reseller')
+
+      const resellerId = reseller ? reseller.id : data.id
+
+      if (reseller) {
+        await fetch(`/api/resellers-product/${resellerId}`, {
+          method: 'DELETE'
+        })
+      }
+
+      for (const productId of form.assignedProducts) {
+        await fetch('/api/resellers-product', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resellerId,
+            productId,
+            isActive: true,
+            userId: 'SYSTEM'
+          })
+        })
+      }
+
+      // 🔥 ITO ANG IMPORTANTE
+      onSuccess(reseller ? 'edit' : 'create')
+
+    } catch (err) {
+      console.error(err)
+      onError?.(err.message)
+    }
   }
+
 
   return (
     <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
