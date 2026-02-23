@@ -1,6 +1,6 @@
 'use client'
-
-import { usePathname } from 'next/navigation'
+import axios from 'axios'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,7 @@ import {
   SidebarHeader
 } from '@/components/ui/sidebar'
 import { ClipboardClock, ChartColumn, ShoppingCart, UserRound, Settings, Archive, LogOut } from 'lucide-react'
+import Image from 'next/image'
 
 const menuitems = [
   {
@@ -53,18 +54,31 @@ const otheritems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
-  const handleLogout = () => {
-    console.log('Logout clicked')
+  const handleLogout = async () => {
+  try {
+    const response = await axios.post('/api/logout')
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
   }
+}
 
   return (
     <Sidebar className='bg-[#F8F9FA]'>
       <SidebarHeader className='h-16 border-b border-[#E5E7EB] bg-[#F8F9FA]'>
         <div className='flex items-center gap-3 px-8 h-full'>
-          <div className='flex items-center justify-center w-8 h-8 rounded-full bg-[#1e40af] text-white font-bold text-sm shrink-0'>
-            M
+          <div className='flex items-center justify-center w-8 h-8 shrink-0'>
+            <Image
+              src="/LOGO_CLEAR.png"
+              alt="Murang Bigas Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain"
+            />
           </div>
+
           <div className='flex flex-col'>
             <h2 className='text-sm font-bold text-[#1e40af] leading-tight'>Murang Bigas</h2>
             <h2 className='text-sm font-bold text-[#1e40af] leading-tight'>Livelihood</h2>

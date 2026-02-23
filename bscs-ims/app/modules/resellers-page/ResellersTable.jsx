@@ -1,44 +1,50 @@
-'use client'
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  Avatar,
-  Box,
-  Chip,
-  IconButton,
   Paper,
-  Skeleton,
-  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
-  Tooltip,
-  Typography
+  TablePagination,
+  IconButton,
+  Chip,
+  Avatar,
+  Skeleton
 } from '@mui/material'
-
+import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import AddIcon from '@mui/icons-material/Add'
-import RemoveIcon from '@mui/icons-material/Remove'
+import ImageIcon from '@mui/icons-material/Image'
 
-export default function ProductTable({ products, loading, onEdit, onDelete, onAdd, onMinus }) {
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
+function AssignedProductsCell({ resellerId }) {
+  const [products, setProducts] = useState([])
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage)
-  }
+  useEffect(() => {
+    fetch(`/api/resellers-product/${resellerId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setProducts(d.products || [])
+      })
+      .catch((err) => console.error(err))
+  }, [resellerId])
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
+  if (!products.length) return '-'
 
-  const paginatedProducts = products.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  return products.map((p) => p.name).join(', ')
+}
 
+export default function ResellersTable({
+  paginatedResellers,
+  sortedResellers,
+  loading,
+  page,
+  rowsPerPage,
+  onChangePage,
+  onChangeRowsPerPage,
+  onEdit,
+  onDelete
+}) {
   return (
     <TableContainer component={Paper} sx={{ border: '1px solid #e5e7eb', boxShadow: 'none' }}>
       <Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
@@ -52,38 +58,54 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                 py: 2,
                 width: '10%',
                 borderRight: '1px solid #e5e7eb',
-                borderBottom: '2px solid #e5e7eb',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                borderBottom: '2px solid #e5e7eb'
               }}
             >
               Image
             </TableCell>
+
             <TableCell
               sx={{
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '30%',
+                width: '25%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
             >
-              Product Name (SKU)
+              Reseller
             </TableCell>
+
             <TableCell
               sx={{
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '15%',
+                width: '35%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
             >
-              Price
+              Products Owned
             </TableCell>
+
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '20%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Contact Number
+            </TableCell>
+
             <TableCell
               align='center'
               sx={{
@@ -98,13 +120,14 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
             >
               Status
             </TableCell>
+
             <TableCell
               align='center'
               sx={{
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '30%',
+                width: '15%',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
@@ -116,10 +139,10 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
 
         <TableBody>
           {loading ? (
-            Array.from({ length: 5 }).map((_, index) => (
+            Array.from({ length: rowsPerPage }).map((_, index) => (
               <TableRow key={`skeleton-${index}`}>
                 <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
-                  <Skeleton variant='rounded' width={40} height={40} sx={{ mx: 'auto' }} />
+                  <Skeleton variant='circular' width={42} height={42} sx={{ mx: 'auto' }} />
                 </TableCell>
                 <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
                   <Skeleton variant='rectangular' width='100%' height={24} />
@@ -128,6 +151,9 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                   <Skeleton variant='rectangular' width='100%' height={24} />
                 </TableCell>
                 <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={24} />
+                </TableCell>
+                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
                   <Skeleton variant='rectangular' width='100%' height={24} />
                 </TableCell>
                 <TableCell align='center' sx={{ py: 2.5 }}>
@@ -135,26 +161,72 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                 </TableCell>
               </TableRow>
             ))
-          ) : products.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} align='center' sx={{ py: 8, color: '#6b7280', boxShadow: 'none' }}>
-                No products found
-              </TableCell>
-            </TableRow>
-          ) : (
-            paginatedProducts.map((product) => (
-              <TableRow key={product.id}>
+          ) : paginatedResellers.length > 0 ? (
+            paginatedResellers.map((row) => (
+              <TableRow key={row.id}>
                 <TableCell
                   align='center'
                   sx={{
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb'
+                  }}
+                >
+                  {row.imageUrl ? (
+                    <Avatar
+                      src={row.imageUrl}
+                      alt={row.businessName}
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        mx: 'auto'
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        mx: 'auto',
+                        bgcolor: '#E8F1FA',
+                        color: '#1F384C'
+                      }}
+                    >
+                      <ImageIcon fontSize='small' />
+                    </Avatar>
+                  )}
+                </TableCell>
+
+                <TableCell
+                  sx={{
                     color: '#374151',
                     py: 2.5,
                     borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none'
+                    fontWeight: 600
                   }}
                 >
-                  <Avatar src={product.image} variant='rounded' sx={{ mx: 'auto' }} />
+                  {row.businessName}
                 </TableCell>
+
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb'
+                  }}
+                >
+                  <AssignedProductsCell resellerId={row.id} />
+                </TableCell>
+
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb'
+                  }}
+                >
+                  {row.contactNumber}
+                </TableCell>
+
                 <TableCell
                   sx={{
                     color: '#374151',
@@ -162,107 +234,49 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                     borderRight: '1px solid #e5e7eb',
                     boxShadow: 'none'
                   }}
-                >
-                  <Stack
-                    spacing={0}
-                    tabIndex={0}
-                    role='button'
-                    onClick={() => onEdit(product)}
-                    onKeyDown={(e) => e.key === 'Enter' && onEdit(product)}
-                    sx={{
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 600,
-                        color: '#1e40af',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }}
-                    >
-                      {product.name}
-                    </Typography>
-                    <Typography
-                      component='span'
-                      variant='body2'
-                      sx={{
-                        color: '#1e40af',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      ({product.sku})
-                    </Typography>
-                  </Stack>
-                </TableCell>
-                <TableCell
-                  sx={{
-                    color: '#374151',
-                    py: 2.5,
-                    borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none'
-                  }}
-                >
-                  ₱
-                  {Number(product.price).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
-                </TableCell>
-                <TableCell
                   align='center'
-                  sx={{
-                    color: '#374151',
-                    py: 2.5,
-                    borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none'
-                  }}
                 >
                   <Chip
-                    label={product.status}
+                    label={row.status === 'active' ? 'Active' : 'Not Active'}
                     size='small'
                     sx={{
-                      bgcolor: product.status === 'Available' ? '#e8f5e9' : '#fff3e0',
-                      color: product.status === 'Available' ? '#2e7d32' : '#e65100',
+                      bgcolor: row.status === 'active' ? '#e8f5e9' : '#fff3e0',
+                      color: row.status === 'active' ? '#2e7d32' : '#e65100',
                       fontWeight: 500,
                       border: 'none'
                     }}
                   />
                 </TableCell>
-                <TableCell align='center' sx={{ py: 2.5, boxShadow: 'none' }}>
-                  <Tooltip title='Add'>
-                    <IconButton onClick={() => onAdd(product)} size='medium' sx={{ color: '#00c853', mr: 1 }}>
-                      <AddIcon />
-                    </IconButton>
-                  </Tooltip>
 
-                  <Tooltip title='Minus'>
-                    <IconButton onClick={() => onMinus(product.id)} size='medium' sx={{ color: '#d50000', mr: 1 }}>
-                      <RemoveIcon />
-                    </IconButton>
-                  </Tooltip>
+                <TableCell align='center' sx={{ py: 2.5 }}>
+                  <IconButton onClick={() => onEdit(row)} sx={{ color: '#1F384C', mr: 1 }}>
+                    <EditIcon />
+                  </IconButton>
 
-                  <Tooltip title='Delete'>
-                    <IconButton onClick={() => onDelete(product.id)} size='medium' sx={{ color: '#991b1b' }}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
+                  <IconButton onClick={() => onDelete(row.id)} sx={{ color: '#991b1b' }}>
+                    <DeleteIcon />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} align='center' sx={{ py: 8, color: '#6b7280' }}>
+                No resellers found
+              </TableCell>
+            </TableRow>
           )}
         </TableBody>
       </Table>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25, 50]}
+        rowsPerPageOptions={[5, 10, 25]}
         component='div'
-        count={products.length}
-        rowsPerPage={rowsPerPage}
+        count={sortedResellers.length}
         page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
+        onPageChange={onChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={onChangeRowsPerPage}
       />
     </TableContainer>
   )

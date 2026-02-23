@@ -1,7 +1,10 @@
+export const runtime = "nodejs";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/app/lib/firebase";
 import { serialize } from "cookie";
 import { NextResponse } from "next/server";
+import { admin } from "@/app/lib/firebaseAdmin";
+
 
 export async function POST(request) {
   try {
@@ -15,18 +18,22 @@ export async function POST(request) {
       );
     }
 
-    // Sign in with Firebase
+    // Sign in with Firebase client SDK
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Get ID token (just for session storage)
-    const token = await user.getIdToken();
+    // Get short-lived ID token from Firebase client SDK
+    const idToken = await user.getIdToken();
 
-    // Create HTTP-only cookie for session management
-    const sessionCookie = serialize("session", token, {
+    // Create long-lived session cookie (5 days)
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days in milliseconds
+    const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
+
+    // Set HTTP-only cookie for browser
+    const cookie = serialize("session", sessionCookie, {
       httpOnly: true,
       path: "/",
-      maxAge: 60 * 60, // 1 hour
+      maxAge: expiresIn / 1000, // in seconds
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
@@ -43,7 +50,7 @@ export async function POST(request) {
       {
         status: 200,
         headers: {
-          "Set-Cookie": sessionCookie,
+          "Set-Cookie": cookie,
           "Content-Type": "application/json",
         },
       }
@@ -65,9 +72,6 @@ export async function POST(request) {
         break;
       case "auth/wrong-password":
         errorMessage = "Incorrect password";
-        break;
-      case "auth/invalid-credential":
-        errorMessage = "Invalid email or password";
         break;
       case "auth/too-many-requests":
         errorMessage = "Too many failed attempts. Please try again later";

@@ -1,40 +1,69 @@
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { admin } from '@/app/lib/firebaseAdmin'
 
-export async function GET() {
+// Helper: verify session and return decoded token
+async function getSession(req) {
+  const token = req.cookies.get('session')?.value
+  if (!token) return null
+
   try {
-    const inventoryRef = collection(db, 'inventory')
-    const snap = await getDocs(inventoryRef)
+    return await admin.auth().verifySessionCookie(token, true)
+  } catch (err) {
+    console.error('Invalid session cookie:', err.message)
+    return null
+  }
+}
 
-    const stocks = await Promise.all(
-      snap.docs.map(async (docSnap) => {
-        const data = docSnap.data()
+/* ==========================
+   GET - fetch all inventory
+========================== */
+export async function GET(req) {
+  try {
+    const session = await getSession(req)
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
 
-        // Fetch product name
-        const productSnap = await getDoc(doc(db, 'products', data.productId))
-        const productName = productSnap.exists() ? productSnap.data().name : 'Unknown Product'
+    // Fetch all data in parallel
+    const [inventorySnap, productsSnap, locationsSnap] = await Promise.all([
+      getDocs(collection(db, 'inventory')),
+      getDocs(query(collection(db, 'products'), where('isActive', '==', true))),
+      getDocs(collection(db, 'locations')),
+    ])
 
-        // Fetch location name
-        const locationSnap = await getDoc(doc(db, 'locations', data.locationId))
-        const locationName = locationSnap.exists() ? locationSnap.data().name : 'Unknown Location'
-
-        return {
-          id: docSnap.id,
-          productId: data.productId,
-          locationId: data.locationId,
-          locationName,
-          productName,
-          quantity: data.quantity
-        }
-      })
+    // Build lookup maps
+    const productMap = new Map(
+      productsSnap.docs.map((d) => [d.id, d.data()])
     )
+    const locationMap = new Map(
+      locationsSnap.docs.map((d) => [d.id, d.data()])
+    )
+
+    // Map inventory with resolved names
+    const stocks = inventorySnap.docs.map((docSnap) => {
+      const data = docSnap.data()
+
+      const product = productMap.get(data.productId)
+      const location = locationMap.get(data.locationId)
+
+      return {
+        id: docSnap.id,
+        productId: data.productId,
+        productName: product?.name ?? 'Unknown Product',
+        productImage: product?.imageUrl ?? null,
+        locationId: data.locationId,
+        locationName: location?.name ?? 'Unknown Location',
+        quantity: data.quantity ?? 0,
+      }
+    })
 
     return NextResponse.json({ success: true, data: stocks })
-  } catch (e) {
-    return NextResponse.json(
-      { success: false, error: e.message },
-      { status: 500 }
-    )
+  } catch (error) {
+    console.error('GET /inventory error:', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }

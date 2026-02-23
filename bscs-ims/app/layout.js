@@ -3,6 +3,8 @@
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import { ConditionalLayout } from "../components/ui/conditional-layout"
 import TokenRefresher from "../components/ui/token-refresher";
 
@@ -61,12 +63,24 @@ export default function RootLayout({ children }) {
     <html lang='en'>
       <body className={`${inter.variable} antialiased`}>
         <TokenRefresher />
-        <ConditionalLayout>{children}</ConditionalLayout>
+
+        <ConditionalLayout>
+          {children}
+        </ConditionalLayout>
+
+        {/* ✅ TOAST LIVES HERE */}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          theme="colored"
+        />
+
         <Analytics />
       </body>
     </html>
   )
 }
+
 
 // export default function RootLayout({ children }) {
 //   return (

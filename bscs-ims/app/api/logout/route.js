@@ -1,18 +1,42 @@
-import { serialize } from "cookie";
-import { NextResponse } from "next/server";
+export const runtime = 'nodejs'
 
-export async function POST() {
-  const expiredCookie = serialize("session", "", {
-    httpOnly: true,
-    path: "/",
-    expires: new Date(0),  // delete cookie immediately
-  });
+import { NextResponse } from 'next/server'
+import { serialize } from 'cookie'
+import { admin } from '@/app/lib/firebaseAdmin'
 
-  return new NextResponse(JSON.stringify({ message: "Logged out" }), {
-    status: 200,
-    headers: {
-      "Set-Cookie": expiredCookie,
-      "Content-Type": "application/json",
-    },
-  });
+/* ==========================
+   POST - logout
+========================== */
+export async function POST(req) {
+  try {
+    // Attempt to revoke the session in Firebase
+    const token = req.cookies.get('session')?.value
+    if (token) {
+      try {
+        const decoded = await admin.auth().verifySessionCookie(token)
+        await admin.auth().revokeRefreshTokens(decoded.sub)
+      } catch (err) {
+        // Session may already be expired or invalid — still proceed with logout
+        console.warn('Session revocation skipped:', err.message)
+      }
+    }
+
+    // Clear the cookie with the same attributes it was set with
+    const expiredCookie = serialize('session', '', {
+      httpOnly: true,
+      path: '/',
+      expires: new Date(0),
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    })
+
+    return NextResponse.json({ success: true, message: 'Logged out' }, {
+      status: 200,
+      headers: { 'Set-Cookie': expiredCookie },
+    })
+
+  } catch (error) {
+    console.error('POST /logout error:', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
 }

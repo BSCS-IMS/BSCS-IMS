@@ -1,85 +1,127 @@
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
 import {
   doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
   runTransaction,
+  serverTimestamp,
 } from 'firebase/firestore'
+import { admin } from '@/app/lib/firebaseAdmin'
 
+// Helper: verify session and return decoded token
+async function getSession(req) {
+  const token = req.cookies.get('session')?.value
+  if (!token) return null
+
+  try {
+    return await admin.auth().verifySessionCookie(token, true)
+  } catch (err) {
+    console.error('Invalid session cookie:', err.message)
+    return null
+  }
+}
+
+/* ==========================
+   POST - add stock to inventory
+========================== */
 export async function POST(request) {
   try {
+    const session = await getSession(request)
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { productId, locationId, quantity } = await request.json()
 
     // Input validation
-    if (!productId || !locationId || typeof quantity !== 'number') {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    if (!productId || !locationId) {
+      return NextResponse.json(
+        { success: false, error: 'productId and locationId are required' },
+        { status: 400 }
+      )
     }
 
-    if (quantity < 0) {
-      return NextResponse.json({ error: 'Quantity cannot be negative' }, { status: 400 })
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return NextResponse.json(
+        { success: false, error: 'Quantity must be a positive integer' },
+        { status: 400 }
+      )
     }
 
-    // Use transaction to ensure data consistency
     const inventoryId = `${productId}_${locationId}`
-    
+    let finalQuantity = 0
+
     await runTransaction(db, async (transaction) => {
-      // Check if product exists
       const productRef = doc(db, 'products', productId)
-      const productSnap = await transaction.get(productRef)
+      const locationRef = doc(db, 'locations', locationId)
+      const inventoryRef = doc(db, 'inventory', inventoryId)
+
+      // Fetch all in parallel within transaction
+      const [productSnap, locationSnap, inventorySnap] = await Promise.all([
+        transaction.get(productRef),
+        transaction.get(locationRef),
+        transaction.get(inventoryRef),
+      ])
+
+      // Validate product
       if (!productSnap.exists()) {
         throw new Error('Product not found')
       }
+      if (!productSnap.data().isActive) {
+        throw new Error('Product is inactive')
+      }
 
-      // Check if location exists
-      const locationRef = doc(db, 'locations', locationId)
-      const locationSnap = await transaction.get(locationRef)
+      // Validate location
       if (!locationSnap.exists()) {
         throw new Error('Location not found')
       }
 
-      // Get or create inventory record
-      const inventoryRef = doc(db, 'inventory', inventoryId)
-      const inventorySnap = await transaction.get(inventoryRef)
-
       if (inventorySnap.exists()) {
-        // Update existing quantity
-        const currentQty = inventorySnap.data().quantity || 0
-        transaction.set(
-          inventoryRef,
-          {
-            productId,
-            locationId,
-            quantity: currentQty + quantity,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        )
+        // Update existing record
+        const currentQty = inventorySnap.data().quantity ?? 0
+        finalQuantity = currentQty + quantity
+
+        transaction.update(inventoryRef, {
+          quantity: finalQuantity,
+          updatedAt: serverTimestamp(),
+          updatedByEmail: session.email,
+          updatedByUid: session.uid,
+        })
       } else {
-        // Create new inventory record
+        // Create new record
+        finalQuantity = quantity
+
         transaction.set(inventoryRef, {
-          id: inventoryId,
           productId,
           locationId,
-          quantity,
+          quantity: finalQuantity,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
+          createdByEmail: session.email,
+          createdByUid: session.uid,
         })
       }
     })
 
-    return NextResponse.json({ success: true, inventoryId })
+    return NextResponse.json({
+      success: true,
+      inventoryId,
+      finalQuantity,
+    })
+
   } catch (err) {
-    // Handle specific errors
     if (err.message === 'Product not found') {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 })
+    }
+    if (err.message === 'Product is inactive') {
+      return NextResponse.json({ success: false, error: 'Product is inactive' }, { status: 400 })
     }
     if (err.message === 'Location not found') {
-      return NextResponse.json({ error: 'Location not found' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'Location not found' }, { status: 404 })
     }
-    
-    console.error('Inventory update error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+
+    console.error('POST /inventory error:', err)
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 })
   }
 }
