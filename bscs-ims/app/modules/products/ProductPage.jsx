@@ -11,6 +11,7 @@ import ProductFilter from './ProductFilter'
 import ProductSortDialog from './ProductSortDialog'
 import ProductFormModal from './ProductFormModal'
 import InventoryAdjustModal from './InventoryAdjustModal'
+import DeleteProductModal from './DeleteProductModal'
 
 export default function ProductPage() {
   const theme = useTheme()
@@ -38,6 +39,9 @@ export default function ProductPage() {
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false)
   const [inventoryModalMode, setInventoryModalMode] = useState('add')
   const [inventoryModalProduct, setInventoryModalProduct] = useState(null)
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [deleteModalProduct, setDeleteModalProduct] = useState(null)
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -83,9 +87,14 @@ export default function ProductPage() {
     fetchInventory()
   }, [])
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this product?')) return
-    setProducts((prev) => prev.filter((p) => p.id !== id))
+  const openDeleteModal = (product) => {
+    setDeleteModalProduct(product)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setDeleteModalProduct(null)
   }
 
   const filteredProducts = products
@@ -208,7 +217,7 @@ export default function ProductPage() {
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
           />
 
-          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={handleDelete} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
+          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={openDeleteModal} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
         </Box>
       </Box>
 
@@ -236,6 +245,14 @@ export default function ProductPage() {
           onClose={closeInventoryModal}
           product={inventoryModalProduct}
           mode={inventoryModalMode}
+          onSuccess={refreshData}
+        />
+      )}
+
+      {isDeleteModalOpen && deleteModalProduct && (
+        <DeleteProductModal
+          onClose={closeDeleteModal}
+          product={deleteModalProduct}
           onSuccess={refreshData}
         />
       )}

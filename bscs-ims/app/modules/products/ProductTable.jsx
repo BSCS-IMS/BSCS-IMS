@@ -322,7 +322,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
 
                     <Tooltip title='Delete Product'>
                       <IconButton
-                        onClick={() => onDelete(product.id)}
+                        onClick={() => onDelete(product)}
                         size='small'
                         sx={{
                           bgcolor: '#ffebee',

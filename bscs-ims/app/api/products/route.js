@@ -22,7 +22,7 @@ async function getSession(req) {
 }
 
 /* ==========================
-   GET - fetch all products
+   GET - fetch all non-deleted products
 ========================== */
 export async function GET(req) {
   try {
@@ -32,7 +32,9 @@ export async function GET(req) {
     }
 
     const snapshot = await getDocs(collection(db, 'products'))
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    const products = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(product => !product.deletedAt)
     return NextResponse.json({ success: true, products })
   } catch (error) {
     console.error('GET /products error:', error)

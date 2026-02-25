@@ -72,7 +72,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
@@ -102,7 +102,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
@@ -183,7 +183,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
@@ -197,9 +197,8 @@ export async function DELETE(request, { params }) {
     // Delete image from Supabase
     await deleteImage(product.imageUrl)
 
-    // Soft delete — preserves history
+    // Soft delete — preserves history (does not modify isActive as it's user-controllable)
     await updateDoc(docRef, {
-      isActive: false,
       deletedAt: serverTimestamp(),
       deletedByEmail: session.email,
       deletedByUid: session.uid,
