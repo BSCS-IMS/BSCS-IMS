@@ -1,6 +1,8 @@
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore'
 
 export async function GET(req, { params }) {
 	try {
@@ -30,7 +32,31 @@ export async function GET(req, { params }) {
 
 		return NextResponse.json({ products })
 	} catch (err) {
-		console.error('RESSELLER PRODUCTS ERROR:', err)
+		console.error('RESELLER PRODUCTS ERROR:', err)
+		return NextResponse.json({ error: err.message }, { status: 500 })
+	}
+}
+
+// DELETE all product mappings for a reseller
+export async function DELETE(req, { params }) {
+	try {
+		const { id: resellerId } = await params
+
+		const mappingSnap = await getDocs(
+			query(
+				collection(db, 'resellers-product'),
+				where('resellerId', '==', resellerId)
+			)
+		)
+
+		// Delete all mappings for this reseller
+		for (const docSnap of mappingSnap.docs) {
+			await deleteDoc(doc(db, 'resellers-product', docSnap.id))
+		}
+
+		return NextResponse.json({ success: true, deleted: mappingSnap.docs.length })
+	} catch (err) {
+		console.error('DELETE RESELLER PRODUCTS ERROR:', err)
 		return NextResponse.json({ error: err.message }, { status: 500 })
 	}
 }

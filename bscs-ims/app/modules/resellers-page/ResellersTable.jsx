@@ -11,7 +11,9 @@ import {
   IconButton,
   Chip,
   Avatar,
-  Skeleton
+  Skeleton,
+  Stack,
+  Tooltip
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -54,11 +56,13 @@ export default function ResellersTable({
               align='center'
               sx={{
                 fontWeight: 600,
+                fontSize: '0.8125rem',
                 color: '#374151',
-                py: 2,
-                width: '10%',
+                py: 1.5,
+                width: '8%',
                 borderRight: '1px solid #e5e7eb',
-                borderBottom: '2px solid #e5e7eb'
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
             >
               Image
@@ -67,9 +71,10 @@ export default function ResellersTable({
             <TableCell
               sx={{
                 fontWeight: 600,
+                fontSize: '0.8125rem',
                 color: '#374151',
-                py: 2,
-                width: '25%',
+                py: 1.5,
+                width: '20%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -81,9 +86,10 @@ export default function ResellersTable({
             <TableCell
               sx={{
                 fontWeight: 600,
+                fontSize: '0.8125rem',
                 color: '#374151',
-                py: 2,
-                width: '35%',
+                py: 1.5,
+                width: '30%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -95,9 +101,10 @@ export default function ResellersTable({
             <TableCell
               sx={{
                 fontWeight: 600,
+                fontSize: '0.8125rem',
                 color: '#374151',
-                py: 2,
-                width: '20%',
+                py: 1.5,
+                width: '15%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -110,9 +117,10 @@ export default function ResellersTable({
               align='center'
               sx={{
                 fontWeight: 600,
+                fontSize: '0.8125rem',
                 color: '#374151',
-                py: 2,
-                width: '15%',
+                py: 1.5,
+                width: '12%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -125,8 +133,9 @@ export default function ResellersTable({
               align='center'
               sx={{
                 fontWeight: 600,
+                fontSize: '0.8125rem',
                 color: '#374151',
-                py: 2,
+                py: 1.5,
                 width: '15%',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -167,41 +176,42 @@ export default function ResellersTable({
                 <TableCell
                   align='center'
                   sx={{
-                    py: 2.5,
-                    borderRight: '1px solid #e5e7eb'
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
                   }}
                 >
                   {row.imageUrl ? (
                     <Avatar
                       src={row.imageUrl}
                       alt={row.businessName}
-                      sx={{
-                        width: 42,
-                        height: 42,
-                        mx: 'auto'
-                      }}
+                      variant='rounded'
+                      sx={{ width: 36, height: 36, mx: 'auto' }}
                     />
                   ) : (
                     <Avatar
+                      variant='rounded'
                       sx={{
-                        width: 42,
-                        height: 42,
+                        width: 36,
+                        height: 36,
                         mx: 'auto',
                         bgcolor: '#E8F1FA',
                         color: '#1F384C'
                       }}
                     >
-                      <ImageIcon fontSize='small' />
+                      <ImageIcon sx={{ fontSize: 18 }} />
                     </Avatar>
                   )}
                 </TableCell>
 
                 <TableCell
                   sx={{
-                    color: '#374151',
-                    py: 2.5,
+                    color: '#1F384C',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    py: 2,
                     borderRight: '1px solid #e5e7eb',
-                    fontWeight: 600
+                    boxShadow: 'none'
                   }}
                 >
                   {row.businessName}
@@ -209,9 +219,11 @@ export default function ResellersTable({
 
                 <TableCell
                   sx={{
-                    color: '#374151',
-                    py: 2.5,
-                    borderRight: '1px solid #e5e7eb'
+                    color: '#1F384C',
+                    fontSize: '0.75rem',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
                   }}
                 >
                   <AssignedProductsCell resellerId={row.id} />
@@ -219,22 +231,23 @@ export default function ResellersTable({
 
                 <TableCell
                   sx={{
-                    color: '#374151',
-                    py: 2.5,
-                    borderRight: '1px solid #e5e7eb'
-                  }}
-                >
-                  {row.contactNumber}
-                </TableCell>
-
-                <TableCell
-                  sx={{
-                    color: '#374151',
-                    py: 2.5,
+                    color: '#1F384C',
+                    fontSize: '0.8125rem',
+                    py: 2,
                     borderRight: '1px solid #e5e7eb',
                     boxShadow: 'none'
                   }}
+                >
+                  {row.contactNumber || '-'}
+                </TableCell>
+
+                <TableCell
                   align='center'
+                  sx={{
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
                 >
                   <Chip
                     label={row.status === 'active' ? 'Active' : 'Not Active'}
@@ -243,25 +256,57 @@ export default function ResellersTable({
                       bgcolor: row.status === 'active' ? '#e8f5e9' : '#fff3e0',
                       color: row.status === 'active' ? '#2e7d32' : '#e65100',
                       fontWeight: 500,
+                      fontSize: '0.75rem',
+                      height: 24,
                       border: 'none'
                     }}
                   />
                 </TableCell>
 
-                <TableCell align='center' sx={{ py: 2.5 }}>
-                  <IconButton onClick={() => onEdit(row)} sx={{ color: '#1F384C', mr: 1 }}>
-                    <EditIcon />
-                  </IconButton>
+                <TableCell align='center' sx={{ py: 2, boxShadow: 'none' }}>
+                  <Stack direction='row' spacing={0.75} justifyContent='center'>
+                    <Tooltip title='Edit Reseller'>
+                      <IconButton
+                        onClick={() => onEdit(row)}
+                        size='small'
+                        sx={{
+                          bgcolor: '#e0f2fe',
+                          color: '#0369a1',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            bgcolor: '#bae6fd',
+                          }
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
 
-                  <IconButton onClick={() => onDelete(row.id)} sx={{ color: '#991b1b' }}>
-                    <DeleteIcon />
-                  </IconButton>
+                    <Tooltip title='Delete Reseller'>
+                      <IconButton
+                        onClick={() => onDelete(row)}
+                        size='small'
+                        sx={{
+                          bgcolor: '#ffebee',
+                          color: '#c62828',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            bgcolor: '#ffcdd2',
+                          }
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} align='center' sx={{ py: 8, color: '#6b7280' }}>
+              <TableCell colSpan={6} align='center' sx={{ py: 6, color: '#6b7280', fontSize: '0.8125rem', boxShadow: 'none' }}>
                 No resellers found
               </TableCell>
             </TableRow>
@@ -270,13 +315,21 @@ export default function ResellersTable({
       </Table>
 
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         component='div'
         count={sortedResellers.length}
         page={page}
         onPageChange={onChangePage}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={onChangeRowsPerPage}
+        sx={{
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+            fontSize: '0.75rem'
+          },
+          '& .MuiTablePagination-select': {
+            fontSize: '0.75rem'
+          }
+        }}
       />
     </TableContainer>
   )

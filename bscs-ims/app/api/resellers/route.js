@@ -1,3 +1,5 @@
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
@@ -27,6 +29,13 @@ export async function GET() {
 			const assignedProducts = products.filter(p => assignedProductIds.includes(p.id))
 
 			return { ...r, assignedProducts }
+		})
+
+		// Sort by createdAt (newest first)
+		resellersWithProducts.sort((a, b) => {
+			const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+			const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+			return bTime - aTime
 		})
 
 		return NextResponse.json(resellersWithProducts)

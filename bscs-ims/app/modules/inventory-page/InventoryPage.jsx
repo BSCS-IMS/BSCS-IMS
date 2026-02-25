@@ -28,7 +28,7 @@ export default function InventoryPage() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [sortOrder, setSortOrder] = useState(null)
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -96,11 +96,10 @@ export default function InventoryPage() {
   )
 
   const sortedRows = [...filteredRows].sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a.location.localeCompare(b.location)
-    } else {
-      return b.location.localeCompare(a.location)
-    }
+    if (!sortOrder) return 0 // preserve API order (newest first)
+    if (sortOrder === 'asc') return a.location.localeCompare(b.location)
+    if (sortOrder === 'desc') return b.location.localeCompare(a.location)
+    return 0
   })
 
   const paginatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

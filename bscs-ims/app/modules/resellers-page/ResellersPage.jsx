@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { Box, Stack, Typography, Button, useMediaQuery, useTheme } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import ResellersFilters from './ResellersFilter'
@@ -8,8 +9,8 @@ import ResellersTable from './ResellersTable'
 import ResellersSortDialog from './ResellersSortDialog'
 import ResellersMobileView from './ResellersMobileView'
 import CreateResellerModal from './ResellerFormModal'
+import DeleteResellerModal from './DeleteResellerModal'
 import { toast } from 'react-toastify'
-
 
 export default function ResellersPage() {
   const theme = useTheme()
@@ -28,16 +29,16 @@ export default function ResellersPage() {
   const [openForm, setOpenForm] = useState(false)
   const [editingReseller, setEditingReseller] = useState(null)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [sortOrder, setSortOrder] = useState(null)
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [deleteModalReseller, setDeleteModalReseller] = useState(null)
 
   const fetchResellers = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/resellers', { cache: 'no-store' })
-      if (!res.ok) throw new Error()
-
-      const data = await res.json()
-      setResellers(data)
+      const res = await axios.get('/api/resellers')
+      setResellers(res.data)
     } catch {
       toast.error('Failed to load resellers')
     } finally {
@@ -64,18 +65,14 @@ export default function ResellersPage() {
     setOpenForm(true)
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this reseller?')) return
+  const openDeleteModal = (reseller) => {
+    setDeleteModalReseller(reseller)
+    setIsDeleteModalOpen(true)
+  }
 
-    try {
-      const res = await fetch(`/api/resellers/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
-
-      setResellers(prev => prev.filter(r => r.id !== id))
-      toast.success('Reseller deleted')
-    } catch {
-      toast.error('Delete failed')
-    }
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setDeleteModalReseller(null)
   }
 
 
@@ -95,10 +92,10 @@ export default function ResellersPage() {
   const filteredResellers = resellers.filter((r) => r.businessName?.toLowerCase().includes(search.toLowerCase()))
 
   const sortedResellers = [...filteredResellers].sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a.businessName.localeCompare(b.businessName)
-    }
-    return b.businessName.localeCompare(a.businessName)
+    if (!sortOrder) return 0 // preserve API order (newest first)
+    if (sortOrder === 'asc') return a.businessName.localeCompare(b.businessName)
+    if (sortOrder === 'desc') return b.businessName.localeCompare(a.businessName)
+    return 0
   })
 
   const paginatedResellers = sortedResellers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -111,7 +108,7 @@ export default function ResellersPage() {
         <ResellersMobileView
           resellers={resellers}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={openDeleteModal}
           onCreate={() => {
             setEditingReseller(null)
             setOpenForm(true)
@@ -120,21 +117,20 @@ export default function ResellersPage() {
         {openForm && (
           <CreateResellerModal
             reseller={editingReseller}
-            onSuccess={(mode) => {
-              toast.success(
-                mode === 'edit'
-                  ? 'Reseller updated successfully'
-                  : 'Reseller created successfully'
-              )
+            onSuccess={() => {
               fetchResellers()
               setOpenForm(false)
             }}
-            onError={(msg) => {
-              toast.error(msg || 'Something went wrong')
-            }}
             onClose={() => setOpenForm(false)}
           />
+        )}
 
+        {isDeleteModalOpen && deleteModalReseller && (
+          <DeleteResellerModal
+            onClose={closeDeleteModal}
+            reseller={deleteModalReseller}
+            onSuccess={fetchResellers}
+          />
         )}
       </>
     )
@@ -182,7 +178,7 @@ export default function ResellersPage() {
           onChangeRowsPerPage={handleChangeRowsPerPage}
           onEdit={handleEdit}
           loading={loading}
-          onDelete={handleDelete}
+          onDelete={openDeleteModal}
         />
 
         <ResellersSortDialog
@@ -197,21 +193,20 @@ export default function ResellersPage() {
       {openForm && (
         <CreateResellerModal
           reseller={editingReseller}
-          onSuccess={(mode) => {
-            toast.success(
-              mode === 'edit'
-                ? 'Reseller updated successfully'
-                : 'Reseller created successfully'
-            )
+          onSuccess={() => {
             fetchResellers()
             setOpenForm(false)
           }}
-          onError={(msg) => {
-            toast.error(msg || 'Something went wrong')
-          }}
           onClose={() => setOpenForm(false)}
         />
+      )}
 
+      {isDeleteModalOpen && deleteModalReseller && (
+        <DeleteResellerModal
+          onClose={closeDeleteModal}
+          reseller={deleteModalReseller}
+          onSuccess={fetchResellers}
+        />
       )}
     </Box>
   )
