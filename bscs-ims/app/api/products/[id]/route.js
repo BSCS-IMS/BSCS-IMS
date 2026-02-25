@@ -117,6 +117,7 @@ export async function PUT(request, { params }) {
     const name = formData.get('name')
     const currentPriceRaw = formData.get('currentPrice')
     const priceUnit = formData.get('priceUnit')
+    const description = formData.get('description')
     const isActive = formData.get('isActive') === 'true'
     const file = formData.get('file')
 
@@ -157,6 +158,11 @@ export async function PUT(request, { params }) {
 
     if (priceUnit?.trim()) {
       updateData.priceUnit = priceUnit.trim()
+    }
+
+    // Handle description - allow clearing it with empty string
+    if (description !== null) {
+      updateData.description = description?.trim() || ''
     }
 
     await updateDoc(docRef, updateData)

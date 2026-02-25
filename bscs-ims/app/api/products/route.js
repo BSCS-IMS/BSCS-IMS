@@ -58,6 +58,7 @@ export async function POST(request) {
     const sku = formData.get('sku')
     const priceUnit = formData.get('priceUnit')
     const currentPriceRaw = formData.get('currentPrice')
+    const description = formData.get('description')
     const file = formData.get('file')
 
     // Validate required fields
@@ -125,6 +126,10 @@ export async function POST(request) {
 
     if (priceUnit?.trim()) {
       productData.priceUnit = priceUnit.trim()
+    }
+
+    if (description?.trim()) {
+      productData.description = description.trim()
     }
 
     if (imageUrl) {

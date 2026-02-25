@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import axios from 'axios'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { toast } from 'react-toastify'
 import ProductFormFields from './ProductFormFields'
 
 const defaultValues = {
@@ -37,6 +39,16 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
   const [form, setForm] = useState(initialFormState)
   const [imageName, setImageName] = useState(product?.imageUrl ? 'Current image' : '')
   const [imagePreviewUrl, setImagePreviewUrl] = useState(product?.imageUrl || '')
+  const [loading, setLoading] = useState(false)
+
+  // Cleanup blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreviewUrl)
+      }
+    }
+  }, [imagePreviewUrl])
 
   const title = product ? 'Edit Product' : 'Create Product'
   const subtitle = product
@@ -71,6 +83,9 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
   }
 
   async function handleSubmit() {
+    if (loading) return
+    setLoading(true)
+
     try {
       const formData = new FormData()
 
@@ -82,30 +97,37 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
       if (form.amount !== '') formData.append('currentPrice', form.amount)
       if (form.priceUnit) formData.append('priceUnit', form.priceUnit)
       if (form.status) formData.append('isActive', form.status === 'Active' ? 'true' : 'false')
-      if (form.description?.trim()) formData.append('description', form.description.trim())
+      // Always send description in edit mode to allow clearing, only send if has content for create
+      if (product) {
+        formData.append('description', form.description?.trim() || '')
+      } else if (form.description?.trim()) {
+        formData.append('description', form.description.trim())
+      }
       if (product && form.imageUrl) formData.append('imageUrl', form.imageUrl)
       if (form.imageFile) formData.append('file', form.imageFile)
 
       const url = product ? `/api/products/${product.id}` : '/api/products'
-      const method = product ? 'PUT' : 'POST'
+      const method = product ? 'put' : 'post'
 
-      const res = await fetch(url, { method, body: formData })
-      const data = await res.json()
+      const res = await axios[method](url, formData)
 
-      if (!data?.success) {
-        alert(data?.error || 'Failed to save product')
+      if (!res.data?.success) {
+        toast.error(res.data?.error || 'Failed to save product')
         return
       }
 
-      const listRes = await fetch('/api/products')
-      const listData = await listRes.json()
+      toast.success(product ? 'Product updated successfully' : 'Product created successfully')
 
-      if (listData?.success) onConfirm?.(listData.products)
+      const listRes = await axios.get('/api/products')
+      if (listRes.data?.success) onConfirm?.(listRes.data.products)
 
       onClose?.()
     } catch (err) {
       console.error('Save failed:', err)
-      alert('Failed to save product')
+      const errorMsg = err.response?.data?.error || 'Failed to save product'
+      toast.error(errorMsg)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -145,13 +167,13 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-4 sm:px-6 py-3">
-          <Button variant="outline" onClick={onClose} className="h-8 text-xs px-3">Cancel</Button>
+          <Button variant="outline" onClick={onClose} disabled={loading} className="h-8 text-xs px-3">Cancel</Button>
           <Button
             onClick={handleSubmit}
-            disabled={!isValid}
+            disabled={!isValid || loading}
             className="bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3"
           >
-            {product ? 'Update' : 'Confirm'}
+            {loading ? 'Saving...' : (product ? 'Update' : 'Confirm')}
           </Button>
         </div>
       </div>

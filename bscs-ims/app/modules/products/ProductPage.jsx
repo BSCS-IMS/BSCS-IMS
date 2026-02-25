@@ -56,6 +56,7 @@ export default function ProductPage() {
             image: p.imageUrl,
             price: p.currentPrice,
             priceUnit: p.priceUnit,
+            description: p.description || '',
             status: p.isActive ? 'Available' : 'Not Available'
           }))
         )
@@ -122,7 +123,7 @@ export default function ProductPage() {
       priceUnit: product.priceUnit,
       isActive: product.status === 'Available',
       imageUrl: product.image,
-      description: ''
+      description: product.description || ''
     })
     setIsProductModalOpen(true)
   }
@@ -155,6 +156,7 @@ export default function ProductPage() {
         image: p.imageUrl,
         price: p.currentPrice,
         priceUnit: p.priceUnit,
+        description: p.description || '',
         status: p.isActive ? 'Available' : 'Not Available'
       }))
     )

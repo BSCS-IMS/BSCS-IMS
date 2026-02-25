@@ -30,14 +30,18 @@ export default function ProductFormFields({
 
         <div className='space-y-1'>
           <Label className='text-xs font-medium text-[#374151]'>
-            SKU <span className='text-[#991b1b]'>*</span>
+            SKU {!isEditMode && <span className='text-[#991b1b]'>*</span>}
           </Label>
           <Input
             placeholder='e.g. RICE-5KG-001'
             value={form.sku || ''}
             onChange={(e) => setForm({ ...form, sku: e.target.value })}
-            className='border-[#e5e7eb] h-8 text-xs'
+            disabled={isEditMode}
+            className={`border-[#e5e7eb] h-8 text-xs ${isEditMode ? 'bg-[#f3f4f6] cursor-not-allowed opacity-70' : ''}`}
           />
+          {isEditMode && (
+            <p className='text-[10px] text-[#9ca3af]'>SKU cannot be changed</p>
+          )}
         </div>
       </div>
 
@@ -50,7 +54,15 @@ export default function ProductFormFields({
           <Input
             placeholder='0'
             value={form.amount || ''}
-            onChange={(e) => setForm({ ...form, amount: e.target.value.replace(/[^\d.]/g, '') })}
+            onChange={(e) => {
+              let value = e.target.value.replace(/[^\d.]/g, '')
+              // Only allow one decimal point
+              const parts = value.split('.')
+              if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('')
+              }
+              setForm({ ...form, amount: value })
+            }}
             className='border-[#e5e7eb] h-8 text-xs'
           />
         </div>
@@ -117,7 +129,7 @@ export default function ProductFormFields({
       <div className='space-y-1'>
         <Label className='text-xs font-medium text-[#374151]'>Description</Label>
         <textarea
-          className='min-h-24 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:ring-2 focus:ring-[#c7d2fe]'
+          className='min-h-24 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]'
           placeholder='Write a short description...'
           value={form.description || ''}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
