@@ -24,7 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import RemoveIcon from '@mui/icons-material/Remove'
 
-export default function ProductTable({ products, loading, onEdit, onDelete, onAdd, onMinus }) {
+export default function ProductTable({ products, loading, onEdit, onDelete, onAdd, onMinus, inventory = [] }) {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
@@ -63,7 +63,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '30%',
+                width: '20%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -76,7 +76,20 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '15%',
+                width: '20%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Inventory Locations
+            </TableCell>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                color: '#374151',
+                py: 2,
+                width: '12%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -90,7 +103,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '15%',
+                width: '12%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
@@ -104,7 +117,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                 fontWeight: 600,
                 color: '#374151',
                 py: 2,
-                width: '30%',
+                width: '18%',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
@@ -125,6 +138,9 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                   <Skeleton variant='rectangular' width='100%' height={24} />
                 </TableCell>
                 <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
+                  <Skeleton variant='rectangular' width='100%' height={40} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
                   <Skeleton variant='rectangular' width='100%' height={24} />
                 </TableCell>
                 <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
@@ -137,7 +153,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
             ))
           ) : products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} align='center' sx={{ py: 8, color: '#6b7280', boxShadow: 'none' }}>
+              <TableCell colSpan={6} align='center' sx={{ py: 8, color: '#6b7280', boxShadow: 'none' }}>
                 No products found
               </TableCell>
             </TableRow>
@@ -204,6 +220,34 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                     boxShadow: 'none'
                   }}
                 >
+                  {(() => {
+                    const productInventory = inventory.filter((inv) => inv.productId === product.id)
+                    if (productInventory.length === 0) {
+                      return (
+                        <Typography variant='body2' sx={{ color: '#9ca3af', fontStyle: 'italic' }}>
+                          No inventory
+                        </Typography>
+                      )
+                    }
+                    return (
+                      <Stack spacing={0.5}>
+                        {productInventory.map((inv) => (
+                          <Typography key={inv.id} variant='body2' sx={{ color: '#374151' }}>
+                            {inv.locationName} ({inv.quantity})
+                          </Typography>
+                        ))}
+                      </Stack>
+                    )
+                  })()}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2.5,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
                   ₱
                   {Number(product.price).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
@@ -238,7 +282,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                   </Tooltip>
 
                   <Tooltip title='Minus'>
-                    <IconButton onClick={() => onMinus(product.id)} size='medium' sx={{ color: '#d50000', mr: 1 }}>
+                    <IconButton onClick={() => onMinus(product)} size='medium' sx={{ color: '#d50000', mr: 1 }}>
                       <RemoveIcon />
                     </IconButton>
                   </Tooltip>

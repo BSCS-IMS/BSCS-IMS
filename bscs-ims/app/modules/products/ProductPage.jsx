@@ -10,6 +10,7 @@ import ProductMobile from './ProductMobile'
 import ProductFilter from './ProductFilter'
 import ProductSortDialog from './ProductSortDialog'
 import ProductFormModal from './ProductFormModal'
+import InventoryAdjustModal from './InventoryAdjustModal'
 
 export default function ProductPage() {
   const theme = useTheme()
@@ -28,10 +29,15 @@ export default function ProductPage() {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [inventory, setInventory] = useState([])
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [productModalMode, setProductModalMode] = useState('create')
   const [productModalInitialValues, setProductModalInitialValues] = useState(null)
+
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false)
+  const [inventoryModalMode, setInventoryModalMode] = useState('add')
+  const [inventoryModalProduct, setInventoryModalProduct] = useState(null)
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -57,8 +63,24 @@ export default function ProductPage() {
     }
   }
 
+  const fetchInventory = async () => {
+    try {
+      const res = await axios.get('/api/inventory')
+      if (res.data.success) {
+        setInventory(res.data.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch inventory:', error)
+    }
+  }
+
+  const refreshData = async () => {
+    await Promise.all([fetchProducts(), fetchInventory()])
+  }
+
   useEffect(() => {
     fetchProducts()
+    fetchInventory()
   }, [])
 
   const handleDelete = async (id) => {
@@ -97,6 +119,23 @@ export default function ProductPage() {
   }
 
   const closeModal = () => setIsProductModalOpen(false)
+
+  const openAddModal = (product) => {
+    setInventoryModalMode('add')
+    setInventoryModalProduct(product)
+    setIsInventoryModalOpen(true)
+  }
+
+  const openSubtractModal = (product) => {
+    setInventoryModalMode('subtract')
+    setInventoryModalProduct(product)
+    setIsInventoryModalOpen(true)
+  }
+
+  const closeInventoryModal = () => {
+    setIsInventoryModalOpen(false)
+    setInventoryModalProduct(null)
+  }
 
   const handleConfirm = (updatedProducts) => {
     setProducts(
@@ -169,7 +208,7 @@ export default function ProductPage() {
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
           />
 
-          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={handleDelete} />
+          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={handleDelete} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
         </Box>
       </Box>
 
@@ -189,6 +228,15 @@ export default function ProductPage() {
           onClose={closeModal}
           product={productModalMode === 'edit' ? productModalInitialValues : null}
           onConfirm={handleConfirm}
+        />
+      )}
+
+      {isInventoryModalOpen && inventoryModalProduct && (
+        <InventoryAdjustModal
+          onClose={closeInventoryModal}
+          product={inventoryModalProduct}
+          mode={inventoryModalMode}
+          onSuccess={refreshData}
         />
       )}
     </>
