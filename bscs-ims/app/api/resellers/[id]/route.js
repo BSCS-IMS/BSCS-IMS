@@ -1,3 +1,5 @@
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
@@ -21,7 +23,7 @@ export async function DELETE(req, context) {
 }
 
 // UPDATE reseller
-export async function PATCH(req, context) {
+export async function PUT(req, context) {
 	const { id: resellerId } = await context.params
 	const body = await req.json()
 	if (!resellerId) return NextResponse.json({ message: 'Missing reseller ID' }, { status: 400 })

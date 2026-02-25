@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { toast } from 'react-toastify'
 import ResellerFormFields from './ResellerFormFields'
 
 export default function ResellerFormModal({
-	onClose,
-	onSuccess,
-	onError,
-	reseller = null
+  onClose,
+  onSuccess,
+  reseller = null
 }) {
 
   const [form, setForm] = useState({
@@ -25,14 +26,23 @@ export default function ResellerFormModal({
   const [products, setProducts] = useState([])
   const [imagePreview, setImagePreview] = useState(null)
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
 
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products')
-        const data = await res.json()
-        const productArray = Array.isArray(data.products) ? data.products : []
+        const res = await axios.get('/api/products')
+        const productArray = Array.isArray(res.data.products) ? res.data.products : []
         setProducts(productArray)
       } catch (err) {
         console.error(err)
@@ -47,12 +57,10 @@ export default function ResellerFormModal({
 
     const fetchAssignedProducts = async () => {
       try {
-        const res = await fetch(`/api/resellers-product/${reseller.id}`)
-        const data = await res.json()
-
+        const res = await axios.get(`/api/resellers-product/${reseller.id}`)
         setForm((prev) => ({
           ...prev,
-          assignedProducts: Array.isArray(data.products) ? data.products.map((p) => p.id) : []
+          assignedProducts: Array.isArray(res.data.products) ? res.data.products.map((p) => p.id) : []
         }))
       } catch (err) {
         console.error(err)
@@ -74,99 +82,90 @@ export default function ResellerFormModal({
     const newErrors = {}
 
     if (!form.businessName.trim()) {
-      newErrors.businessName = 'Business name is required'
+      newErrors.businessName = 'Reseller name is required'
     }
 
-    if (!form.contactNumber.trim()) {
-      newErrors.contactNumber = 'Contact number is required'
-    } else if (!/^\d+$/.test(form.contactNumber)) {
+    // Contact number is optional, but if provided must be numbers only
+    if (form.contactNumber.trim() && !/^\d+$/.test(form.contactNumber)) {
       newErrors.contactNumber = 'Contact number must contain numbers only'
     }
 
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length > 0) {
-      onError?.('Please fix the highlighted errors')
+      toast.error('Please fix the highlighted errors')
       return false
     }
 
     return true
   }
 
-
   async function handleSubmit() {
     if (!validateForm()) return
+    if (loading) return
+    setLoading(true)
+
     try {
-      const method = reseller ? 'PATCH' : 'POST'
+      const method = reseller ? 'put' : 'post'
       const url = reseller ? `/api/resellers/${reseller.id}` : '/api/resellers'
 
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName: form.businessName,
-          contactNumber: form.contactNumber,
-          address: form.address,
-          status: form.status,
-          notes: form.description,
-          userId: 'SYSTEM'
-        })
+      const res = await axios[method](url, {
+        businessName: form.businessName,
+        contactNumber: form.contactNumber,
+        address: form.address,
+        status: form.status,
+        notes: form.description,
+        userId: 'SYSTEM'
       })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Failed to save reseller')
-
-      const resellerId = reseller ? reseller.id : data.id
+      const resellerId = reseller ? reseller.id : res.data.id
 
       if (reseller) {
-        await fetch(`/api/resellers-product/${resellerId}`, {
-          method: 'DELETE'
-        })
+        await axios.delete(`/api/resellers-product/${resellerId}`)
       }
 
       for (const productId of form.assignedProducts) {
-        await fetch('/api/resellers-product', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            resellerId,
-            productId,
-            isActive: true,
-            userId: 'SYSTEM'
-          })
+        await axios.post('/api/resellers-product', {
+          resellerId,
+          productId,
+          isActive: true,
+          userId: 'SYSTEM'
         })
       }
 
-      // 🔥 ITO ANG IMPORTANTE
+      toast.success(reseller ? 'Reseller updated successfully' : 'Reseller created successfully')
       onSuccess(reseller ? 'edit' : 'create')
 
     } catch (err) {
       console.error(err)
-      onError?.(err.message)
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to save reseller'
+      toast.error(errorMsg)
+    } finally {
+      setLoading(false)
     }
   }
 
 
   return (
-    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-50'>
-      <div className='bg-white w-170 max-h-[90vh] overflow-y-auto rounded-xl shadow-xl relative'>
-        <div className='flex items-center justify-between px-7 pt-6 pb-1'>
+    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4'>
+      <div className='bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-xl shadow-xl relative'>
+        <div className='flex items-center justify-between px-4 sm:px-6 pt-5 pb-1'>
           <div>
-            <h2 className='text-lg font-semibold text-[#1F384C]'>{reseller ? 'Edit Reseller' : 'Create Reseller'}</h2>
-            <p className='text-sm text-[#6b7280] mt-0.5'>
+            <h2 className='text-base font-semibold text-[#1F384C]'>{reseller ? 'Edit Reseller' : 'Create Reseller'}</h2>
+            <p className='text-xs text-[#6b7280] mt-0.5'>
               {reseller ? 'Update the reseller details.' : 'Fill out the details for the new reseller.'}
             </p>
           </div>
           <Button
             variant='ghost'
             onClick={onClose}
-            className='h-8 w-8 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6] rounded-md cursor-pointer'
+            className='h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]'
           >
-            <X size={18} />
+            <X size={16} />
           </Button>
         </div>
 
-        <Separator className='my-4 mx-7' />
+        <Separator className='my-3 mx-4 sm:mx-6' />
 
         <ResellerFormFields
           form={form}
@@ -174,19 +173,25 @@ export default function ResellerFormModal({
           products={products}
           imagePreview={imagePreview}
           onImageChange={handleImageChange}
+          errors={errors}
         />
 
         <Separator />
-        <div className='flex items-center justify-end gap-3 px-7 py-4'>
+        <div className='flex items-center justify-end gap-2 px-4 sm:px-6 py-3'>
           <Button
             variant='outline'
             onClick={onClose}
-            className='border-[#e5e7eb] text-[#374151] hover:bg-[#f3f4f6] cursor-pointer'
+            disabled={loading}
+            className='h-8 text-xs px-3'
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className='bg-[#1e40af] text-white hover:bg-[#1e3a8a] px-5 cursor-pointer'>
-            {reseller ? 'Update' : 'Confirm'}
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className='bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3'
+          >
+            {loading ? 'Saving...' : (reseller ? 'Update' : 'Confirm')}
           </Button>
         </div>
       </div>
