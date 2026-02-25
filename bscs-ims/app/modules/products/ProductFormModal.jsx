@@ -113,22 +113,22 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-xl shadow-xl relative">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-7 pt-6 pb-1">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-1">
           <div>
-            <h2 className="text-lg font-semibold text-[#1F384C]">{title}</h2>
-            <p className="text-sm text-[#6b7280] mt-0.5">{subtitle}</p>
+            <h2 className="text-base font-semibold text-[#1F384C]">{title}</h2>
+            <p className="text-xs text-[#6b7280] mt-0.5">{subtitle}</p>
           </div>
 
           <Button
             variant="ghost"
             onClick={onClose}
-            className="h-8 w-8 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]"
+            className="h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]"
           >
-            <X size={18} />
+            <X size={16} />
           </Button>
         </div>
 
-        <Separator className="my-4 mx-4 sm:mx-7" />
+        <Separator className="my-3 mx-4 sm:mx-6" />
 
         {/* Form Fields */}
         <ProductFormFields
@@ -144,12 +144,12 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
         <Separator />
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-4 sm:px-7 py-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <div className="flex items-center justify-end gap-2 px-4 sm:px-6 py-3">
+          <Button variant="outline" onClick={onClose} className="h-8 text-xs px-3">Cancel</Button>
           <Button
             onClick={handleSubmit}
             disabled={!isValid}
-            className="bg-[#1F384C] text-white hover:bg-[#162A3F]"
+            className="bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3"
           >
             {product ? 'Update' : 'Confirm'}
           </Button>

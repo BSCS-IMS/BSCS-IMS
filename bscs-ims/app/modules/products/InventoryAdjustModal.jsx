@@ -51,7 +51,14 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
     return inv ? inv.quantity : 0
   }, [locationId, inventory, product.id])
 
-  const isValid = locationId && quantity && parseInt(quantity) > 0
+  const formatNumber = (num) => {
+    return Number(num).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    })
+  }
+
+  const isValid = locationId && quantity && parseFloat(quantity) > 0
 
   async function handleSubmit() {
     if (!isValid) return
@@ -63,7 +70,7 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
       const res = await axios.post(endpoint, {
         productId: product.id,
         locationId,
-        quantity: parseInt(quantity)
+        quantity: parseFloat(quantity)
       })
 
       if (!res.data.success) {
@@ -95,33 +102,33 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white w-full max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-xl shadow-xl relative">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-7 pt-6 pb-1">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-5 pb-1">
           <div>
-            <h2 className="text-lg font-semibold text-[#1F384C]">{title}</h2>
-            <p className="text-sm text-[#6b7280] mt-0.5">{subtitle}</p>
+            <h2 className="text-base font-semibold text-[#1F384C]">{title}</h2>
+            <p className="text-xs text-[#6b7280] mt-0.5">{subtitle}</p>
           </div>
 
           <Button
             variant="ghost"
             onClick={onClose}
-            className="h-8 w-8 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]"
+            className="h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]"
           >
-            <X size={18} />
+            <X size={16} />
           </Button>
         </div>
 
-        <Separator className="my-4 mx-4 sm:mx-7" />
+        <Separator className="my-3 mx-4 sm:mx-6" />
 
         {/* Product Info */}
-        <div className="px-4 sm:px-7 pb-4">
-          <div className="bg-[#f9fafb] rounded-lg p-4 mb-4">
-            <p className="text-sm font-medium text-[#1F384C]">{product.name}</p>
-            <p className="text-sm text-[#6b7280]">SKU: {product.sku}</p>
+        <div className="px-4 sm:px-6 pb-4">
+          <div className="bg-[#f9fafb] rounded-lg p-3 mb-4">
+            <p className="text-xs font-medium text-[#1F384C]">{product.name}</p>
+            <p className="text-xs text-[#6b7280]">SKU: {product.sku}</p>
           </div>
 
           {/* Location Select */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+            <label className="block text-xs font-medium text-[#374151] mb-1">
               Inventory Location <span className="text-red-500">*</span>
             </label>
             <FormControl fullWidth size="small">
@@ -137,27 +144,28 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
                 }}
                 sx={{
                   bgcolor: 'white',
+                  height: 36,
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: '#e5e7eb',
                   },
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#1e40af',
+                    borderColor: '#1F384C',
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#1e40af',
+                    borderColor: '#1F384C',
                     borderWidth: '2px',
                   },
                   '& .MuiSelect-select': {
                     color: locationId ? '#374151' : '#9ca3af',
-                    fontSize: '0.875rem',
+                    fontSize: '0.75rem',
                   },
                 }}
               >
-                <MenuItem value="" disabled>
+                <MenuItem value="" disabled sx={{ fontSize: '0.75rem' }}>
                   Select location
                 </MenuItem>
                 {locations.map((loc) => (
-                  <MenuItem key={loc.id} value={loc.id}>
+                  <MenuItem key={loc.id} value={loc.id} sx={{ fontSize: '0.75rem' }}>
                     {loc.name}
                   </MenuItem>
                 ))}
@@ -167,21 +175,22 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
 
           {/* Quantity Input */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+            <label className="block text-xs font-medium text-[#374151] mb-1">
               Quantity <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
-              min="1"
+              min="0.01"
+              step="any"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Enter quantity"
-              className="w-full h-10 px-3 rounded-md border border-[#e5e7eb] bg-white text-[#374151] text-sm focus:outline-none focus:ring-2 focus:ring-[#1e40af]/30 focus:border-[#1e40af]"
+              className="w-full h-9 px-3 rounded-md border border-[#e5e7eb] bg-white text-[#374151] text-xs focus:outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]"
             />
             {/* Current Quantity Display */}
             {locationId && currentQuantity !== null && (
-              <p className="text-sm text-[#6b7280] mt-2">
-                Current stock at this location: <span className="font-medium text-[#1F384C]">{currentQuantity}</span>
+              <p className="text-[10px] text-[#6b7280] mt-1.5">
+                Current stock: <span className="font-medium text-[#1F384C]">{formatNumber(currentQuantity)}</span>
               </p>
             )}
           </div>
@@ -190,14 +199,14 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
         <Separator />
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-4 sm:px-7 py-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+        <div className="flex items-center justify-end gap-2 px-4 sm:px-6 py-3">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="h-8 text-xs px-3">
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!isValid || loading}
-            className="bg-[#1F384C] text-white hover:bg-[#162A3F]"
+            className="bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3"
           >
             {loading ? 'Processing...' : 'Confirm'}
           </Button>
