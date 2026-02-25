@@ -29,7 +29,7 @@ export default function ResellersPage() {
   const [openForm, setOpenForm] = useState(false)
   const [editingReseller, setEditingReseller] = useState(null)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [sortOrder, setSortOrder] = useState(null)
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteModalReseller, setDeleteModalReseller] = useState(null)
@@ -92,10 +92,10 @@ export default function ResellersPage() {
   const filteredResellers = resellers.filter((r) => r.businessName?.toLowerCase().includes(search.toLowerCase()))
 
   const sortedResellers = [...filteredResellers].sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a.businessName.localeCompare(b.businessName)
-    }
-    return b.businessName.localeCompare(a.businessName)
+    if (!sortOrder) return 0 // preserve API order (newest first)
+    if (sortOrder === 'asc') return a.businessName.localeCompare(b.businessName)
+    if (sortOrder === 'desc') return b.businessName.localeCompare(a.businessName)
+    return 0
   })
 
   const paginatedResellers = sortedResellers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

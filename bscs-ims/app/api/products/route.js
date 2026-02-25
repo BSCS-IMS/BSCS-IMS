@@ -35,6 +35,11 @@ export async function GET(req) {
     const products = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(product => !product.deletedAt)
+      .sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+        const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+        return bTime - aTime // newest first
+      })
     return NextResponse.json({ success: true, products })
   } catch (error) {
     console.error('GET /products error:', error)
