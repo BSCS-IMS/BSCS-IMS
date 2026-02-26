@@ -87,25 +87,36 @@ export default function InventoryTable({
             ))
           ) : paginatedRows.length > 0 ? (
             paginatedRows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} sx={{ verticalAlign: 'top' }}>
+                {/* Location — shown once per grouped row */}
                 <TableCell
                   sx={{
                     color: '#374151',
                     py: 2.5,
                     borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none',
                     fontWeight: 600
                   }}
                 >
                   {row.location}
                 </TableCell>
-                <TableCell sx={{ color: '#374151', py: 2.5, borderRight: '1px solid #e5e7eb', boxShadow: 'none' }}>
-                  {row.product.name}
-                  <Typography component='span' variant='body2' sx={{ color: '#6b7280', ml: 1 }}>
-                    ({row.product.quantity} qty)
-                  </Typography>
+
+                {/* All products in this location */}
+                <TableCell sx={{ color: '#374151', py: 2.5, borderRight: '1px solid #e5e7eb' }}>
+                  {(row.items ?? []).map((item, idx) => (
+                    <Typography
+                      key={item.id ?? idx}
+                      variant='body2'
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: idx < row.items.length - 1 ? 0.75 : 0 }}
+                    >
+                      {item.productName}
+                      <Typography component='span' variant='body2' sx={{ color: '#6b7280' }}>
+                        ({item.qty} qty)
+                      </Typography>
+                    </Typography>
+                  ))}
                 </TableCell>
-                <TableCell align='center' sx={{ py: 2.5, boxShadow: 'none' }}>
+
+                <TableCell align='center' sx={{ py: 2.5 }}>
                   <IconButton onClick={() => onEdit(row)} size='medium' sx={{ color: '#1F384C', mr: 1 }}>
                     <EditIcon />
                   </IconButton>
@@ -117,7 +128,7 @@ export default function InventoryTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={3} align='center' sx={{ py: 8, color: '#6b7280', boxShadow: 'none' }}>
+              <TableCell colSpan={3} align='center' sx={{ py: 8, color: '#6b7280' }}>
                 No inventory found
               </TableCell>
             </TableRow>
