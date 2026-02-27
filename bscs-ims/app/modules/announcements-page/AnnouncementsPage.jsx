@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import axios from 'axios'
 import { Box, Typography, Stack, Button, useMediaQuery, useTheme } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -9,6 +10,7 @@ import AnnouncementsTable from './AnnouncementsTable'
 import AnnouncementsMobileView from './AnnouncementsMobileView'
 import AnnouncementsFilter from './AnnouncementsFilter'
 import AnnouncementsSortDialog from './AnnouncementsSortDialog'
+import AnnouncementsFilterDialog from './AnnouncementsFilterDialog'
 import AnnouncementFormModal from './AnnouncementFormModal'
 import DeleteAnnouncementModal from './DeleteAnnouncementModal'
 
@@ -17,14 +19,24 @@ export default function AnnouncementsPage() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const [search, setSearch] = useState('')
-  const [sortOrder, setSortOrder] = useState(null)
+  // Read filters from URL params
+  const urlSearch = searchParams.get('search') || ''
+  const urlSort = searchParams.get('sort') || ''
+  const urlStatus = searchParams.get('status') || ''
+  const urlDateFrom = searchParams.get('dateFrom') || ''
+  const urlDateTo = searchParams.get('dateTo') || ''
+
+  const [search, setSearch] = useState(urlSearch)
+  const [sortOrder, setSortOrder] = useState(urlSort || null)
+
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null)
   const isSortOpen = Boolean(sortAnchorEl)
+  const isFilterOpen = Boolean(filterAnchorEl)
 
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,21 +47,93 @@ export default function AnnouncementsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteModalAnnouncement, setDeleteModalAnnouncement] = useState(null)
 
-  const fetchAnnouncements = async () => {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Update URL params
+  const updateUrlParams = useCallback((params) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newSearchParams.set(key, value)
+      } else {
+        newSearchParams.delete(key)
+      }
+    })
+
+    const queryString = newSearchParams.toString()
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  // Fetch announcements with filters
+  const fetchAnnouncements = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await axios.get('/api/announcement')
+      const params = new URLSearchParams()
+      if (urlSearch) params.set('search', urlSearch)
+      if (urlSort) params.set('sort', urlSort)
+      if (urlStatus) params.set('status', urlStatus)
+      if (urlDateFrom) params.set('dateFrom', urlDateFrom)
+      if (urlDateTo) params.set('dateTo', urlDateTo)
+
+      const queryString = params.toString()
+      const url = queryString ? `/api/announcement?${queryString}` : '/api/announcement'
+
+      const res = await axios.get(url)
       setAnnouncements(res.data)
     } catch (error) {
       console.error('Failed to fetch announcements:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [urlSearch, urlSort, urlStatus, urlDateFrom, urlDateTo])
 
   useEffect(() => {
     fetchAnnouncements()
-  }, [])
+  }, [fetchAnnouncements])
+
+  // Sync search state with URL
+  useEffect(() => {
+    setSearch(urlSearch)
+  }, [urlSearch])
+
+  // Sync sort state with URL
+  useEffect(() => {
+    setSortOrder(urlSort || null)
+  }, [urlSort])
+
+  // Handle search submit
+  const handleSearchSubmit = () => {
+    updateUrlParams({ search: search.trim() })
+  }
+
+  // Handle search on Enter key
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit()
+    }
+  }
+
+  // Handle sort change
+  const handleSortSelect = (order) => {
+    setSortOrder(order)
+    updateUrlParams({ sort: order || '' })
+    setSortAnchorEl(null)
+  }
+
+  // Handle filter apply
+  const handleFilterApply = (filters) => {
+    updateUrlParams({
+      status: filters.status,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo
+    })
+  }
+
+  // Count active filters
+  const activeFilterCount = [urlStatus, urlDateFrom, urlDateTo].filter(Boolean).length
 
   const openCreateModal = () => {
     setEditingAnnouncement(null)
@@ -76,22 +160,13 @@ export default function AnnouncementsPage() {
     setDeleteModalAnnouncement(null)
   }
 
-  const filteredAnnouncements = announcements
-    .filter((a) => a.title?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (!sortOrder) return 0
-      if (sortOrder === 'asc') return a.title.localeCompare(b.title)
-      if (sortOrder === 'desc') return b.title.localeCompare(a.title)
-      return 0
-    })
-
   if (!mounted) return null
 
   if (!isDesktop) {
     return (
       <>
         <AnnouncementsMobileView
-          announcements={filteredAnnouncements}
+          announcements={announcements}
           onEdit={openEditModal}
           onDelete={openDeleteModal}
           onCreate={openCreateModal}
@@ -149,12 +224,16 @@ export default function AnnouncementsPage() {
           <AnnouncementsFilter
             search={search}
             setSearch={setSearch}
-            onFilterClick={() => {}}
+            onSearchSubmit={handleSearchSubmit}
+            onSearchKeyDown={handleSearchKeyDown}
+            onFilterClick={(e) => setFilterAnchorEl(e.currentTarget)}
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
+            activeFilterCount={activeFilterCount}
+            sortOrder={sortOrder}
           />
 
           <AnnouncementsTable
-            announcements={filteredAnnouncements}
+            announcements={announcements}
             loading={loading}
             onEdit={openEditModal}
             onDelete={openDeleteModal}
@@ -167,10 +246,19 @@ export default function AnnouncementsPage() {
         open={isSortOpen}
         onClose={() => setSortAnchorEl(null)}
         sortOrder={sortOrder}
-        onSortSelect={(order) => {
-          setSortOrder(order)
-          setSortAnchorEl(null)
+        onSortSelect={handleSortSelect}
+      />
+
+      <AnnouncementsFilterDialog
+        anchorEl={filterAnchorEl}
+        open={isFilterOpen}
+        onClose={() => setFilterAnchorEl(null)}
+        filters={{
+          status: urlStatus,
+          dateFrom: urlDateFrom,
+          dateTo: urlDateTo
         }}
+        onApply={handleFilterApply}
       />
 
       {isFormModalOpen && (

@@ -41,6 +41,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
+    // Single announcement fetch by ID
     if (id) {
       const docRef = doc(db, "announcements", id);
       const snapshot = await getDoc(docRef);
@@ -52,9 +53,60 @@ export async function GET(req) {
       return NextResponse.json({ id: snapshot.id, ...snapshot.data() });
     }
 
+    // Get filter params
+    const search = searchParams.get("search")?.toLowerCase() || "";
+    const sort = searchParams.get("sort") || "";
+    const status = searchParams.get("status") || "";
+    const dateFrom = searchParams.get("dateFrom") || "";
+    const dateTo = searchParams.get("dateTo") || "";
+
+    // Fetch all announcements
     const q = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    const announcements = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    let announcements = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Apply search filter (by title)
+    if (search) {
+      announcements = announcements.filter((a) =>
+        a.title?.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply status filter
+    if (status === "published") {
+      announcements = announcements.filter((a) => a.isPublished === true);
+    } else if (status === "draft") {
+      announcements = announcements.filter((a) => a.isPublished === false);
+    }
+
+    // Apply date range filter
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      announcements = announcements.filter((a) => {
+        if (!a.createdAt) return false;
+        const createdDate = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt.seconds * 1000);
+        return createdDate >= fromDate;
+      });
+    }
+
+    if (dateTo) {
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      announcements = announcements.filter((a) => {
+        if (!a.createdAt) return false;
+        const createdDate = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt.seconds * 1000);
+        return createdDate <= toDate;
+      });
+    }
+
+    // Apply sort (by title)
+    if (sort === "asc") {
+      announcements.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    } else if (sort === "desc") {
+      announcements.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
+    }
+    // Default sort is by createdAt desc (already from Firestore query)
 
     return NextResponse.json(announcements);
   } catch (error) {
