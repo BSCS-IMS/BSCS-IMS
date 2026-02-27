@@ -5,18 +5,28 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 
-export default function ResellerFormFields({ form, setForm, products, imagePreview, onImageChange, errors }) {
+export default function ResellerFormFields({
+  form,
+  setForm,
+  products,
+  imageName,
+  imagePreviewUrl,
+  onImageChange,
+  errors,
+  isEditMode = false
+}) {
   const [showProductDropdown, setShowProductDropdown] = useState(false)
 
   return (
     <div className='px-4 sm:px-6 pb-5 space-y-4'>
+      {/* Reseller Name */}
       <div className='space-y-1'>
         <Label className='text-xs font-medium text-[#374151]'>
           Reseller Name <span className='text-[#991b1b]'>*</span>
         </Label>
         <Input
           placeholder='Enter reseller name'
-          value={form.businessName}
+          value={form.businessName || ''}
           onChange={(e) => setForm({ ...form, businessName: e.target.value })}
           className={`h-8 text-xs border ${errors?.businessName ? 'border-red-500' : 'border-[#e5e7eb]'}`}
         />
@@ -25,6 +35,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         )}
       </div>
 
+      {/* Contact Number + Address */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
         <div className='space-y-1'>
           <Label className='text-xs font-medium text-[#374151]'>
@@ -32,7 +43,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
           </Label>
           <Input
             placeholder='e.g. 09123456789'
-            value={form.contactNumber}
+            value={form.contactNumber || ''}
             onChange={(e) => {
               const value = e.target.value.replace(/\D/g, '')
               setForm({ ...form, contactNumber: value })
@@ -47,16 +58,19 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
           <Label className='text-xs font-medium text-[#374151]'>Address</Label>
           <Input
             placeholder='Enter address'
-            value={form.address}
+            value={form.address || ''}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
             className='h-8 text-xs border-[#e5e7eb]'
           />
         </div>
       </div>
 
+      {/* Upload Image + Status */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
         <div className='space-y-1'>
-          <Label className='text-xs font-medium text-[#374151]'>Upload Image</Label>
+          <Label className='text-xs font-medium text-[#374151]'>
+            {isEditMode ? 'Update image (optional)' : 'Upload image'}
+          </Label>
           <label className='cursor-pointer block'>
             <input type='file' accept='image/*' className='hidden' onChange={onImageChange} />
             <Button
@@ -68,7 +82,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
               <span>
                 <Upload size={14} className='text-[#6b7280] shrink-0' />
                 <span className='truncate flex-1 text-left'>
-                  {imagePreview ? 'Change image' : 'Browse'}
+                  {imageName || (isEditMode ? 'Change image' : 'Browse')}
                 </span>
               </span>
             </Button>
@@ -78,7 +92,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
 
         <div className='space-y-1'>
           <Label className='text-xs font-medium text-[#374151]'>Status</Label>
-          <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}>
+          <Select value={form.status || 'active'} onValueChange={(value) => setForm({ ...form, status: value })}>
             <SelectTrigger className='w-full h-8 text-xs border-[#e5e7eb] cursor-pointer'>
               <SelectValue placeholder='Select status' />
             </SelectTrigger>
@@ -90,6 +104,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         </div>
       </div>
 
+      {/* Assigned Products */}
       <div className='relative space-y-1'>
         <Label className='text-xs font-medium text-[#374151]'>Assigned Products</Label>
         <div
@@ -153,22 +168,24 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         )}
       </div>
 
+      {/* Description */}
       <div className='space-y-1'>
         <Label className='text-xs font-medium text-[#374151]'>Description</Label>
         <textarea
           className='min-h-20 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]'
-          value={form.description}
+          value={form.description || ''}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           placeholder='Write a short description...'
         />
       </div>
 
-      {imagePreview && (
+      {/* Image Preview */}
+      {imagePreviewUrl && (
         <div className='flex items-center gap-2'>
           <div className='h-10 w-14 overflow-hidden rounded-md border border-[#e5e7eb] bg-[#f3f4f6]'>
-            <img src={imagePreview} alt='preview' className='h-full w-full object-cover' />
+            <img src={imagePreviewUrl} alt='preview' className='h-full w-full object-cover' />
           </div>
-          <div className='text-[10px] text-[#6b7280]'>Selected image</div>
+          <div className='text-[10px] text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
         </div>
       )}
     </div>

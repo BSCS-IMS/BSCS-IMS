@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import axios from 'axios'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,36 +8,64 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'react-toastify'
 import ResellerFormFields from './ResellerFormFields'
 
-export default function ResellerFormModal({
-  onClose,
-  onSuccess,
-  reseller = null
-}) {
+const defaultValues = {
+  businessName: '',
+  contactNumber: '',
+  address: '',
+  status: 'active',
+  description: '',
+  assignedProducts: [],
+  imageFile: null,
+  imageUrl: ''
+}
 
-  const [form, setForm] = useState({
-    businessName: reseller?.businessName || '',
-    contactNumber: reseller?.contactNumber || '',
-    address: reseller?.address || '',
-    status: reseller?.status || 'active',
-    description: reseller?.notes || '',
-    assignedProducts: [],
-    image: null
-  })
+export default function ResellerFormModal({ onClose, onSuccess, reseller = null }) {
+  const initialFormState = useMemo(() => {
+    if (reseller) {
+      return {
+        businessName: reseller.businessName ?? '',
+        contactNumber: reseller.contactNumber ?? '',
+        address: reseller.address ?? '',
+        status: reseller.status ?? 'active',
+        description: reseller.notes ?? '',
+        assignedProducts: [],
+        imageFile: null,
+        imageUrl: reseller.imageUrl || ''
+      }
+    }
+    return defaultValues
+  }, [reseller])
+
+  const [form, setForm] = useState(initialFormState)
   const [products, setProducts] = useState([])
-  const [imagePreview, setImagePreview] = useState(null)
+  const [imageName, setImageName] = useState(reseller?.imageUrl ? 'Current image' : '')
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(reseller?.imageUrl || '')
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
-  // Cleanup blob URLs on unmount
+  // Cleanup blob URLs on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      if (imagePreview?.startsWith('blob:')) {
-        URL.revokeObjectURL(imagePreview)
+      if (imagePreviewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreviewUrl)
       }
     }
-  }, [imagePreview])
+  }, [imagePreviewUrl])
 
+  const title = reseller ? 'Edit Reseller' : 'Create Reseller'
+  const subtitle = reseller
+    ? 'Update the reseller details.'
+    : 'Fill out the details for the new reseller.'
 
+  // Form validation - only businessName is required
+  const isValid = useMemo(() => {
+    if (!form.businessName.trim()) return false
+    // Contact number validation (optional, but must be numbers if provided)
+    if (form.contactNumber.trim() && !/^\d+$/.test(form.contactNumber)) return false
+    return true
+  }, [form.businessName, form.contactNumber])
+
+  // Fetch products for assignment dropdown
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -52,6 +80,7 @@ export default function ResellerFormModal({
     fetchProducts()
   }, [])
 
+  // Fetch assigned products when editing
   useEffect(() => {
     if (!reseller) return
 
@@ -71,14 +100,27 @@ export default function ResellerFormModal({
   }, [reseller])
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setForm({ ...form, image: file })
-      setImagePreview(URL.createObjectURL(file))
+    const f = e.target.files?.[0] || null
+
+    setForm((p) => ({ ...p, imageFile: f }))
+    setImageName(f?.name || '')
+
+    // Revoke previous blob URL to prevent memory leak
+    if (imagePreviewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl)
+    }
+
+    if (f) {
+      setImagePreviewUrl(URL.createObjectURL(f))
+    } else if (form.imageUrl) {
+      setImagePreviewUrl(form.imageUrl)
+      setImageName('Current image')
+    } else {
+      setImagePreviewUrl('')
     }
   }
 
-    const validateForm = () => {
+  const validateForm = () => {
     const newErrors = {}
 
     if (!form.businessName.trim()) {
@@ -110,20 +152,27 @@ export default function ResellerFormModal({
       const url = reseller ? `/api/resellers/${reseller.id}` : '/api/resellers'
 
       const res = await axios[method](url, {
-        businessName: form.businessName,
-        contactNumber: form.contactNumber,
-        address: form.address,
+        businessName: form.businessName.trim(),
+        contactNumber: form.contactNumber.trim(),
+        address: form.address.trim(),
         status: form.status,
-        notes: form.description,
+        notes: form.description.trim(),
         userId: 'SYSTEM'
       })
 
+      if (!res.data?.success && !res.data?.id) {
+        toast.error(res.data?.error || 'Failed to save reseller')
+        return
+      }
+
       const resellerId = reseller ? reseller.id : res.data.id
 
+      // Clear existing product assignments when editing
       if (reseller) {
         await axios.delete(`/api/resellers-product/${resellerId}`)
       }
 
+      // Add new product assignments
       for (const productId of form.assignedProducts) {
         await axios.post('/api/resellers-product', {
           resellerId,
@@ -134,27 +183,26 @@ export default function ResellerFormModal({
       }
 
       toast.success(reseller ? 'Reseller updated successfully' : 'Reseller created successfully')
-      onSuccess(reseller ? 'edit' : 'create')
+      onSuccess?.(reseller ? 'edit' : 'create')
+      onClose?.()
 
     } catch (err) {
-      console.error(err)
-      const errorMsg = err.response?.data?.message || err.message || 'Failed to save reseller'
+      console.error('Save failed:', err)
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to save reseller'
       toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
   }
 
-
   return (
     <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4'>
       <div className='bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-xl shadow-xl relative'>
+        {/* Header */}
         <div className='flex items-center justify-between px-4 sm:px-6 pt-5 pb-1'>
           <div>
-            <h2 className='text-base font-semibold text-[#1F384C]'>{reseller ? 'Edit Reseller' : 'Create Reseller'}</h2>
-            <p className='text-xs text-[#6b7280] mt-0.5'>
-              {reseller ? 'Update the reseller details.' : 'Fill out the details for the new reseller.'}
-            </p>
+            <h2 className='text-base font-semibold text-[#1F384C]'>{title}</h2>
+            <p className='text-xs text-[#6b7280] mt-0.5'>{subtitle}</p>
           </div>
           <Button
             variant='ghost'
@@ -167,16 +215,21 @@ export default function ResellerFormModal({
 
         <Separator className='my-3 mx-4 sm:mx-6' />
 
+        {/* Form Fields */}
         <ResellerFormFields
           form={form}
           setForm={setForm}
           products={products}
-          imagePreview={imagePreview}
+          imageName={imageName}
+          imagePreviewUrl={imagePreviewUrl}
           onImageChange={handleImageChange}
           errors={errors}
+          isEditMode={!!reseller}
         />
 
         <Separator />
+
+        {/* Footer */}
         <div className='flex items-center justify-end gap-2 px-4 sm:px-6 py-3'>
           <Button
             variant='outline'
@@ -188,7 +241,7 @@ export default function ResellerFormModal({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={!isValid || loading}
             className='bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3'
           >
             {loading ? 'Saving...' : (reseller ? 'Update' : 'Confirm')}
