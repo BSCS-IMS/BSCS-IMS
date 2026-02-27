@@ -1,53 +1,94 @@
 'use client'
 
-import { Stack, TextField, InputAdornment, IconButton, Box } from '@mui/material'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Button from '@mui/material/Button'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
 import SearchIcon from '@mui/icons-material/Search'
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined'
 import SortIcon from '@mui/icons-material/Sort'
 
-export default function AnnouncementsFilter({ search, setSearch, onSortClick, sortOrder }) {
+export default function AnnouncementsFilter({ search, setSearch, onFilterClick, onSortClick }) {
   return (
-    <Stack direction='row' spacing={2} mb={3} alignItems='center'>
-      <TextField
-        placeholder='Search announcements...'
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        size='small'
-        sx={{
-          flex: 1,
-          maxWidth: 400,
-          '& .MuiOutlinedInput-root': {
-            bgcolor: 'white',
-            borderRadius: 2,
-            '& fieldset': { borderColor: '#e5e7eb' },
-            '&:hover fieldset': { borderColor: '#1F384C' },
-            '&.Mui-focused fieldset': { borderColor: '#1F384C' }
-          }
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position='start'>
-              <SearchIcon sx={{ color: '#6b7280', fontSize: 20 }} />
-            </InputAdornment>
-          )
-        }}
-      />
+    <Box sx={{ mb: 5 }}>
+      <Stack direction='row' spacing={2} alignItems='center'>
+        <TextField
+          placeholder='Search announcements...'
+          size='small'
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ flexGrow: 1 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <SearchIcon fontSize='small' sx={{ color: '#6b7280' }} />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position='end'>
+                <Button
+                  variant='contained'
+                  size='small'
+                  sx={{
+                    bgcolor: '#1F384C',
+                    color: '#fff',
+                    textTransform: 'none',
+                    minWidth: '70px',
+                    borderRadius: 1.5,
+                    '&:hover': { bgcolor: '#162A3F' }
+                  }}
+                >
+                  Search
+                </Button>
+              </InputAdornment>
+            ),
+            sx: {
+              pr: 1,
+              borderRadius: 2,
+              height: '48px'
+            }
+          }}
+        />
 
-      <Box sx={{ flexGrow: 1 }} />
+        <Button
+          onClick={onFilterClick}
+          variant='text'
+          sx={{
+            color: '#1F384C',
+            flexDirection: 'column',
+            minWidth: 'auto',
+            textTransform: 'none',
+            height: '48px',
+            px: 2,
+            '&:hover': {
+              bgcolor: '#f3f4f6'
+            }
+          }}
+        >
+          <FilterAltOutlinedIcon sx={{ fontSize: 18 }} />
+          Filter
+        </Button>
 
-      <IconButton
-        onClick={onSortClick}
-        sx={{
-          border: '1px solid #e5e7eb',
-          borderRadius: 2,
-          bgcolor: sortOrder ? '#1F384C' : 'white',
-          color: sortOrder ? 'white' : '#4A5568',
-          '&:hover': {
-            bgcolor: sortOrder ? '#162a3a' : '#f3f4f6'
-          }
-        }}
-      >
-        <SortIcon sx={{ fontSize: 20 }} />
-      </IconButton>
-    </Stack>
+        <Button
+          onClick={onSortClick}
+          variant='text'
+          sx={{
+            color: '#1F384C',
+            flexDirection: 'column',
+            minWidth: 'auto',
+            textTransform: 'none',
+            height: '48px',
+            px: 2,
+            '&:hover': {
+              bgcolor: '#f3f4f6'
+            }
+          }}
+        >
+          <SortIcon sx={{ fontSize: 18 }} />
+          Sort
+        </Button>
+      </Stack>
+    </Box>
   )
 }

@@ -1,19 +1,23 @@
 'use client'
 
+import { useState } from 'react'
 import {
+  Chip,
+  IconButton,
+  Paper,
+  Skeleton,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
-  Paper,
-  IconButton,
-  Chip,
-  Typography,
-  Skeleton,
-  Stack
+  Tooltip,
+  Typography
 } from '@mui/material'
+
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 
@@ -27,151 +31,278 @@ function formatDate(timestamp) {
   })
 }
 
-function truncateText(text, maxLength = 50) {
+function truncateText(text, maxLength = 60) {
   if (!text) return '-'
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength).trim() + '...'
 }
 
 export default function AnnouncementsTable({ announcements, loading, onEdit, onDelete }) {
-  const headerStyle = {
-    fontWeight: 600,
-    color: '#4A5568',
-    fontSize: '0.8125rem',
-    borderBottom: '1px solid #e5e7eb',
-    bgcolor: '#f8f9fa',
-    py: 1.5
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
+  const handleChangePage = (_, newPage) => {
+    setPage(newPage)
   }
 
-  const cellStyle = {
-    borderBottom: '1px solid #e5e7eb',
-    py: 2
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
   }
 
-  if (loading) {
-    return (
-      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={headerStyle}>Title</TableCell>
-              <TableCell sx={headerStyle}>Content</TableCell>
-              <TableCell sx={headerStyle}>Status</TableCell>
-              <TableCell sx={headerStyle}>Created</TableCell>
-              <TableCell sx={headerStyle} align='right'>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {[...Array(5)].map((_, i) => (
-              <TableRow key={i}>
-                <TableCell sx={cellStyle}><Skeleton variant='text' width={120} /></TableCell>
-                <TableCell sx={cellStyle}><Skeleton variant='text' width={200} /></TableCell>
-                <TableCell sx={cellStyle}><Skeleton variant='rounded' width={70} height={24} /></TableCell>
-                <TableCell sx={cellStyle}><Skeleton variant='text' width={100} /></TableCell>
-                <TableCell sx={cellStyle} align='right'>
-                  <Stack direction='row' spacing={1} justifyContent='flex-end'>
-                    <Skeleton variant='circular' width={32} height={32} />
-                    <Skeleton variant='circular' width={32} height={32} />
+  const paginatedAnnouncements = announcements.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  return (
+    <TableContainer component={Paper} sx={{ border: '1px solid #e5e7eb', boxShadow: 'none' }}>
+      <Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
+        <TableHead>
+          <TableRow>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: '#374151',
+                py: 1.5,
+                width: '25%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Title
+            </TableCell>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: '#374151',
+                py: 1.5,
+                width: '35%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Content
+            </TableCell>
+            <TableCell
+              align='center'
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: '#374151',
+                py: 1.5,
+                width: '12%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Status
+            </TableCell>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: '#374151',
+                py: 1.5,
+                width: '15%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Created
+            </TableCell>
+            <TableCell
+              align='center'
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: '#374151',
+                py: 1.5,
+                width: '13%',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Actions
+            </TableCell>
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {loading ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rectangular' width='100%' height={20} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rectangular' width='100%' height={20} />
+                </TableCell>
+                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rounded' width={70} height={24} sx={{ mx: 'auto' }} />
+                </TableCell>
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rectangular' width='100%' height={20} />
+                </TableCell>
+                <TableCell align='center' sx={{ py: 2 }}>
+                  <Stack direction='row' spacing={0.75} justifyContent='center'>
+                    <Skeleton variant='circular' width={28} height={28} />
+                    <Skeleton variant='circular' width={28} height={28} />
                   </Stack>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    )
-  }
-
-  if (announcements.length === 0) {
-    return (
-      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-        <Table>
-          <TableHead>
+            ))
+          ) : announcements.length === 0 ? (
             <TableRow>
-              <TableCell sx={headerStyle}>Title</TableCell>
-              <TableCell sx={headerStyle}>Content</TableCell>
-              <TableCell sx={headerStyle}>Status</TableCell>
-              <TableCell sx={headerStyle}>Created</TableCell>
-              <TableCell sx={headerStyle} align='right'>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell colSpan={5} align='center' sx={{ py: 8, color: '#6b7280' }}>
+              <TableCell colSpan={5} align='center' sx={{ py: 6, color: '#6b7280', fontSize: '0.8125rem', boxShadow: 'none' }}>
                 No announcements found
               </TableCell>
             </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
-    )
-  }
-
-  return (
-    <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e5e7eb', borderRadius: 2 }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={headerStyle}>Title</TableCell>
-            <TableCell sx={headerStyle}>Content</TableCell>
-            <TableCell sx={headerStyle}>Status</TableCell>
-            <TableCell sx={headerStyle}>Created</TableCell>
-            <TableCell sx={headerStyle} align='right'>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {announcements.map((announcement) => (
-            <TableRow key={announcement.id} hover>
-              <TableCell sx={cellStyle}>
-                <Typography sx={{ fontWeight: 600, fontSize: '0.75rem', color: '#1F384C' }}>
-                  {announcement.title}
-                </Typography>
-              </TableCell>
-              <TableCell sx={cellStyle}>
-                <Typography sx={{ fontSize: '0.75rem', color: '#374151' }}>
-                  {truncateText(announcement.content, 60)}
-                </Typography>
-              </TableCell>
-              <TableCell sx={cellStyle}>
-                <Chip
-                  label={announcement.isPublished ? 'Published' : 'Draft'}
-                  size='small'
+          ) : (
+            paginatedAnnouncements.map((announcement) => (
+              <TableRow key={announcement.id}>
+                <TableCell
                   sx={{
-                    bgcolor: announcement.isPublished ? '#dcfce7' : '#fef3c7',
-                    color: announcement.isPublished ? '#166534' : '#92400e',
-                    fontWeight: 500,
-                    fontSize: '0.75rem',
-                    height: 24
+                    color: '#374151',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
                   }}
-                />
-              </TableCell>
-              <TableCell sx={cellStyle}>
-                <Typography sx={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                  {formatDate(announcement.createdAt)}
-                </Typography>
-              </TableCell>
-              <TableCell sx={cellStyle} align='right'>
-                <Stack direction='row' spacing={0.5} justifyContent='flex-end'>
-                  <IconButton
-                    size='small'
+                >
+                  <Stack
+                    spacing={0}
+                    tabIndex={0}
+                    role='button'
                     onClick={() => onEdit(announcement)}
-                    sx={{ color: '#1F384C', '&:hover': { bgcolor: '#f3f4f6' } }}
+                    onKeyDown={(e) => e.key === 'Enter' && onEdit(announcement)}
+                    sx={{
+                      cursor: 'pointer'
+                    }}
                   >
-                    <EditIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                  <IconButton
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '0.8125rem',
+                        color: '#1F384C',
+                        '&:hover': {
+                          textDecoration: 'underline'
+                        }
+                      }}
+                    >
+                      {announcement.title}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <Typography sx={{ fontSize: '0.75rem', color: '#374151' }}>
+                    {truncateText(announcement.content, 60)}
+                  </Typography>
+                </TableCell>
+                <TableCell
+                  align='center'
+                  sx={{
+                    color: '#374151',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <Chip
+                    label={announcement.isPublished ? 'Published' : 'Draft'}
                     size='small'
-                    onClick={() => onDelete(announcement)}
-                    sx={{ color: '#991b1b', '&:hover': { bgcolor: '#fee2e2' } }}
-                  >
-                    <DeleteIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Stack>
-              </TableCell>
-            </TableRow>
-          ))}
+                    sx={{
+                      bgcolor: announcement.isPublished ? '#e8f5e9' : '#fff3e0',
+                      color: announcement.isPublished ? '#2e7d32' : '#e65100',
+                      fontWeight: 500,
+                      fontSize: '0.75rem',
+                      height: 24,
+                      border: 'none'
+                    }}
+                  />
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: '#1F384C',
+                    fontSize: '0.75rem',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  {formatDate(announcement.createdAt)}
+                </TableCell>
+                <TableCell align='center' sx={{ py: 2, boxShadow: 'none' }}>
+                  <Stack direction='row' spacing={0.75} justifyContent='center'>
+                    <Tooltip title='Edit Announcement'>
+                      <IconButton
+                        onClick={() => onEdit(announcement)}
+                        size='small'
+                        sx={{
+                          bgcolor: '#e3f2fd',
+                          color: '#1565c0',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            bgcolor: '#bbdefb'
+                          }
+                        }}
+                      >
+                        <EditIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title='Delete Announcement'>
+                      <IconButton
+                        onClick={() => onDelete(announcement)}
+                        size='small'
+                        sx={{
+                          bgcolor: '#ffebee',
+                          color: '#c62828',
+                          width: 28,
+                          height: 28,
+                          '&:hover': {
+                            bgcolor: '#ffcdd2'
+                          }
+                        }}
+                      >
+                        <DeleteIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
+
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        component='div'
+        count={announcements.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+            fontSize: '0.75rem'
+          },
+          '& .MuiTablePagination-select': {
+            fontSize: '0.75rem'
+          }
+        }}
+      />
     </TableContainer>
   )
 }

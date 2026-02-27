@@ -149,8 +149,8 @@ export default function AnnouncementsPage() {
           <AnnouncementsFilter
             search={search}
             setSearch={setSearch}
+            onFilterClick={() => {}}
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
-            sortOrder={sortOrder}
           />
 
           <AnnouncementsTable

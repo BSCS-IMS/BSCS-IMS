@@ -1,77 +1,88 @@
 'use client'
 
-import { Menu, MenuItem, ListItemIcon, ListItemText, Typography } from '@mui/material'
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
-import CheckIcon from '@mui/icons-material/Check'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
 
-export default function AnnouncementsSortDialog({ anchorEl, open, onClose, sortOrder, onSortSelect }) {
+export default function AnnouncementsSortDialog({
+  anchorEl,
+  open,
+  onClose,
+  sortOrder,
+  onSortSelect
+}) {
   return (
     <Menu
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      slotProps={{
-        paper: {
-          sx: {
-            mt: 1,
-            minWidth: 180,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            border: '1px solid #e5e7eb',
-            borderRadius: 2
-          }
+      PaperProps={{
+        sx: {
+          minWidth: 300,
+          mt: 1,
+          borderRadius: 2,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          p: 1
         }
       }}
     >
-      <Typography sx={{ px: 2, py: 1, fontSize: '0.75rem', color: '#6b7280', fontWeight: 500 }}>
-        Sort by Title
-      </Typography>
       <MenuItem
         onClick={() => onSortSelect('asc')}
+        selected={sortOrder === 'asc'}
         sx={{
-          py: 1.5,
-          '&:hover': { bgcolor: '#f3f4f6' }
+          py: 2,
+          px: 2.5,
+          mb: 0.5,
+          borderRadius: 1.5,
+          '&:hover': {
+            bgcolor: '#f3f4f6'
+          },
+          '&.Mui-selected': {
+            bgcolor: '#e5e7eb',
+            '&:hover': {
+              bgcolor: '#d1d5db'
+            }
+          }
         }}
       >
-        <ListItemIcon>
-          <ArrowUpwardIcon sx={{ fontSize: 18, color: '#4A5568' }} />
-        </ListItemIcon>
-        <ListItemText>
-          <Typography sx={{ fontSize: '0.875rem', color: '#374151' }}>A to Z</Typography>
-        </ListItemText>
-        {sortOrder === 'asc' && <CheckIcon sx={{ fontSize: 18, color: '#1F384C' }} />}
+        <Box>
+          <Typography variant='body2' fontWeight={500} sx={{ color: '#1F384C' }}>
+            Ascending
+          </Typography>
+          <Typography variant='caption' sx={{ mt: 0.5, display: 'block', color: '#6b7280' }}>
+            Sort announcements from A to Z
+          </Typography>
+        </Box>
       </MenuItem>
+
       <MenuItem
         onClick={() => onSortSelect('desc')}
+        selected={sortOrder === 'desc'}
         sx={{
-          py: 1.5,
-          '&:hover': { bgcolor: '#f3f4f6' }
+          py: 2,
+          px: 2.5,
+          borderRadius: 1.5,
+          '&:hover': {
+            bgcolor: '#f3f4f6'
+          },
+          '&.Mui-selected': {
+            bgcolor: '#e5e7eb',
+            '&:hover': {
+              bgcolor: '#d1d5db'
+            }
+          }
         }}
       >
-        <ListItemIcon>
-          <ArrowDownwardIcon sx={{ fontSize: 18, color: '#4A5568' }} />
-        </ListItemIcon>
-        <ListItemText>
-          <Typography sx={{ fontSize: '0.875rem', color: '#374151' }}>Z to A</Typography>
-        </ListItemText>
-        {sortOrder === 'desc' && <CheckIcon sx={{ fontSize: 18, color: '#1F384C' }} />}
+        <Box>
+          <Typography variant='body2' fontWeight={500} sx={{ color: '#1F384C' }}>
+            Descending
+          </Typography>
+          <Typography variant='caption' sx={{ mt: 0.5, display: 'block', color: '#6b7280' }}>
+            Sort announcements from Z to A
+          </Typography>
+        </Box>
       </MenuItem>
-      {sortOrder && (
-        <MenuItem
-          onClick={() => onSortSelect(null)}
-          sx={{
-            py: 1.5,
-            borderTop: '1px solid #e5e7eb',
-            '&:hover': { bgcolor: '#f3f4f6' }
-          }}
-        >
-          <ListItemText>
-            <Typography sx={{ fontSize: '0.875rem', color: '#6b7280' }}>Clear sort</Typography>
-          </ListItemText>
-        </MenuItem>
-      )}
     </Menu>
   )
 }
