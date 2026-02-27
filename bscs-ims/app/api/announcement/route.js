@@ -14,6 +14,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { admin } from "@/app/lib/firebaseAdmin";
+import { logAudit } from '@/app/lib/audit'
 
 // Helper: verify session and return decoded token
 async function getSession(req) {
@@ -130,20 +131,28 @@ export async function POST(req) {
       return NextResponse.json({ message: "Title and content are required" }, { status: 400 });
     }
 
-    const docRef = await addDoc(collection(db, "announcements"), {
+    const announcementData = {
       title: title.trim(),
       content: content.trim(),
       isPublished,
-      publishAt: isPublished
-        ? serverTimestamp()
-        : publishAt
-        ? new Date(publishAt)
-        : null,
+      publishAt: isPublished ? serverTimestamp() : publishAt ? new Date(publishAt) : null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       createdByEmail: session.email,
       createdByUid: session.uid,
-    });
+    }
+
+    const docRef = await addDoc(collection(db, 'announcements'), announcementData)
+
+    await logAudit({
+      action: 'CREATE',
+      entityType: 'announcement',
+      entityId: docRef.id,
+      newData: announcementData,
+      performedById: session.uid
+
+    })
+
 
     return NextResponse.json({ message: "Created successfully", id: docRef.id }, { status: 201 });
   } catch (error) {
@@ -180,18 +189,25 @@ export async function PUT(req) {
 
     const existing = snapshot.data();
 
-    await updateDoc(docRef, {
+    const updateData = {
       title: title.trim(),
       content: content.trim(),
       isPublished,
-      publishAt: isPublished
-        ? existing.publishAt ?? serverTimestamp() // preserve original publish time if already published
-        : publishAt
-        ? new Date(publishAt)
-        : null,
+      publishAt: isPublished ? existing.publishAt ?? serverTimestamp() : publishAt ? new Date(publishAt) : null,
       updatedAt: serverTimestamp(),
       updatedByEmail: session.email,
-    });
+    }
+
+    await updateDoc(docRef, updateData)
+
+    await logAudit({
+      action: 'UPDATE',
+      entityType: 'announcement',
+      entityId: id,
+      oldData: existing,
+      newData: updateData,
+      performedById: session.uid
+    })
 
     return NextResponse.json({ message: "Updated successfully" });
   } catch (error) {
@@ -221,7 +237,18 @@ export async function DELETE(req) {
       return NextResponse.json({ message: "Announcement not found" }, { status: 404 });
     }
 
-    await deleteDoc(docRef);
+    const deletedData = snapshot.data()  // ✅ capture before deleting
+
+    await deleteDoc(docRef)
+
+    await logAudit({
+      action: 'DELETE',
+      entityType: 'announcement',
+      entityId: id,
+      oldData: deletedData,
+      newData: null,
+      performedById: session.uid
+    })
 
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {

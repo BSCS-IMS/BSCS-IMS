@@ -5,6 +5,7 @@ import { db } from '@/app/lib/firebase'
 import { collection, getDocs, addDoc, query, where, serverTimestamp } from 'firebase/firestore'
 import { supabase } from '@/app/lib/supabaseClient'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
@@ -142,6 +143,15 @@ export async function POST(request) {
     }
 
     const docRef = await addDoc(collection(db, 'products'), productData)
+
+    await logAudit({
+      action: 'CREATE',
+      entityType: 'product',
+      entityId: docRef.id,
+      newData: productData,
+      performedById: session.uid
+
+    })
 
     return NextResponse.json({
       success: true,

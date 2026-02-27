@@ -2,8 +2,9 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where, doc, deleteDoc, getDoc } from 'firebase/firestore'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
 
 // Helper: verify session and return decoded token
 async function getSession(req) {
@@ -72,6 +73,54 @@ export async function GET(req) {
     return NextResponse.json({ success: true, data: stocks })
   } catch (error) {
     console.error('GET /inventory error:', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
+}
+
+/* ==========================
+   DELETE - hard delete inventory document
+========================== */
+export async function DELETE(req) {
+  try {
+    const session = await getSession(req)
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { productId, locationId } = await req.json()
+
+    if (!productId || !locationId) {
+      return NextResponse.json(
+        { success: false, error: 'productId and locationId are required' },
+        { status: 400 }
+      )
+    }
+
+    const inventoryId = `${productId}_${locationId}`
+    const inventoryRef = doc(db, 'inventory', inventoryId)
+    const snapshot = await getDoc(inventoryRef)
+
+    if (!snapshot.exists()) {
+      return NextResponse.json({ success: false, error: 'Inventory not found' }, { status: 404 })
+    }
+
+    const oldData = snapshot.data()
+
+    await deleteDoc(inventoryRef)
+
+    await logAudit({
+      action: 'DELETE',
+      entityType: 'inventory',
+      entityId: inventoryId,
+      oldData,
+      newData: null,
+      performedById: session.uid,
+    })
+
+    return NextResponse.json({ success: true, message: 'Inventory deleted successfully' })
+
+  } catch (error) {
+    console.error('DELETE /inventory error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 }
