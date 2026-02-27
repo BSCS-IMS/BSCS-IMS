@@ -120,6 +120,15 @@ export default function ResellerFormModal({ onClose, onSuccess, reseller = null 
     }
   }
 
+  const handleImageRemove = () => {
+    if (imagePreviewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl)
+    }
+    setForm((p) => ({ ...p, imageFile: null, imageUrl: '', removeImage: true }))
+    setImageName('')
+    setImagePreviewUrl('')
+  }
+
   const validateForm = () => {
     const newErrors = {}
 
@@ -163,6 +172,9 @@ export default function ResellerFormModal({ onClose, onSuccess, reseller = null 
       // Image file
       if (form.imageFile) {
         formData.append('file', form.imageFile)
+      }
+      if (form.removeImage) {
+        formData.append('removeImage', 'true')
       }
 
       const method = reseller ? 'put' : 'post'
@@ -233,6 +245,7 @@ export default function ResellerFormModal({ onClose, onSuccess, reseller = null 
           imageName={imageName}
           imagePreviewUrl={imagePreviewUrl}
           onImageChange={handleImageChange}
+          onImageRemove={handleImageRemove}
           errors={errors}
           isEditMode={!!reseller}
         />

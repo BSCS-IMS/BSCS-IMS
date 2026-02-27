@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Upload } from 'lucide-react'
+import { Upload, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -12,6 +12,7 @@ export default function ResellerFormFields({
   imageName,
   imagePreviewUrl,
   onImageChange,
+  onImageRemove,
   errors,
   isEditMode = false
 }) {
@@ -181,11 +182,22 @@ export default function ResellerFormFields({
 
       {/* Image Preview */}
       {imagePreviewUrl && (
-        <div className='flex items-center gap-2'>
-          <div className='h-10 w-14 overflow-hidden rounded-md border border-[#e5e7eb] bg-[#f3f4f6]'>
-            <img src={imagePreviewUrl} alt='preview' className='h-full w-full object-cover' />
+        <div className='flex items-center justify-between gap-2'>
+          <div className='flex items-center gap-2'>
+            <div className='h-10 w-14 overflow-hidden rounded-md border border-[#e5e7eb] bg-[#f3f4f6]'>
+              <img src={imagePreviewUrl} alt='preview' className='h-full w-full object-cover' />
+            </div>
+            <div className='text-[10px] text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
           </div>
-          <div className='text-[10px] text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
+          {onImageRemove && (
+            <button
+              type='button'
+              onClick={onImageRemove}
+              className='w-7 h-7 border border-red-300 hover:border-red-500 hover:bg-red-50 text-red-500 rounded-md flex items-center justify-center transition-colors'
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
       )}
     </div>

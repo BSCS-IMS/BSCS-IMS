@@ -142,7 +142,7 @@ export default function LoginPage() {
         <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 p-4 md:pl-16 mt-10">
 
           <Image
-            src="/LOGO_CLEAr.png"
+            src="/LOGO_CLEAR.png"
             alt="Murang Bigas Logo"
             width={45}
             height={45}

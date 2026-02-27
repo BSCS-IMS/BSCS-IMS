@@ -120,6 +120,7 @@ export async function PUT(request, { params }) {
     const description = formData.get('description')
     const isActive = formData.get('isActive') === 'true'
     const file = formData.get('file')
+    const removeImage = formData.get('removeImage') === 'true'
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -128,9 +129,13 @@ export async function PUT(request, { params }) {
       )
     }
 
-    // Handle image replacement
+    // Handle image removal
     let imageUrl = existingProduct.imageUrl ?? null
-    if (file && file.size > 0) {
+    if (removeImage) {
+      await deleteImage(existingProduct.imageUrl)
+      imageUrl = null
+    } else if (file && file.size > 0) {
+      // Handle image replacement
       await deleteImage(existingProduct.imageUrl)
 
       const result = await uploadImage(file)

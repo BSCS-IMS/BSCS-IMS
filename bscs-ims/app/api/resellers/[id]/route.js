@@ -98,6 +98,7 @@ export async function PUT(req, context) {
 	const notes = formData.get('notes')
 	const userId = formData.get('userId')
 	const file = formData.get('file')
+	const removeImage = formData.get('removeImage') === 'true'
 
 	// Validate required field
 	if (!businessName?.trim()) {
@@ -107,10 +108,13 @@ export async function PUT(req, context) {
 		)
 	}
 
-	// Handle image replacement
+	// Handle image removal
 	let imageUrl = oldData.imageUrl ?? null
-	if (file && file.size > 0) {
-		// Delete old image
+	if (removeImage) {
+		await deleteImage(oldData.imageUrl)
+		imageUrl = null
+	} else if (file && file.size > 0) {
+		// Handle image replacement
 		await deleteImage(oldData.imageUrl)
 
 		const result = await uploadImage(file)

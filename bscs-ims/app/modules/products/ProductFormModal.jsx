@@ -82,6 +82,15 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
     }
   }
 
+  const handleImageRemove = () => {
+    if (imagePreviewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl)
+    }
+    setForm((p) => ({ ...p, imageFile: null, imageUrl: '', removeImage: true }))
+    setImageName('')
+    setImagePreviewUrl('')
+  }
+
   async function handleSubmit() {
     if (loading) return
     setLoading(true)
@@ -105,6 +114,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
       }
       if (product && form.imageUrl) formData.append('imageUrl', form.imageUrl)
       if (form.imageFile) formData.append('file', form.imageFile)
+      if (form.removeImage) formData.append('removeImage', 'true')
 
       const url = product ? `/api/products/${product.id}` : '/api/products'
       const method = product ? 'put' : 'post'
@@ -159,6 +169,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
           imageName={imageName}
           imagePreviewUrl={imagePreviewUrl}
           onImageChange={handleImageChange}
+          onImageRemove={handleImageRemove}
           isEditMode={!!product}
           showAsteriskFields={['productName', 'sku']}
         />
