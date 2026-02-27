@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   Avatar,
   Chip,
@@ -249,13 +250,46 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                         </Typography>
                       )
                     }
+                    const displayInventory = productInventory.length >= 4 ? productInventory.slice(0, 3) : productInventory
+                    const hasMore = productInventory.length >= 4
                     return (
-                      <Stack spacing={0.25}>
-                        {productInventory.map((inv) => (
-                          <Typography key={inv.id} variant='body2' sx={{ color: '#1F384C', fontSize: '0.75rem' }}>
-                            {inv.locationName} ({Number(inv.quantity).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })})
-                          </Typography>
+                      <Stack spacing={0.5}>
+                        {displayInventory.map((inv) => (
+                          <Stack key={inv.id} direction='row' justifyContent='space-between' alignItems='center'>
+                            <Typography sx={{ fontWeight: 600, fontSize: '0.75rem', color: '#1F384C' }}>
+                              {inv.locationName}
+                            </Typography>
+                            <Typography sx={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                              {Number(inv.quantity).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                            </Typography>
+                          </Stack>
                         ))}
+                        {hasMore && (
+                          <Link href='/inventory' style={{ textDecoration: 'none', display: 'block', marginTop: '15px' }}>
+                            <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ '&:hover': { textDecoration: 'underline' } }}>
+                              <Typography
+                                sx={{
+                                  fontWeight: 500,
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                View more
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  fontWeight: 500,
+                                  fontSize: '0.75rem',
+                                  color: '#6b7280',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                &gt;
+                              </Typography>
+                            </Stack>
+                          </Link>
+                        )}
                       </Stack>
                     )
                   })()}
