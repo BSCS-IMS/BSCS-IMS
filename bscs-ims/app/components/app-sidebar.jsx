@@ -16,7 +16,7 @@ import {
   SidebarFooter,
   SidebarHeader
 } from '@/components/ui/sidebar'
-import { ClipboardClock, ChartColumn, ShoppingCart, UserRound, Settings, Archive, LogOut } from 'lucide-react'
+import { ClipboardClock, ChartColumn, ShoppingCart, UserRound, Settings, Archive, LogOut, Megaphone } from 'lucide-react'
 import Image from 'next/image'
 
 const menuitems = [
@@ -44,6 +44,11 @@ const menuitems = [
     title: 'Inventory',
     url: '/inventory',
     icon: Archive
+  },
+  {
+    title: 'Announcements',
+    url: '/announcements',
+    icon: Megaphone
   }
 ]
 
