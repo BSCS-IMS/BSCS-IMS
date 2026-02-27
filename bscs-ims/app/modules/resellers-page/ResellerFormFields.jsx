@@ -182,22 +182,26 @@ export default function ResellerFormFields({
 
       {/* Image Preview */}
       {imagePreviewUrl && (
-        <div className='flex items-center justify-between gap-2'>
-          <div className='flex items-center gap-2'>
-            <div className='h-10 w-14 overflow-hidden rounded-md border border-[#e5e7eb] bg-[#f3f4f6]'>
-              <img src={imagePreviewUrl} alt='preview' className='h-full w-full object-cover' />
-            </div>
-            <div className='text-[10px] text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
+        <div className='space-y-1.5'>
+          <Label className='text-xs font-medium text-[#374151]'>Image Preview</Label>
+          <div
+            className='relative w-full h-40 overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f3f4f6] group cursor-pointer'
+            onClick={onImageRemove}
+          >
+            <img
+              src={imagePreviewUrl}
+              alt='preview'
+              className='h-full w-full object-cover transition-all duration-200 group-hover:blur-sm group-hover:brightness-75'
+            />
+            {onImageRemove && (
+              <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                <div className='w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-md'>
+                  <Trash2 size={24} className='text-[#1F384C]' />
+                </div>
+              </div>
+            )}
           </div>
-          {onImageRemove && (
-            <button
-              type='button'
-              onClick={onImageRemove}
-              className='w-7 h-7 border border-red-300 hover:border-red-500 hover:bg-red-50 text-red-500 rounded-md flex items-center justify-center transition-colors'
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
+          <div className='text-[10px] text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
         </div>
       )}
     </div>
