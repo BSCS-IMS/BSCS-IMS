@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
-  Menu,
   Stack,
   Autocomplete,
-  TextField,
-  Button,
-  Divider
+  TextField
 } from '@mui/material'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs from 'dayjs'
+import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 
 const statusOptions = [
   { label: 'All', value: '' },
@@ -23,7 +23,6 @@ const statusOptions = [
 ]
 
 export default function AnnouncementsFilterDialog({
-  anchorEl,
   open,
   onClose,
   filters,
@@ -66,140 +65,154 @@ export default function AnnouncementsFilterDialog({
 
   const hasActiveFilters = status?.value || dateFrom || dateTo
 
+  if (!open) return null
+
   return (
-    <Menu
-      anchorEl={anchorEl}
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: {
-          minWidth: 320,
-          mt: 1,
-          borderRadius: 2,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          p: 2
-        }
-      }}
-    >
-      <Typography variant='subtitle2' fontWeight={600} sx={{ color: '#1F384C', mb: 2 }}>
-        Filter Announcements
-      </Typography>
+    <div className='fixed inset-0 bg-black/40 flex items-center justify-center z-9999 p-4'>
+      <div className='bg-white w-full max-w-md overflow-hidden rounded-xl shadow-xl relative'>
+        {/* Header */}
+        <div className='flex items-center justify-between px-4 sm:px-6 pt-5 pb-1'>
+          <div>
+            <h2 className='text-base font-semibold text-[#1F384C]'>Filter Announcements</h2>
+            <p className='text-xs text-[#6b7280] mt-0.5'>Apply filters to narrow down results</p>
+          </div>
 
-      <Stack spacing={2.5}>
-        {/* Status Filter */}
-        <Box>
-          <Typography variant='caption' sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-            Status
-          </Typography>
-          <Autocomplete
-            size='small'
-            options={statusOptions}
-            value={status}
-            onChange={(_, newValue) => setStatus(newValue)}
-            getOptionLabel={(option) => option.label}
-            isOptionEqualToValue={(option, value) => option.value === value.value}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                placeholder='Select status'
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1.5,
-                    '& fieldset': { borderColor: '#e5e7eb' },
-                    '&:hover fieldset': { borderColor: '#1F384C' },
-                    '&.Mui-focused fieldset': { borderColor: '#1F384C' }
-                  }
-                }}
-              />
-            )}
-          />
-        </Box>
-
-        {/* Date Range Filter */}
-        <Box>
-          <Typography variant='caption' sx={{ color: '#6b7280', mb: 0.5, display: 'block' }}>
-            Created Date Range
-          </Typography>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Stack direction='row' spacing={1} alignItems='center'>
-              <DatePicker
-                value={dateFrom}
-                onChange={(newValue) => setDateFrom(newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    placeholder: 'From',
-                    sx: {
-                      flex: 1,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 1.5,
-                        '& fieldset': { borderColor: '#e5e7eb' },
-                        '&:hover fieldset': { borderColor: '#1F384C' },
-                        '&.Mui-focused fieldset': { borderColor: '#1F384C' }
-                      }
-                    }
-                  }
-                }}
-                format='MM/DD/YYYY'
-              />
-              <Typography variant='body2' sx={{ color: '#6b7280' }}>
-                to
-              </Typography>
-              <DatePicker
-                value={dateTo}
-                onChange={(newValue) => setDateTo(newValue)}
-                minDate={dateFrom || undefined}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    placeholder: 'To',
-                    sx: {
-                      flex: 1,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 1.5,
-                        '& fieldset': { borderColor: '#e5e7eb' },
-                        '&:hover fieldset': { borderColor: '#1F384C' },
-                        '&.Mui-focused fieldset': { borderColor: '#1F384C' }
-                      }
-                    }
-                  }
-                }}
-                format='MM/DD/YYYY'
-              />
-            </Stack>
-          </LocalizationProvider>
-        </Box>
-      </Stack>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Action Buttons */}
-      <Stack direction='row' spacing={1} justifyContent='flex-end'>
-        {hasActiveFilters && (
           <Button
-            variant='text'
-            onClick={handleClear}
-            sx={{
-              color: '#6b7280',
-              textTransform: 'none',
-              '&:hover': { bgcolor: '#f3f4f6' }
-            }}
+            variant='ghost'
+            onClick={onClose}
+            className='h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]'
           >
-            Clear
+            <X size={16} />
           </Button>
-        )}
-        <Button
-          variant='contained'
-          onClick={handleApply}
-          sx={{
-            bgcolor: '#1F384C',
-            textTransform: 'none',
-            '&:hover': { bgcolor: '#162A3F' }
-          }}
-        >
-          Apply Filters
-        </Button>
-      </Stack>
-    </Menu>
+        </div>
+
+        <Separator className='my-3 mx-4 sm:mx-6' />
+
+        {/* Filter Content */}
+        <div className='px-4 sm:px-6 pb-4'>
+          <Stack spacing={3}>
+            {/* Status Filter */}
+            <Box>
+              <Typography variant='caption' sx={{ color: '#374151', fontWeight: 500, mb: 0.5, display: 'block' }}>
+                Status
+              </Typography>
+              <Autocomplete
+                size='small'
+                options={statusOptions}
+                value={status}
+                onChange={(_, newValue) => setStatus(newValue)}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                slotProps={{
+                  popper: {
+                    sx: { zIndex: 10000 }
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder='Select status'
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 1.5,
+                        '& fieldset': { borderColor: '#e5e7eb' },
+                        '&:hover fieldset': { borderColor: '#1F384C' },
+                        '&.Mui-focused fieldset': { borderColor: '#1F384C' }
+                      }
+                    }}
+                  />
+                )}
+              />
+            </Box>
+
+            {/* Date Range Filter */}
+            <Box>
+              <Typography variant='caption' sx={{ color: '#374151', fontWeight: 500, mb: 1, display: 'block' }}>
+                Created Date Range
+              </Typography>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Stack spacing={2}>
+                  <DatePicker
+                    label='From'
+                    value={dateFrom}
+                    onChange={(newValue) => setDateFrom(newValue)}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        sx: {
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 1.5,
+                            '& fieldset': { borderColor: '#e5e7eb' },
+                            '&:hover fieldset': { borderColor: '#1F384C' },
+                            '&.Mui-focused fieldset': { borderColor: '#1F384C' }
+                          }
+                        }
+                      },
+                      popper: {
+                        sx: { zIndex: 10000 }
+                      }
+                    }}
+                    format='MM/DD/YYYY'
+                  />
+                  <DatePicker
+                    label='To'
+                    value={dateTo}
+                    onChange={(newValue) => setDateTo(newValue)}
+                    minDate={dateFrom || undefined}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        sx: {
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 1.5,
+                            '& fieldset': { borderColor: '#e5e7eb' },
+                            '&:hover fieldset': { borderColor: '#1F384C' },
+                            '&.Mui-focused fieldset': { borderColor: '#1F384C' }
+                          }
+                        }
+                      },
+                      popper: {
+                        sx: { zIndex: 10000 }
+                      }
+                    }}
+                    format='MM/DD/YYYY'
+                  />
+                </Stack>
+              </LocalizationProvider>
+            </Box>
+          </Stack>
+        </div>
+
+        <Separator />
+
+        {/* Footer */}
+        <div className='flex items-center justify-end gap-2 px-4 sm:px-6 py-3'>
+          {hasActiveFilters && (
+            <Button
+              variant='ghost'
+              onClick={handleClear}
+              className='h-8 text-xs px-3 text-[#6b7280] hover:text-[#1F384C]'
+            >
+              Clear All
+            </Button>
+          )}
+          <Button
+            variant='outline'
+            onClick={onClose}
+            className='h-8 text-xs px-3'
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleApply}
+            className='bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3'
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

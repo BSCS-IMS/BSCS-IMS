@@ -4,6 +4,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import Divider from '@mui/material/Divider'
 
 export default function AnnouncementsSortDialog({
   anchorEl,
@@ -83,6 +84,27 @@ export default function AnnouncementsSortDialog({
           </Typography>
         </Box>
       </MenuItem>
+
+      {sortOrder && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          <MenuItem
+            onClick={() => onSortSelect(null)}
+            sx={{
+              py: 1.5,
+              px: 2.5,
+              borderRadius: 1.5,
+              '&:hover': {
+                bgcolor: '#f3f4f6'
+              }
+            }}
+          >
+            <Typography variant='body2' sx={{ color: '#6b7280' }}>
+              Clear sort
+            </Typography>
+          </MenuItem>
+        </>
+      )}
     </Menu>
   )
 }

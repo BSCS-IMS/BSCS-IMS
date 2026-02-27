@@ -34,9 +34,8 @@ export default function AnnouncementsPage() {
   const [sortOrder, setSortOrder] = useState(urlSort || null)
 
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null)
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const isSortOpen = Boolean(sortAnchorEl)
-  const isFilterOpen = Boolean(filterAnchorEl)
 
   const [announcements, setAnnouncements] = useState([])
   const [loading, setLoading] = useState(true)
@@ -226,7 +225,7 @@ export default function AnnouncementsPage() {
             setSearch={setSearch}
             onSearchSubmit={handleSearchSubmit}
             onSearchKeyDown={handleSearchKeyDown}
-            onFilterClick={(e) => setFilterAnchorEl(e.currentTarget)}
+            onFilterClick={() => setIsFilterDialogOpen(true)}
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
             activeFilterCount={activeFilterCount}
             sortOrder={sortOrder}
@@ -250,9 +249,8 @@ export default function AnnouncementsPage() {
       />
 
       <AnnouncementsFilterDialog
-        anchorEl={filterAnchorEl}
-        open={isFilterOpen}
-        onClose={() => setFilterAnchorEl(null)}
+        open={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
         filters={{
           status: urlStatus,
           dateFrom: urlDateFrom,
