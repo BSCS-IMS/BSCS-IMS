@@ -174,7 +174,21 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                     boxShadow: 'none'
                   }}
                 >
-                  <Avatar src={product.image} variant='rounded' sx={{ mx: 'auto', width: 36, height: 36 }} />
+                  <Avatar
+                    src={product.image || ''}
+                    variant='rounded'
+                    sx={{
+                      mx: 'auto',
+                      width: 36,
+                      height: 36,
+                      bgcolor: '#E8F1FA'
+                    }}
+                    imgProps={{
+                      onError: (e) => { e.target.style.display = 'none' }
+                    }}
+                  >
+                    <img src='/LOGO_CLEAR.png' alt='logo' style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                  </Avatar>
                 </TableCell>
                 <TableCell
                   sx={{

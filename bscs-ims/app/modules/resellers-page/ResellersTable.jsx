@@ -17,7 +17,6 @@ import {
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import ImageIcon from '@mui/icons-material/Image'
 
 function AssignedProductsCell({ resellerId }) {
   const [products, setProducts] = useState([])
@@ -181,27 +180,22 @@ export default function ResellersTable({
                     boxShadow: 'none'
                   }}
                 >
-                  {row.imageUrl ? (
                     <Avatar
-                      src={row.imageUrl}
-                      alt={row.businessName}
-                      variant='rounded'
-                      sx={{ width: 36, height: 36, mx: 'auto' }}
-                    />
-                  ) : (
-                    <Avatar
-                      variant='rounded'
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        mx: 'auto',
-                        bgcolor: '#E8F1FA',
-                        color: '#1F384C'
-                      }}
-                    >
-                      <ImageIcon sx={{ fontSize: 18 }} />
-                    </Avatar>
-                  )}
+                    src={row.imageUrl || ''}
+                    alt={row.businessName}
+                    variant='rounded'
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      mx: 'auto',
+                      bgcolor: '#E8F1FA'
+                    }}
+                    imgProps={{
+                      onError: (e) => { e.target.style.display = 'none' }
+                    }}
+                  >
+                    <img src='/LOGO_CLEAR.png' alt='logo' style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                  </Avatar>
                 </TableCell>
 
                 <TableCell
