@@ -1,6 +1,9 @@
 'use client'
+import { useState } from 'react'
 import axios from 'axios'
 import { usePathname, useRouter } from 'next/navigation'
+import { toast } from 'react-toastify'
+import { LogoutLoader } from '@/app/components/Loader'
 import {
   Sidebar,
   SidebarContent,
@@ -55,18 +58,46 @@ const otheritems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
-  try {
-    const response = await axios.post('/api/logout')
-    router.push('/login')
-  } catch (error) {
-    console.error('Logout failed:', error)
+    try {
+      setIsLoggingOut(true)
+      await axios.post('/api/logout')
+
+      toast.success('Logged out successfully. Goodbye!', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: false,
+        draggable: true,
+        theme: "colored",
+      })
+
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
+    } catch (error) {
+      console.error('Logout failed:', error)
+      setIsLoggingOut(false)
+
+      toast.error('Logout failed. Please try again.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      })
+    }
   }
-}
 
   return (
-    <Sidebar className='bg-[#F8F9FA]'>
+    <>
+      {isLoggingOut && <LogoutLoader />}
+      <Sidebar className='bg-[#F8F9FA]'>
       <SidebarHeader className='h-16 border-b border-[#E5E7EB] bg-[#F8F9FA]'>
         <div className='flex items-center gap-3 px-8 h-full'>
           <div className='flex items-center justify-center w-8 h-8 shrink-0'>
@@ -168,5 +199,6 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+    </>
   )
 }

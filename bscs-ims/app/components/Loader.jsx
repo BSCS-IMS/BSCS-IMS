@@ -158,3 +158,45 @@ export function LoginLoader() {
     </div>
   )
 }
+
+// Logout-specific loader - named export
+export function LogoutLoader() {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-[9999]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative w-16 h-16">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-3 bg-[#1F384C] rounded-full opacity-80"
+              style={{
+                left: '50%',
+                top: '50%',
+                transform: `rotate(${i * 45}deg) translateY(-24px)`,
+                animation: `spin 1s linear infinite`,
+                animationDelay: `${i * 0.125}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        <p className="text-[#1F384C] font-medium text-sm">Signing you out...</p>
+      </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}

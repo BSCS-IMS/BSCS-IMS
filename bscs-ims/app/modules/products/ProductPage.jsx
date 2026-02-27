@@ -174,7 +174,7 @@ export default function ProductPage() {
         setSortOrder={setSortOrder}
         onCreate={openCreateModal}
         onEdit={openEditModal}
-        onDelete={handleDelete}
+        onDelete={openDeleteModal}
         isProductModalOpen={isProductModalOpen}
         setIsProductModalOpen={setIsProductModalOpen}
         productModalMode={productModalMode}
