@@ -80,8 +80,8 @@ export function AppSidebar() {
           </div>
 
           <div className='flex flex-col'>
-            <h2 className='text-sm font-bold text-[#1e40af] leading-tight'>Murang Bigas</h2>
-            <h2 className='text-sm font-bold text-[#1e40af] leading-tight'>Livelihood</h2>
+            <h2 className='text-sm font-bold text-[#1F384C] leading-tight'>Murang Bigas</h2>
+            <h2 className='text-sm font-bold text-[#1F384C] leading-tight'>Livelihood</h2>
           </div>
         </div>
       </SidebarHeader>
@@ -101,13 +101,13 @@ export function AppSidebar() {
                       asChild
                       className={`h-12 px-3 text-base transition-colors rounded-lg ${
                         isActive
-                          ? 'bg-[#1e40af]/15 text-[#1e40af] font-medium'
-                          : 'text-[#4A5568] font-normal hover:bg-[#1e40af]/8'
+                          ? 'bg-[#1F384C]/12 text-[#1F384C] font-medium'
+                          : 'text-[#4A5568] font-normal hover:bg-[#1F384C]/8'
                       }`}
                     >
                       <a href={menuitem.url} className='flex items-center gap-3'>
                         <menuitem.icon
-                          className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#1e40af]' : 'text-[#718096]'}`}
+                          className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#1F384C]' : 'text-[#718096]'}`}
                         />
                         <span className='truncate'>{menuitem.title}</span>
                       </a>
@@ -133,13 +133,13 @@ export function AppSidebar() {
                       asChild
                       className={`h-12 px-3 text-base transition-colors rounded-lg ${
                         isActive
-                          ? 'bg-[#1e40af]/15 text-[#1e40af] font-medium'
-                          : 'text-[#4A5568] font-normal hover:bg-[#1e40af]/8'
+                          ? 'bg-[#1F384C]/12 text-[#1F384C] font-medium'
+                          : 'text-[#4A5568] font-normal hover:bg-[#1F384C]/8'
                       }`}
                     >
                       <a href={otheritem.url} className='flex items-center gap-3'>
                         <otheritem.icon
-                          className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#1e40af]' : 'text-[#718096]'}`}
+                          className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#1F384C]' : 'text-[#718096]'}`}
                         />
                         <span className='truncate'>{otheritem.title}</span>
                       </a>
@@ -157,7 +157,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className='h-12 px-3 text-base transition-colors rounded-lg text-[#1e40af] font-normal hover:bg-[#1e40af]/8'
+              className='h-12 px-3 text-base transition-colors rounded-lg text-[#1F384C] font-normal hover:bg-[#1F384C]/8'
             >
               <div className='flex items-center gap-3 w-full cursor-pointer'>
                 <LogOut className='w-5 h-5 shrink-0' />
