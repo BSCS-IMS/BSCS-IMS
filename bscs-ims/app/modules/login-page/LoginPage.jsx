@@ -102,7 +102,7 @@ export default function LoginPage() {
       })
 
       // Success toast
-      toast.success('Login Successfull, Welcome!', {
+      toast.success('Login Successful', {
         position: "top-right",
         autoClose: 2000,
         hideProgressBar: true,
