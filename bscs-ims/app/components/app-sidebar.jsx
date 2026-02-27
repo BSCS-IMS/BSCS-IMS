@@ -65,7 +65,7 @@ export function AppSidebar() {
       setIsLoggingOut(true)
       await axios.post('/api/logout')
 
-      toast.success('Logged out successfully. Goodbye!', {
+      toast.success('Logged out successfully.', {
         position: "top-right",
         autoClose: 2000,
         hideProgressBar: true,
