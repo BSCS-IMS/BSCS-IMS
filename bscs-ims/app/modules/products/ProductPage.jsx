@@ -180,6 +180,7 @@ export default function ProductPage() {
         productModalMode={productModalMode}
         productModalInitialValues={productModalInitialValues}
         onConfirm={handleConfirm}
+        loading={loading}
       />
     )
   }

@@ -113,6 +113,7 @@ export default function ResellersPage() {
             setEditingReseller(null)
             setOpenForm(true)
           }}
+          loading={loading}
         />
         {openForm && (
           <CreateResellerModal

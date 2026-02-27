@@ -14,6 +14,20 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+function SkeletonCard() {
+  return (
+    <div className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden p-4'>
+      <div className='flex items-center justify-between'>
+        <div className='space-y-2 flex-1'>
+          <div className='h-4 w-32 bg-gray-200 rounded animate-pulse' />
+          <div className='h-3 w-24 bg-gray-200 rounded animate-pulse' />
+        </div>
+        <div className='h-5 w-5 bg-gray-200 rounded animate-pulse' />
+      </div>
+    </div>
+  )
+}
+
 export default function InventoryMobileView({ rows, loading, onEdit, onDelete }) {
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
@@ -141,14 +155,21 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
         )}
 
         {/* Inventory Cards */}
-        <div className='space-y-3'>
-          {filteredRows.length === 0 && (
+        <div className='space-y-3 pb-20'>
+          {loading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : filteredRows.length === 0 ? (
             <div className='bg-white rounded-lg py-10 text-center text-gray-500 shadow-sm border border-[#e5e7eb]'>
-              {loading ? 'Loading...' : 'No inventory found'}
+              No inventory found
             </div>
-          )}
-
-          {filteredRows.map((row) => {
+          ) : (
+          filteredRows.map((row) => {
             const isOpen = expandedId === row.id
             const itemCount = row.items?.length || 0
             const totalQty = row.items?.reduce((sum, item) => sum + Number(item.qty || 0), 0) || 0
@@ -206,7 +227,8 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
                 )}
               </div>
             )
-          })}
+          })
+          )}
         </div>
       </div>
     </div>
