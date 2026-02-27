@@ -148,17 +148,27 @@ export default function ResellerFormModal({ onClose, onSuccess, reseller = null 
     setLoading(true)
 
     try {
+      const formData = new FormData()
+
+      // Required field
+      formData.append('businessName', form.businessName.trim())
+
+      // Optional fields
+      formData.append('contactNumber', form.contactNumber.trim())
+      formData.append('address', form.address.trim())
+      formData.append('status', form.status)
+      formData.append('notes', form.description.trim())
+      formData.append('userId', 'SYSTEM')
+
+      // Image file
+      if (form.imageFile) {
+        formData.append('file', form.imageFile)
+      }
+
       const method = reseller ? 'put' : 'post'
       const url = reseller ? `/api/resellers/${reseller.id}` : '/api/resellers'
 
-      const res = await axios[method](url, {
-        businessName: form.businessName.trim(),
-        contactNumber: form.contactNumber.trim(),
-        address: form.address.trim(),
-        status: form.status,
-        notes: form.description.trim(),
-        userId: 'SYSTEM'
-      })
+      const res = await axios[method](url, formData)
 
       if (!res.data?.success && !res.data?.id) {
         toast.error(res.data?.error || 'Failed to save reseller')
