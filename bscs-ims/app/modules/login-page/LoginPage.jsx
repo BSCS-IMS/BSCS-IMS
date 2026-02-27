@@ -120,10 +120,9 @@ export default function LoginPage() {
     } catch (err) {
       console.error('Error logging in:', err)
       setIsLoading(false)
-      
-      // Error toast
-      const errorMessage = err.response?.data?.message || 'Invalid email or password'
-      toast.error(`${errorMessage}`, {
+
+      // Error toast with user-friendly message
+      toast.error('Incorrect email or password. Please try again.', {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: true,

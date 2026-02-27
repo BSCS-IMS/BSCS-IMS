@@ -9,7 +9,7 @@ export default function Loader() {
 
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const brandColor =
-      document.querySelector('meta[name="theme-color"]')?.content || "#b49cff";
+      document.querySelector('meta[name="theme-color"]')?.content || "#1F384C";
 
     // OVERLAY
     const overlay = document.createElement("div");
@@ -133,7 +133,7 @@ export function LoginLoader() {
           {[...Array(8)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-2 h-3 bg-[#5A67BA] rounded-full opacity-80"
+              className="absolute w-2 h-3 bg-[#1F384C] rounded-full opacity-80"
               style={{
                 left: '50%',
                 top: '50%',
@@ -146,7 +146,7 @@ export function LoginLoader() {
         </div>
         
         {/* Loading text */}
-        <p className="text-[#5A67BA] font-medium text-sm">Signing you in...</p>
+        <p className="text-[#1F384C] font-medium text-sm">Signing you in...</p>
       </div>
 
       <style jsx>{`
