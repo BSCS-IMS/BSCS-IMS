@@ -89,7 +89,7 @@ export default function AnnouncementFormModal({ announcement = null, onSuccess, 
           <Button
             variant='ghost'
             onClick={onClose}
-            className='h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]'
+            className='h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6] cursor-pointer'
           >
             <X size={16} />
           </Button>
@@ -148,14 +148,14 @@ export default function AnnouncementFormModal({ announcement = null, onSuccess, 
             variant='outline'
             onClick={onClose}
             disabled={loading}
-            className='h-8 text-xs px-3'
+            className='h-8 text-xs px-3 cursor-pointer'
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!isValid || loading}
-            className='bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3'
+            className='bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3 cursor-pointer'
           >
             {loading ? 'Saving...' : (announcement ? 'Update' : 'Confirm')}
           </Button>

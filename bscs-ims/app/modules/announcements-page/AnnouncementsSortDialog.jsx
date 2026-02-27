@@ -36,6 +36,7 @@ export default function AnnouncementsSortDialog({
           px: 2.5,
           mb: 0.5,
           borderRadius: 1.5,
+          cursor: 'pointer',
           '&:hover': {
             bgcolor: '#f3f4f6'
           },
@@ -64,6 +65,7 @@ export default function AnnouncementsSortDialog({
           py: 2,
           px: 2.5,
           borderRadius: 1.5,
+          cursor: 'pointer',
           '&:hover': {
             bgcolor: '#f3f4f6'
           },
@@ -94,6 +96,7 @@ export default function AnnouncementsSortDialog({
               py: 1.5,
               px: 2.5,
               borderRadius: 1.5,
+              cursor: 'pointer',
               '&:hover': {
                 bgcolor: '#f3f4f6'
               }

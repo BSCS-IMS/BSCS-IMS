@@ -172,29 +172,15 @@ export default function AnnouncementsTable({ announcements, loading, onEdit, onD
                     boxShadow: 'none'
                   }}
                 >
-                  <Stack
-                    spacing={0}
-                    tabIndex={0}
-                    role='button'
-                    onClick={() => onEdit(announcement)}
-                    onKeyDown={(e) => e.key === 'Enter' && onEdit(announcement)}
+                  <Typography
                     sx={{
-                      cursor: 'pointer'
+                      fontWeight: 600,
+                      fontSize: '0.8125rem',
+                      color: '#1F384C'
                     }}
                   >
-                    <Typography
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: '0.8125rem',
-                        color: '#1F384C',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }}
-                    >
-                      {announcement.title}
-                    </Typography>
-                  </Stack>
+                    {announcement.title}
+                  </Typography>
                 </TableCell>
                 <TableCell
                   sx={{
@@ -252,6 +238,7 @@ export default function AnnouncementsTable({ announcements, loading, onEdit, onD
                           color: '#1565c0',
                           width: 28,
                           height: 28,
+                          cursor: 'pointer',
                           '&:hover': {
                             bgcolor: '#bbdefb'
                           }
@@ -270,6 +257,7 @@ export default function AnnouncementsTable({ announcements, loading, onEdit, onD
                           color: '#c62828',
                           width: 28,
                           height: 28,
+                          cursor: 'pointer',
                           '&:hover': {
                             bgcolor: '#ffcdd2'
                           }

@@ -71,7 +71,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
 
         <Button
           onClick={onCreate}
-          className='fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#1F384C] text-white shadow-lg flex items-center justify-center hover:bg-[#162A3F] active:scale-95 p-0'
+          className='fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#1F384C] text-white shadow-lg flex items-center justify-center hover:bg-[#162A3F] active:scale-95 p-0 cursor-pointer'
         >
           <Plus size={24} />
         </Button>
@@ -85,7 +85,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
           />
           <Button
             variant='ghost'
-            className='absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-auto w-auto text-white bg-[#1F384C] rounded hover:bg-[#162A3F]'
+            className='absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-auto w-auto text-white bg-[#1F384C] rounded hover:bg-[#162A3F] cursor-pointer'
           >
             <Search size={14} />
           </Button>
@@ -98,7 +98,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
               setIsFilterOpen((prev) => !prev)
               setIsSortOpen(false)
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] ${
+            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
               isFilterOpen ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
@@ -111,7 +111,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
               setIsSortOpen((prev) => !prev)
               setIsFilterOpen(false)
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] ${
+            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
               isSortOpen ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
@@ -124,13 +124,13 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
           <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
             <p className='text-xs text-[#6b7280] mb-2'>Filter by status</p>
             <div className='flex gap-2'>
-              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
+              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer'>
                 All
               </Button>
-              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
+              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer'>
                 Published
               </Button>
-              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
+              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer'>
                 Draft
               </Button>
             </div>
@@ -144,7 +144,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
               <Button
                 variant='outline'
                 onClick={() => setSortOrder('asc')}
-                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
+                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] cursor-pointer ${
                   sortOrder === 'asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
                 }`}
               >
@@ -153,7 +153,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
               <Button
                 variant='outline'
                 onClick={() => setSortOrder('desc')}
-                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
+                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] cursor-pointer ${
                   sortOrder === 'desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
                 }`}
               >
@@ -184,7 +184,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
                   <Button
                     variant='ghost'
                     onClick={() => toggleExpand(announcement.id)}
-                    className='w-full flex items-center justify-between px-4 py-3 text-left h-auto rounded-none hover:bg-transparent'
+                    className='w-full flex items-center justify-between px-4 py-3 text-left h-auto rounded-none hover:bg-transparent cursor-pointer'
                   >
                     <div className='text-left flex-1 pr-2'>
                       <span className='font-semibold text-[#1F384C]'>{announcement.title}</span>
@@ -223,7 +223,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
                         <Button
                           variant='outline'
                           onClick={() => onEdit(announcement)}
-                          className='flex-1 border-[#e5e7eb] text-[#1F384C] hover:bg-[#f3f4f6]'
+                          className='flex-1 border-[#e5e7eb] text-[#1F384C] hover:bg-[#f3f4f6] cursor-pointer'
                         >
                           <Edit2 size={15} className='mr-1.5' />
                           Edit
@@ -231,7 +231,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
                         <Button
                           variant='outline'
                           onClick={() => onDelete(announcement)}
-                          className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
+                          className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b] cursor-pointer'
                         >
                           <Trash2 size={15} className='mr-1.5' />
                           Delete

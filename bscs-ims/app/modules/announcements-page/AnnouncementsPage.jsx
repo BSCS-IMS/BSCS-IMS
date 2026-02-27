@@ -210,6 +210,7 @@ export default function AnnouncementsPage() {
                 textTransform: 'none',
                 px: 1.5,
                 py: 1,
+                cursor: 'pointer',
                 '&:hover': {
                   bgcolor: '#f3f4f6'
                 }

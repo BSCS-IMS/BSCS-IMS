@@ -48,6 +48,7 @@ export default function AnnouncementsFilter({
                     textTransform: 'none',
                     minWidth: '70px',
                     borderRadius: 1.5,
+                    cursor: 'pointer',
                     '&:hover': { bgcolor: '#162A3F' }
                   }}
                 >
@@ -86,6 +87,7 @@ export default function AnnouncementsFilter({
               textTransform: 'none',
               height: '48px',
               px: 2,
+              cursor: 'pointer',
               bgcolor: activeFilterCount > 0 ? '#e5e7eb' : 'transparent',
               '&:hover': {
                 bgcolor: activeFilterCount > 0 ? '#d1d5db' : '#f3f4f6'
@@ -107,6 +109,7 @@ export default function AnnouncementsFilter({
             textTransform: 'none',
             height: '48px',
             px: 2,
+            cursor: 'pointer',
             bgcolor: sortOrder ? '#e5e7eb' : 'transparent',
             '&:hover': {
               bgcolor: sortOrder ? '#d1d5db' : '#f3f4f6'

@@ -38,7 +38,7 @@ export default function DeleteAnnouncementModal({ announcement, onSuccess, onClo
           <Button
             variant='ghost'
             onClick={onClose}
-            className='h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]'
+            className='h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6] cursor-pointer'
           >
             <X size={16} />
           </Button>
@@ -72,7 +72,7 @@ export default function DeleteAnnouncementModal({ announcement, onSuccess, onClo
             variant='outline'
             onClick={onClose}
             disabled={loading}
-            className='h-8 text-xs px-3'
+            className='h-8 text-xs px-3 cursor-pointer'
           >
             Cancel
           </Button>
@@ -80,7 +80,7 @@ export default function DeleteAnnouncementModal({ announcement, onSuccess, onClo
             type='button'
             onClick={handleDelete}
             disabled={loading}
-            className='bg-red-600 hover:bg-red-700 text-white h-8 text-xs px-3'
+            className='bg-red-600 hover:bg-red-700 text-white h-8 text-xs px-3 cursor-pointer'
           >
             {loading ? (
               <>
