@@ -1,7 +1,5 @@
-export default function DashboardPage() { 
-  return <> 
-    <h1>
-      hi
-    </h1> 
-    </> 
+import DashboardPage from '@/app/modules/dashboard-page/DashboardPage'
+
+export default function Dashboard() {
+  return <DashboardPage />
 }
