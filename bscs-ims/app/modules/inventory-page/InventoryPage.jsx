@@ -29,14 +29,11 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
   const [sortOrder, setSortOrder] = useState(null)
-
-  // Locations for modal dropdown — fetched once
   const [locations, setLocations] = useState([])
-
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [selectedItemsToDelete, setSelectedItemsToDelete] = useState([])  // ✅ new
 
   // ── Data fetching ───────────────────────────────────────────────────────────
 
@@ -44,12 +41,8 @@ export default function InventoryPage() {
     try {
       const res = await axios.get('/api/inventory')
       if (res.data.success) {
-        // Group items by locationId so each location appears once
         const grouped = {}
         res.data.data.forEach((item) => {
-          // Skip zeroed-out inventory records
-          if (item.quantity <= 0) return
-
           if (!grouped[item.locationId]) {
             grouped[item.locationId] = {
               id: item.locationId,
@@ -66,7 +59,6 @@ export default function InventoryPage() {
           })
         })
 
-        // Remove locations that ended up with no items
         Object.keys(grouped).forEach((key) => {
           if (grouped[key].items.length === 0) delete grouped[key]
         })
@@ -107,7 +99,7 @@ export default function InventoryPage() {
   const openEditModal = (row) => {
     setEditingEntry({
       locationId: row.locationId,
-      locationName: row.location,   // pre-fill name in modal
+      locationName: row.location,
       items: row.items.map((i) => ({ productId: i.productId, qty: i.qty })),
     })
     setModalOpen(true)
@@ -119,7 +111,7 @@ export default function InventoryPage() {
   }
 
   const handleModalConfirm = () => {
-    fetchInventory() // refresh table after save
+    fetchInventory()
   }
 
   // ── Table helpers ───────────────────────────────────────────────────────────
@@ -135,11 +127,13 @@ export default function InventoryPage() {
 
   const handleDelete = async (row) => {
     setDeleteTarget(row)
+    setSelectedItemsToDelete([])  // ✅ reset selection on open
   }
 
   const confirmDelete = async () => {
     const row = deleteTarget
     setDeleteTarget(null)
+    setSelectedItemsToDelete([])
     try {
       const results = await Promise.allSettled(
         row.items.map((item) =>
@@ -169,6 +163,41 @@ export default function InventoryPage() {
     } catch (err) {
       console.error('Delete failed:', err)
       toast.error('Failed to clear inventory')
+    }
+  }
+
+  const confirmDeleteInventory = async () => {
+    const row = deleteTarget
+    const selectedItems = row.items.filter((item) => selectedItemsToDelete.includes(item.productId))
+    setDeleteTarget(null)
+    setSelectedItemsToDelete([])
+
+    try {
+      const results = await Promise.allSettled(
+        selectedItems.map((item) =>
+          axios.delete('/api/inventory', {
+            data: {
+              productId: item.productId,
+              locationId: row.locationId,
+            }
+          })
+        )
+      )
+
+      const failed = results.filter(
+        (r) => r.status === 'rejected' || r.value?.data?.success === false
+      )
+
+      if (failed.length > 0) {
+        toast.error('Some items failed to delete')
+      } else {
+        toast.success('Selected inventory deleted successfully')
+      }
+
+      fetchInventory()
+    } catch (err) {
+      console.error('Delete inventory failed:', err)
+      toast.error('Failed to delete inventory')
     }
   }
 
@@ -270,22 +299,52 @@ export default function InventoryPage() {
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-            <h3 className="text-sm font-semibold text-[#1F384C] mb-1">Clear inventory?</h3>
-            <p className="text-xs text-[#6b7280] mb-5">
-              This will zero out all stock at <strong>{deleteTarget.location}</strong>. This action cannot be undone.
+            <h3 className="text-sm font-semibold text-[#1F384C] mb-1">Manage inventory</h3>
+            <p className="text-xs text-[#6b7280] mb-3">
+              Select items to delete, or clear all stock at <strong>{deleteTarget.location}</strong>.
             </p>
+
+            {/* Checklist */}
+            <div className="flex flex-col gap-2 mb-5 max-h-48 overflow-y-auto">
+              {deleteTarget.items.map((item) => (
+                <label key={item.productId} className="flex items-center gap-2 text-xs text-[#1F384C] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedItemsToDelete.includes(item.productId)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedItemsToDelete((prev) => [...prev, item.productId])
+                      } else {
+                        setSelectedItemsToDelete((prev) => prev.filter((id) => id !== item.productId))
+                      }
+                    }}
+                    className="rounded border-[#d1d5db]"
+                  />
+                  <span>{item.productName}</span>
+                  <span className="ml-auto text-[#6b7280]">qty: {item.qty}</span>
+                </label>
+              ))}
+            </div>
+
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => { setDeleteTarget(null); setSelectedItemsToDelete([]) }}
                 className="h-8 px-3 text-xs rounded-md border border-[#d1d5db] text-[#374151] hover:bg-[#f3f4f6] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="h-8 px-3 text-xs rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="h-8 px-3 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
               >
                 Clear stock
+              </button>
+              <button
+                onClick={confirmDeleteInventory}
+                disabled={selectedItemsToDelete.length === 0}
+                className="h-8 px-3 text-xs rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Delete inventory
               </button>
             </div>
           </div>

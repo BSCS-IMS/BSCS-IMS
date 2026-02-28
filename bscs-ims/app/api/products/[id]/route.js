@@ -2,17 +2,16 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
-import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp, getDocs, collection, query, where } from 'firebase/firestore'
 import { supabase } from '@/app/lib/supabaseClient'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
-// Helper: verify session and return decoded token
 async function getSession(req) {
   const token = req.cookies.get('session')?.value
   if (!token) return null
-
   try {
     return await admin.auth().verifySessionCookie(token, true)
   } catch (err) {
@@ -21,7 +20,6 @@ async function getSession(req) {
   }
 }
 
-// Helper: extract file path from Supabase URL
 function getFilePathFromUrl(url) {
   try {
     const parts = url.split('/productimages/')
@@ -32,32 +30,25 @@ function getFilePathFromUrl(url) {
   }
 }
 
-// Helper: upload image to Supabase
 async function uploadImage(file) {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return { error: 'Invalid file type. Allowed: JPEG, PNG, WEBP, GIF' }
   }
-
   const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`
-
   const { error: uploadError } = await supabase.storage
     .from('productimages')
     .upload(fileName, file, { contentType: file.type })
-
   if (uploadError) {
     return { error: `Image upload failed: ${uploadError.message}` }
   }
-
   const { data } = supabase.storage.from('productimages').getPublicUrl(fileName)
   return { imageUrl: data.publicUrl }
 }
 
-// Helper: delete image from Supabase
 async function deleteImage(imageUrl) {
   if (!imageUrl) return
   const filePath = getFilePathFromUrl(imageUrl)
   if (!filePath) return
-
   const { error } = await supabase.storage.from('productimages').remove([filePath])
   if (error) console.error('Error deleting image from Supabase:', error.message)
 }
@@ -73,7 +64,6 @@ export async function GET(request, { params }) {
     }
 
     const { id } = await params
-
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
 
@@ -85,7 +75,6 @@ export async function GET(request, { params }) {
       success: true,
       product: { id: snapshot.id, ...snapshot.data() }
     })
-
   } catch (error) {
     console.error('GET /products/[id] error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
@@ -103,7 +92,6 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params
-
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
 
@@ -112,7 +100,6 @@ export async function PUT(request, { params }) {
     }
 
     const existingProduct = snapshot.data()
-
     const formData = await request.formData()
     const name = formData.get('name')
     const currentPriceRaw = formData.get('currentPrice')
@@ -123,30 +110,22 @@ export async function PUT(request, { params }) {
     const removeImage = formData.get('removeImage') === 'true'
 
     if (!name?.trim()) {
-      return NextResponse.json(
-        { success: false, error: 'Name is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 })
     }
 
-    // Handle image removal
     let imageUrl = existingProduct.imageUrl ?? null
     if (removeImage) {
       await deleteImage(existingProduct.imageUrl)
       imageUrl = null
     } else if (file && file.size > 0) {
-      // Handle image replacement
       await deleteImage(existingProduct.imageUrl)
-
       const result = await uploadImage(file)
       if (result.error) {
         return NextResponse.json({ success: false, error: result.error }, { status: 400 })
       }
-
       imageUrl = result.imageUrl
     }
 
-    // Build update object dynamically
     const updateData = {
       name: name.trim(),
       isActive,
@@ -165,7 +144,6 @@ export async function PUT(request, { params }) {
       updateData.priceUnit = priceUnit.trim()
     }
 
-    // Handle description - allow clearing it with empty string
     if (description !== null) {
       updateData.description = description?.trim() || ''
     }
@@ -173,11 +151,20 @@ export async function PUT(request, { params }) {
     await updateDoc(docRef, updateData)
 
     const updatedSnapshot = await getDoc(docRef)
+
+    await logAudit({
+      action: 'UPDATE',
+      entityType: 'product',
+      entityId: docRef.id,
+      oldData: existingProduct,
+      newData: updateData,
+      performedById: session.uid
+    })
+
     return NextResponse.json({
       success: true,
       product: { id: updatedSnapshot.id, ...updatedSnapshot.data() }
     })
-
   } catch (error) {
     console.error('PUT /products/[id] error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
@@ -185,7 +172,7 @@ export async function PUT(request, { params }) {
 }
 
 /* ==========================
-   DELETE - soft delete product
+   DELETE - hard delete product + cascade
 ========================== */
 export async function DELETE(request, { params }) {
   try {
@@ -195,7 +182,6 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params
-
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
 
@@ -208,18 +194,40 @@ export async function DELETE(request, { params }) {
     // Delete image from Supabase
     await deleteImage(product.imageUrl)
 
-    // Soft delete — preserves history (does not modify isActive as it's user-controllable)
-    await updateDoc(docRef, {
-      deletedAt: serverTimestamp(),
-      deletedByEmail: session.email,
-      deletedByUid: session.uid,
+    // Cascade delete associated inventory records + audit log each one
+    const inventoryQuery = query(collection(db, 'inventory'), where('productId', '==', id))
+    const inventorySnap = await getDocs(inventoryQuery)
+
+    await Promise.all(
+      inventorySnap.docs.map(async (d) => {
+        await deleteDoc(d.ref)
+        await logAudit({
+          action: 'DELETE',
+          entityType: 'inventory',
+          entityId: d.id,
+          oldData: d.data(),
+          newData: null,
+          performedById: session.uid,
+        })
+      })
+    )
+
+    // Hard delete product
+    await deleteDoc(docRef)
+
+    await logAudit({
+      action: 'DELETE',
+      entityType: 'product',
+      entityId: id,
+      oldData: product,
+      newData: null,
+      performedById: session.uid
     })
 
     return NextResponse.json({
       success: true,
       message: 'Product deleted successfully'
     })
-
   } catch (error) {
     console.error('DELETE /products/[id] error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
