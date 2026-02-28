@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Typography, Paper } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { LineChart } from '@mui/x-charts/LineChart'
 
 const PRIMARY_COLOR = '#1F384C'
@@ -10,25 +10,16 @@ const AREA_COLOR = 'rgba(31, 56, 76, 0.1)'
 export default function LocationLineChart({ data = [] }) {
   const hasData = data.length > 0
 
-  const locationNames = data.map(item => item.locationName?.substring(0, 12) || 'Unknown')
+  const locationNames = data.map(item => item.locationName?.substring(0, 10) || 'Unknown')
   const quantities = data.map(item => item.totalQuantity || 0)
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        height: '100%',
-        borderRadius: 3,
-        border: '1px solid #E5E7EB',
-        bgcolor: '#FFFFFF'
-      }}
-    >
-      <Typography variant="h6" fontWeight={600} sx={{ color: PRIMARY_COLOR, mb: 1 }}>
+    <Box sx={{ height: '100%' }}>
+      <Typography variant="subtitle1" fontWeight={600} sx={{ color: PRIMARY_COLOR, mb: 0.5 }}>
         Inventory by Location
       </Typography>
-      <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 2 }}>
-        Total stock quantity per warehouse location
+      <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'block', mb: 1 }}>
+        Total stock quantity per location
       </Typography>
 
       {!hasData ? (
@@ -37,26 +28,26 @@ export default function LocationLineChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 180,
+            height: 160,
             color: '#9CA3AF'
           }}
         >
-          <Typography>No location data available</Typography>
+          <Typography variant="body2">No location data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', height: 180 }}>
+        <Box sx={{ width: '100%', height: 170 }}>
           <LineChart
             xAxis={[{
               scaleType: 'point',
               data: locationNames,
               tickLabelStyle: {
-                fontSize: 10,
+                fontSize: 9,
                 fill: '#6B7280'
               }
             }]}
             yAxis={[{
               tickLabelStyle: {
-                fontSize: 10,
+                fontSize: 9,
                 fill: '#6B7280'
               }
             }]}
@@ -92,6 +83,6 @@ export default function LocationLineChart({ data = [] }) {
           />
         </Box>
       )}
-    </Paper>
+    </Box>
   )
 }

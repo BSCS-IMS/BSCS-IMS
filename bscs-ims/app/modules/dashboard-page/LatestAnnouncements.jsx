@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Typography, Paper, Stack, Chip } from '@mui/material'
+import { Box, Typography, Stack, Chip } from '@mui/material'
 import CampaignIcon from '@mui/icons-material/Campaign'
 
 const PRIMARY_COLOR = '#1F384C'
@@ -20,19 +20,10 @@ export default function LatestAnnouncements({ data = [] }) {
   const hasData = data.length > 0
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        height: '100%',
-        borderRadius: 3,
-        border: '1px solid #E5E7EB',
-        bgcolor: '#FFFFFF'
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-        <CampaignIcon sx={{ color: PRIMARY_COLOR, fontSize: 24 }} />
-        <Typography variant="h6" fontWeight={600} sx={{ color: PRIMARY_COLOR }}>
+    <Box sx={{ height: '100%' }}>
+      <Stack direction="row" alignItems="center" spacing={0.5} mb={1}>
+        <CampaignIcon sx={{ color: PRIMARY_COLOR, fontSize: 20 }} />
+        <Typography variant="subtitle1" fontWeight={600} sx={{ color: PRIMARY_COLOR }}>
           Latest Announcements
         </Typography>
       </Stack>
@@ -43,39 +34,38 @@ export default function LatestAnnouncements({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 150,
+            height: 160,
             color: '#9CA3AF'
           }}
         >
-          <Typography>No announcements yet</Typography>
+          <Typography variant="body2">No announcements yet</Typography>
         </Box>
       ) : (
-        <Stack spacing={2}>
+        <Stack spacing={1}>
           {data.map((announcement) => (
             <Box
               key={announcement.id}
               sx={{
-                p: 2,
-                borderRadius: 2,
+                p: 1,
+                borderRadius: 1,
                 bgcolor: '#F9FAFB',
-                border: '1px solid #E5E7EB',
                 '&:hover': {
-                  bgcolor: '#F3F4F6',
-                  borderColor: PRIMARY_COLOR
+                  bgcolor: '#F3F4F6'
                 },
                 transition: 'all 0.2s ease'
               }}
             >
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={0.5}>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                 <Typography
-                  variant="subtitle2"
+                  variant="caption"
                   fontWeight={600}
                   sx={{
                     color: PRIMARY_COLOR,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    maxWidth: '70%'
+                    maxWidth: '70%',
+                    fontSize: 11
                   }}
                 >
                   {announcement.title}
@@ -84,8 +74,8 @@ export default function LatestAnnouncements({ data = [] }) {
                   label={announcement.isPublished ? 'Published' : 'Draft'}
                   size="small"
                   sx={{
-                    height: 20,
-                    fontSize: 10,
+                    height: 16,
+                    fontSize: 8,
                     bgcolor: announcement.isPublished ? '#D1FAE5' : '#FEF3C7',
                     color: announcement.isPublished ? '#065F46' : '#92400E',
                     fontWeight: 500
@@ -93,27 +83,18 @@ export default function LatestAnnouncements({ data = [] }) {
                 />
               </Stack>
               <Typography
-                variant="body2"
+                variant="caption"
                 sx={{
-                  color: '#6B7280',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  lineHeight: 1.4,
-                  mb: 1
+                  color: '#9CA3AF',
+                  fontSize: 9
                 }}
               >
-                {announcement.content}
-              </Typography>
-              <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
                 {formatDate(announcement.createdAt)}
               </Typography>
             </Box>
           ))}
         </Stack>
       )}
-    </Paper>
+    </Box>
   )
 }

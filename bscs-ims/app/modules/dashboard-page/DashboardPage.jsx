@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Box, Typography, Grid, Skeleton, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Typography, Skeleton } from '@mui/material'
 
 import BarChartCard from './BarChartCard'
 import TopProductsPieChart from './TopProductsPieChart'
@@ -11,20 +11,19 @@ import LatestAnnouncements from './LatestAnnouncements'
 import LocationLineChart from './LocationLineChart'
 
 const PRIMARY_COLOR = '#1F384C'
+const GRID_LINE_COLOR = '#E5E7EB'
 
-function ChartSkeleton({ height = 300 }) {
+function ChartSkeleton({ height = 280 }) {
   return (
     <Skeleton
-      variant="rounded"
+      variant="rectangular"
       height={height}
-      sx={{ borderRadius: 3, bgcolor: '#F3F4F6' }}
+      sx={{ bgcolor: '#F9FAFB' }}
     />
   )
 }
 
 export default function DashboardPage() {
-  const theme = useTheme()
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
   const [mounted, setMounted] = useState(false)
 
   const [loading, setLoading] = useState(true)
@@ -61,61 +60,67 @@ export default function DashboardPage() {
   if (!mounted) return null
 
   return (
-    <Box sx={{ minHeight: '100vh', py: 4, px: { xs: 2, md: 4 } }}>
-      <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ height: '100vh', py: 2, px: { xs: 2, md: 3 }, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ maxWidth: 1400, mx: 'auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Typography
-          variant="h4"
+          variant="h5"
           fontWeight={700}
-          sx={{ color: PRIMARY_COLOR, mb: 4 }}
+          sx={{ color: PRIMARY_COLOR, mb: 2 }}
         >
           Dashboard
         </Typography>
 
-        {/* Main Grid Layout */}
-        <Grid container spacing={3}>
-          {/* Top Row: Bar Chart (main) + Top Products Pie Chart */}
-          <Grid size={{ xs: 12, lg: 8 }}>
+        {/* Grid Layout with subtle inner separators only */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, flex: '0 0 auto' }}>
+          {/* Top Row: Bar Chart (main) */}
+          <Box sx={{ p: 2, borderRight: { lg: `1px solid ${GRID_LINE_COLOR}` } }}>
             {loading ? (
-              <ChartSkeleton height={380} />
+              <ChartSkeleton height={240} />
             ) : (
               <BarChartCard data={analyticsData.todayInventoryChanges} />
             )}
-          </Grid>
+          </Box>
 
-          <Grid size={{ xs: 12, lg: 4 }}>
+          {/* Top Row: Top Products Pie Chart */}
+          <Box sx={{ p: 2 }}>
             {loading ? (
-              <ChartSkeleton height={380} />
+              <ChartSkeleton height={240} />
             ) : (
               <TopProductsPieChart data={analyticsData.topProducts} />
             )}
-          </Grid>
+          </Box>
+        </Box>
 
-          {/* Bottom Row: 3 tiles */}
-          <Grid size={{ xs: 12, md: 4 }}>
+        {/* Horizontal separator between rows */}
+        <Box sx={{ borderTop: `1px solid ${GRID_LINE_COLOR}`, mx: 2 }} />
+
+        {/* Bottom Row: 3 tiles */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, flex: 1 }}>
+          <Box sx={{ p: 2, borderRight: { md: `1px solid ${GRID_LINE_COLOR}` } }}>
             {loading ? (
-              <ChartSkeleton height={320} />
+              <ChartSkeleton height={200} />
             ) : (
               <ResellersPieChart data={analyticsData.topResellers} />
             )}
-          </Grid>
+          </Box>
 
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Box sx={{ p: 2, borderRight: { md: `1px solid ${GRID_LINE_COLOR}` } }}>
             {loading ? (
-              <ChartSkeleton height={320} />
+              <ChartSkeleton height={200} />
             ) : (
               <LatestAnnouncements data={analyticsData.latestAnnouncements} />
             )}
-          </Grid>
+          </Box>
 
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Box sx={{ p: 2 }}>
             {loading ? (
-              <ChartSkeleton height={320} />
+              <ChartSkeleton height={200} />
             ) : (
               <LocationLineChart data={analyticsData.locationData} />
             )}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Box>
     </Box>
   )
