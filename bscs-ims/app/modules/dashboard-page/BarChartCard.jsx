@@ -26,14 +26,14 @@ export default function BarChartCard({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 250,
+            height: 280,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No inventory changes today</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', height: 250 }}>
+        <Box sx={{ width: '100%', height: 280 }}>
           <BarChart
             xAxis={[{
               scaleType: 'band',

@@ -34,14 +34,14 @@ export default function LatestAnnouncements({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 200,
+            height: 230,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No announcements yet</Typography>
         </Box>
       ) : (
-        <Stack spacing={1}>
+        <Stack spacing={1.5}>
           {data.map((announcement) => (
             <Box
               key={announcement.id}

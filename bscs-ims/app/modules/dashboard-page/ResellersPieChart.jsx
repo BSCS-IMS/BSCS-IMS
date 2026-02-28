@@ -26,7 +26,7 @@ export default function ResellersPieChart({ data = [] }) {
 
   return (
     <Box>
-      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 1 }}>
+      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 4 }}>
         Resellers by Products
       </Typography>
 
@@ -36,24 +36,24 @@ export default function ResellersPieChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 200,
+            height: 230,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No reseller data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', height: 200, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Box sx={{ width: '100%', height: 230, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <PieChart
             series={[
               {
                 data: pieData,
                 highlightScope: { fade: 'global', highlight: 'item' },
-                faded: { innerRadius: 20, additionalRadius: -6, color: 'gray' },
-                innerRadius: 28,
-                outerRadius: 70,
+                faded: { innerRadius: 25, additionalRadius: -8, color: 'gray' },
+                innerRadius: 35,
+                outerRadius: 85,
                 paddingAngle: 2,
-                cornerRadius: 3
+                cornerRadius: 4
               }
             ]}
             slotProps={{
@@ -61,18 +61,18 @@ export default function ResellersPieChart({ data = [] }) {
                 direction: 'column',
                 position: { vertical: 'middle', horizontal: 'right' },
                 padding: 0,
-                itemMarkWidth: 8,
-                itemMarkHeight: 8,
-                markGap: 4,
-                itemGap: 5,
+                itemMarkWidth: 10,
+                itemMarkHeight: 10,
+                markGap: 5,
+                itemGap: 12,
                 labelStyle: {
-                  fontSize: 9,
+                  fontSize: 10,
                   fill: '#6B7280'
                 }
               }
             }}
-            width={280}
-            height={170}
+            width={320}
+            height={200}
           />
         </Box>
       )}

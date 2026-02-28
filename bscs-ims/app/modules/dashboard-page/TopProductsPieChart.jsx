@@ -26,7 +26,7 @@ export default function TopProductsPieChart({ data = [] }) {
 
   return (
     <Box>
-      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 1 }}>
+      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 4 }}>
         Top 5 Products by Quantity
       </Typography>
 
@@ -36,22 +36,22 @@ export default function TopProductsPieChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 250,
+            height: 280,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No product data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', height: 250, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Box sx={{ width: '100%', height: 280, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <PieChart
             series={[
               {
                 data: pieData,
                 highlightScope: { fade: 'global', highlight: 'item' },
-                faded: { innerRadius: 25, additionalRadius: -8, color: 'gray' },
-                innerRadius: 35,
-                outerRadius: 85,
+                faded: { innerRadius: 30, additionalRadius: -10, color: 'gray' },
+                innerRadius: 45,
+                outerRadius: 100,
                 paddingAngle: 2,
                 cornerRadius: 4
               }
@@ -61,18 +61,18 @@ export default function TopProductsPieChart({ data = [] }) {
                 direction: 'column',
                 position: { vertical: 'middle', horizontal: 'right' },
                 padding: 0,
-                itemMarkWidth: 8,
-                itemMarkHeight: 8,
-                markGap: 4,
-                itemGap: 6,
+                itemMarkWidth: 10,
+                itemMarkHeight: 10,
+                markGap: 5,
+                itemGap: 8,
                 labelStyle: {
-                  fontSize: 10,
+                  fontSize: 11,
                   fill: '#6B7280'
                 }
               }
             }}
-            width={320}
-            height={200}
+            width={380}
+            height={250}
           />
         </Box>
       )}

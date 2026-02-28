@@ -25,14 +25,14 @@ export default function LocationLineChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 200,
+            height: 230,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No location data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', height: 200 }}>
+        <Box sx={{ width: '100%', height: 230 }}>
           <LineChart
             xAxis={[{
               scaleType: 'point',
