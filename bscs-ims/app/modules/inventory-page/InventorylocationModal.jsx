@@ -47,10 +47,9 @@ function buildInitialItems(entry) {
 
 export default function InventoryLocationModal({
   onClose,
-  entry = null,     // null = create, object = edit
+  entry = null,
   onConfirm,
 }) {
-  // ── Fetch active products ──────────────────────────────────────────────────
   const [products, setProducts] = useState([])
   const [productsLoading, setProductsLoading] = useState(true)
 
@@ -77,7 +76,6 @@ export default function InventoryLocationModal({
     fetchProducts()
   }, [])
 
-  // ── Form state ─────────────────────────────────────────────────────────────
   const [locationName, setLocationName] = useState(entry?.locationName ?? '')
   const [items, setItems] = useState(() => buildInitialItems(entry))
   const [loading, setLoading] = useState(false)
@@ -104,17 +102,14 @@ export default function InventoryLocationModal({
 
   const removeItem = (id) => setItems((prev) => prev.filter((r) => r.id !== id))
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
   async function handleSubmit() {
     if (loading || !isValid) return
     setLoading(true)
 
     try {
-      // Step 1: Create or rename location
       let locationId = null
 
       if (isEditing) {
-        // Rename existing location via PUT
         const renameRes = await axios.put(`/api/location/${entry.locationId}`, { name: locationName.trim() })
         if (!renameRes.data?.success) {
           toast.error(renameRes.data?.error || 'Failed to update location name')
@@ -122,7 +117,6 @@ export default function InventoryLocationModal({
         }
         locationId = entry.locationId
       } else {
-        // Create new location
         try {
           const locationRes = await axios.post('/api/location', { name: locationName.trim() })
           if (!locationRes.data?.success) {
@@ -151,16 +145,12 @@ export default function InventoryLocationModal({
         }
       }
 
-      // Step 2: Add or adjust stock per product row
       const currentProductIds = items.map((r) => r.productId)
-
-      // Products that were removed during edit — deduct their full qty
       const removedItems = isEditing
         ? (entry.items ?? []).filter((i) => !currentProductIds.includes(i.productId) && Number(i.qty) > 0)
         : []
 
       const allOps = [
-        // Removed products: deduct full qty to zero out
         ...removedItems.map((i) =>
           axios.post('/api/inventory/deduct', {
             productId: i.productId,
@@ -168,7 +158,6 @@ export default function InventoryLocationModal({
             quantity: Number(i.qty),
           })
         ),
-        // Current rows: add new or diff existing
         ...items.map((row) => {
           const newQty = Number(row.qty)
 
@@ -202,7 +191,6 @@ export default function InventoryLocationModal({
       ]
 
       const results = await Promise.allSettled(allOps)
-
       const failed = results.filter(
         (r) => r.status === 'rejected' || r.value?.data?.success === false
       )
@@ -228,7 +216,6 @@ export default function InventoryLocationModal({
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
       <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl shadow-xl relative">
@@ -242,7 +229,7 @@ export default function InventoryLocationModal({
           <Button
             variant="ghost"
             onClick={onClose}
-            className="h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6]"
+            className="h-7 w-7 p-0 text-[#6b7280] hover:text-[#1F384C] hover:bg-[#f3f4f6] cursor-pointer"
           >
             <X size={16} />
           </Button>
@@ -253,7 +240,7 @@ export default function InventoryLocationModal({
         {/* Body */}
         <div className="px-4 sm:px-6 pb-4 flex flex-col gap-5">
 
-          {/* Location Name — free text input */}
+          {/* Location Name */}
           <div>
             <FieldLabel label="Location Name" required />
             <input
@@ -317,7 +304,7 @@ export default function InventoryLocationModal({
                     <button
                       onClick={() => removeItem(row.id)}
                       disabled={items.length === 1}
-                      className="h-9 w-8 flex items-center justify-center rounded-md text-[#9ca3af] hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="h-9 w-8 flex items-center justify-center rounded-md text-[#9ca3af] hover:text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -329,7 +316,7 @@ export default function InventoryLocationModal({
             <button
               onClick={addItem}
               disabled={productsLoading || items.length >= products.length}
-              className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#1F384C] hover:text-[#162A3F] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#1F384C] hover:text-[#162A3F] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
               <Plus size={14} />
               Add product
@@ -345,19 +332,27 @@ export default function InventoryLocationModal({
             variant="outline"
             onClick={onClose}
             disabled={loading}
-            className="h-8 text-xs px-3"
+            className="h-8 text-xs px-3 cursor-pointer"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!isValid || loading || productsLoading}
-            className="bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3"
+            className="bg-[#1F384C] text-white hover:bg-[#162A3F] h-8 text-xs px-3 cursor-pointer"
           >
             {loading ? 'Saving...' : isEditing ? 'Update' : 'Confirm'}
           </Button>
         </div>
       </div>
+
+      {/* Spin buttons pointer fix */}
+      <style jsx global>{`
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   )
 }
