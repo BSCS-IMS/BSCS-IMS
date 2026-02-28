@@ -14,8 +14,8 @@ export default function LocationLineChart({ data = [] }) {
   const quantities = data.map(item => item.totalQuantity || 0)
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="body2" fontWeight={600} sx={{ color: PRIMARY_COLOR, flexShrink: 0 }}>
+    <Box>
+      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 1 }}>
         Inventory by Location
       </Typography>
 
@@ -25,14 +25,14 @@ export default function LocationLineChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flex: 1,
+            height: 200,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No location data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', flex: 1, minHeight: 0 }}>
+        <Box sx={{ width: '100%', height: 200 }}>
           <LineChart
             xAxis={[{
               scaleType: 'point',

@@ -60,32 +60,32 @@ export default function DashboardPage() {
   if (!mounted) return null
 
   return (
-    <Box sx={{ height: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ maxWidth: 1400, mx: 'auto', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <Box sx={{ minHeight: '100vh', py: 6 }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
         {/* Header */}
         <Typography
-          variant="h5"
+          variant="h4"
           fontWeight={700}
-          sx={{ color: PRIMARY_COLOR, mb: 1, flexShrink: 0 }}
+          sx={{ color: PRIMARY_COLOR, mb: 5 }}
         >
           Dashboard
         </Typography>
 
         {/* Grid Layout with subtle inner separators only */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, flex: '1 1 55%', minHeight: 0 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' } }}>
           {/* Top Row: Bar Chart (main) */}
-          <Box sx={{ p: 1.5, borderRight: { lg: `1px solid ${GRID_LINE_COLOR}` }, overflow: 'hidden' }}>
+          <Box sx={{ p: 2, borderRight: { lg: `1px solid ${GRID_LINE_COLOR}` } }}>
             {loading ? (
-              <ChartSkeleton height={180} />
+              <ChartSkeleton height={280} />
             ) : (
               <BarChartCard data={analyticsData.todayInventoryChanges} />
             )}
           </Box>
 
           {/* Top Row: Top Products Pie Chart */}
-          <Box sx={{ p: 1.5, overflow: 'hidden' }}>
+          <Box sx={{ p: 2 }}>
             {loading ? (
-              <ChartSkeleton height={180} />
+              <ChartSkeleton height={280} />
             ) : (
               <TopProductsPieChart data={analyticsData.topProducts} />
             )}
@@ -93,29 +93,29 @@ export default function DashboardPage() {
         </Box>
 
         {/* Horizontal separator between rows */}
-        <Box sx={{ borderTop: `1px solid ${GRID_LINE_COLOR}`, flexShrink: 0 }} />
+        <Box sx={{ borderTop: `1px solid ${GRID_LINE_COLOR}` }} />
 
         {/* Bottom Row: 3 tiles */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, flex: '1 1 45%', minHeight: 0 }}>
-          <Box sx={{ p: 1.5, borderRight: { md: `1px solid ${GRID_LINE_COLOR}` }, overflow: 'hidden' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' } }}>
+          <Box sx={{ p: 2, borderRight: { md: `1px solid ${GRID_LINE_COLOR}` } }}>
             {loading ? (
-              <ChartSkeleton height={150} />
+              <ChartSkeleton height={220} />
             ) : (
               <ResellersPieChart data={analyticsData.topResellers} />
             )}
           </Box>
 
-          <Box sx={{ p: 1.5, borderRight: { md: `1px solid ${GRID_LINE_COLOR}` }, overflow: 'hidden' }}>
+          <Box sx={{ p: 2, borderRight: { md: `1px solid ${GRID_LINE_COLOR}` } }}>
             {loading ? (
-              <ChartSkeleton height={150} />
+              <ChartSkeleton height={220} />
             ) : (
               <LatestAnnouncements data={analyticsData.latestAnnouncements} />
             )}
           </Box>
 
-          <Box sx={{ p: 1.5, overflow: 'hidden' }}>
+          <Box sx={{ p: 2 }}>
             {loading ? (
-              <ChartSkeleton height={150} />
+              <ChartSkeleton height={220} />
             ) : (
               <LocationLineChart data={analyticsData.locationData} />
             )}

@@ -25,8 +25,8 @@ export default function TopProductsPieChart({ data = [] }) {
   }))
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="body2" fontWeight={600} sx={{ color: PRIMARY_COLOR, mb: 0.5, flexShrink: 0 }}>
+    <Box>
+      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 1 }}>
         Top 5 Products by Quantity
       </Typography>
 
@@ -36,25 +36,24 @@ export default function TopProductsPieChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flex: 1,
+            height: 250,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No product data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 0 }}>
+        <Box sx={{ width: '100%', height: 250, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <PieChart
             series={[
               {
                 data: pieData,
                 highlightScope: { fade: 'global', highlight: 'item' },
-                faded: { innerRadius: 15, additionalRadius: -5, color: 'gray' },
-                innerRadius: 25,
-                outerRadius: 60,
+                faded: { innerRadius: 25, additionalRadius: -8, color: 'gray' },
+                innerRadius: 35,
+                outerRadius: 85,
                 paddingAngle: 2,
-                cornerRadius: 3,
-                cx: 70
+                cornerRadius: 4
               }
             ]}
             slotProps={{
@@ -62,18 +61,18 @@ export default function TopProductsPieChart({ data = [] }) {
                 direction: 'column',
                 position: { vertical: 'middle', horizontal: 'right' },
                 padding: 0,
-                itemMarkWidth: 6,
-                itemMarkHeight: 6,
-                markGap: 3,
-                itemGap: 4,
+                itemMarkWidth: 8,
+                itemMarkHeight: 8,
+                markGap: 4,
+                itemGap: 6,
                 labelStyle: {
-                  fontSize: 9,
+                  fontSize: 10,
                   fill: '#6B7280'
                 }
               }
             }}
-            width={260}
-            height={180}
+            width={320}
+            height={200}
           />
         </Box>
       )}

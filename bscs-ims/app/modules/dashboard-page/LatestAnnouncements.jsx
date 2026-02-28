@@ -20,10 +20,10 @@ export default function LatestAnnouncements({ data = [] }) {
   const hasData = data.length > 0
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+    <Box>
+      <Stack direction="row" alignItems="center" spacing={0.5} mb={1}>
         <CampaignIcon sx={{ color: PRIMARY_COLOR, fontSize: 16 }} />
-        <Typography variant="body2" fontWeight={600} sx={{ color: PRIMARY_COLOR }}>
+        <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
           Latest Announcements
         </Typography>
       </Stack>
@@ -34,14 +34,14 @@ export default function LatestAnnouncements({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flex: 1,
+            height: 200,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No announcements yet</Typography>
         </Box>
       ) : (
-        <Stack spacing={0.75} sx={{ flex: 1, overflow: 'hidden', mt: 0.5 }}>
+        <Stack spacing={1}>
           {data.map((announcement) => (
             <Box
               key={announcement.id}
