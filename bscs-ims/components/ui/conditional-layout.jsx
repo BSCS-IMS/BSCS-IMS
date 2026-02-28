@@ -6,9 +6,9 @@ import { AppSidebar } from "../../app/components/app-sidebar"
 
 export function ConditionalLayout({ children }) {
   const pathname = usePathname()
-  const isLoginPage = pathname === '/login'
+  const isAuthPage = pathname === '/login' || pathname === '/'
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return <div className="w-full h-full">{children}</div>
   }
 

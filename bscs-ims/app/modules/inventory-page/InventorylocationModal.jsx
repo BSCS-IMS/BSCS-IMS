@@ -5,6 +5,7 @@ import axios from 'axios'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'react-toastify'
 
 // ---------------------------------------------------------------------------
@@ -29,9 +30,15 @@ const newProductRow = () => ({ id: crypto.randomUUID(), productId: '', qty: '' }
 function buildInitialItems(entry) {
   if (!entry) return [newProductRow()]
   if (entry.items?.length) {
-    return entry.items.map((i) => ({ id: crypto.randomUUID(), productId: i.productId, qty: String(i.qty) }))
+    const filtered = entry.items
+      .filter((i) => Number(i.qty) > 0)
+      .map((i) => ({ id: crypto.randomUUID(), productId: i.productId, qty: String(i.qty) }))
+    return filtered.length > 0 ? filtered : [newProductRow()]
   }
-  return [{ id: crypto.randomUUID(), productId: entry.productId ?? '', qty: String(entry.qty ?? '') }]
+  if (Number(entry.qty) > 0) {
+    return [{ id: crypto.randomUUID(), productId: entry.productId ?? '', qty: String(entry.qty ?? '') }]
+  }
+  return [newProductRow()]
 }
 
 // ---------------------------------------------------------------------------
@@ -276,22 +283,26 @@ export default function InventoryLocationModal({
               <div className="flex flex-col gap-2">
                 {items.map((row) => (
                   <div key={row.id} className="grid grid-cols-[1fr_90px_32px] gap-2 items-center">
-                    <select
+                    <Select
                       value={row.productId}
-                      onChange={(e) => updateItem(row.id, 'productId', e.target.value)}
-                      className="w-full h-9 rounded-md border border-[#d1d5db] bg-white px-3 text-xs text-[#1F384C] focus:outline-none focus:ring-2 focus:ring-[#1F384C]/20 focus:border-[#1F384C] transition-colors"
+                      onValueChange={(value) => updateItem(row.id, 'productId', value)}
                     >
-                      <option value="" disabled>Select product</option>
-                      {products.map((p) => (
-                        <option
-                          key={p.value}
-                          value={p.value}
-                          disabled={selectedProductIds.includes(p.value) && p.value !== row.productId || !p.isActive}
-                        >
-                          {p.isActive ? p.label : `${p.label} [Inactive]`}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full h-9 text-xs border-[#e5e7eb] cursor-pointer">
+                        <SelectValue placeholder="Select product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem
+                            key={p.value}
+                            value={p.value}
+                            disabled={selectedProductIds.includes(p.value) && p.value !== row.productId || !p.isActive}
+                            className="cursor-pointer text-xs"
+                          >
+                            {p.isActive ? p.label : `${p.label} [Inactive]`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
                     <input
                       type="number"

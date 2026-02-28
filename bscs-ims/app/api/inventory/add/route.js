@@ -8,6 +8,8 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
+
 
 // Helper: verify session and return decoded token
 async function getSession(req) {
@@ -51,7 +53,9 @@ export async function POST(request) {
 
     const inventoryId = `${productId}_${locationId}`
     let finalQuantity = 0
-
+    let oldInventoryData = null
+    let isNewRecord = false
+    let newInventoryData = null
     await runTransaction(db, async (transaction) => {
       const productRef = doc(db, 'products', productId)
       const locationRef = doc(db, 'locations', locationId)
@@ -80,6 +84,7 @@ export async function POST(request) {
       if (inventorySnap.exists()) {
         // Update existing record
         const currentQty = inventorySnap.data().quantity ?? 0
+        oldInventoryData = inventorySnap.data()
         finalQuantity = currentQty + quantity
 
         transaction.update(inventoryRef, {
@@ -89,10 +94,10 @@ export async function POST(request) {
           updatedByUid: session.uid,
         })
       } else {
-        // Create new record
+        isNewRecord = true
         finalQuantity = quantity
 
-        transaction.set(inventoryRef, {
+        newInventoryData ={
           productId,
           locationId,
           quantity: finalQuantity,
@@ -100,9 +105,20 @@ export async function POST(request) {
           updatedAt: serverTimestamp(),
           createdByEmail: session.email,
           createdByUid: session.uid,
-        })
-      }
+        }
+
+        transaction.set(inventoryRef, newInventoryData)
+      }    
     })
+
+    await logAudit({
+          action: isNewRecord ? 'CREATE' : 'UPDATE',
+          entityType: 'inventory',
+          entityId: inventoryId,
+          oldData: isNewRecord ? null : oldInventoryData,
+          newData: isNewRecord ? newInventoryData : { quantity: finalQuantity },
+          performedById: session.uid,
+        })
 
     return NextResponse.json({
       success: true,

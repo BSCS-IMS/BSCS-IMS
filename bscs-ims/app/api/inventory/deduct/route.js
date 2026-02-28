@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
 
 // Helper: verify session and return decoded token
 async function getSession(req) {
@@ -47,6 +48,7 @@ export async function POST(request) {
 
     const inventoryId = `${productId}_${locationId}`
     let finalQuantity = 0
+    let oldInventoryData = null
 
     await runTransaction(db, async (transaction) => {
       const productRef = doc(db, 'products', productId)
@@ -71,6 +73,7 @@ export async function POST(request) {
       }
 
       const currentQty = inventorySnap.data().quantity ?? 0
+      oldInventoryData = inventorySnap.data()
       if (currentQty < quantity) {
         throw new Error('Insufficient stock')
       }
@@ -83,6 +86,15 @@ export async function POST(request) {
         updatedByEmail: session.email,
         updatedByUid: session.uid,
       })
+    })
+
+    await logAudit({
+      action: 'UPDATE',
+      entityType: 'inventory',
+      entityId: inventoryId,
+      oldData: oldInventoryData,
+      newData: { quantity: finalQuantity },
+      performedById: session.uid,
     })
 
     return NextResponse.json({

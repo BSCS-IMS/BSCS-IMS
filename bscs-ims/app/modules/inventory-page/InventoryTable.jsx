@@ -109,7 +109,7 @@ export default function InventoryTable({
                 {/* All products in this location */}
                 <TableCell sx={{ color: '#374151', py: 2, borderRight: '1px solid #e5e7eb' }}>
                   <Stack spacing={0.5}>
-                    {(row.items ?? []).map((item, idx) => (
+                    {(row.items ?? []).filter((item) => Number(item.qty) > 0).map((item, idx) => (
                       <Stack key={item.id ?? idx} direction='row' justifyContent='space-between' alignItems='center'>
                         <Typography sx={{ fontWeight: 600, fontSize: '0.75rem', color: '#1F384C' }}>
                           {item.productName}

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
 import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from 'firebase/firestore'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
 
 // Helper: verify session and return decoded token
 async function getSession(req) {
@@ -72,12 +73,23 @@ export async function POST(req) {
       )
     }
 
-    const docRef = await addDoc(collection(db, 'locations'), {
+    const locationData = {
       name: normalizedName,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       createdByEmail: session.email,
       createdByUid: session.uid,
+    }
+
+    const docRef = await addDoc(collection(db, 'locations'), locationData)
+
+    await logAudit({
+      action: 'CREATE',
+      entityType: 'location',
+      entityId: docRef.id,
+      oldData: null,
+      newData: locationData,
+      performedById: session.uid,
     })
 
     return NextResponse.json({

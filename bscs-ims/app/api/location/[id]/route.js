@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
 import { doc, getDoc, updateDoc, serverTimestamp, query, collection, where, getDocs } from 'firebase/firestore'
 import { admin } from '@/app/lib/firebaseAdmin'
+import { logAudit } from '@/app/lib/audit'
 
 async function getSession(req) {
   const token = req.cookies.get('session')?.value
@@ -45,6 +46,8 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ success: false, error: 'Location not found' }, { status: 404 })
     }
 
+    const oldData = locationSnap.data()
+
     // Check name uniqueness (excluding current doc)
     const q = query(collection(db, 'locations'), where('name', '==', normalizedName))
     const existing = await getDocs(q)
@@ -56,12 +59,24 @@ export async function PUT(req, { params }) {
       )
     }
 
-    await updateDoc(locationRef, {
+    const updateData = {
       name: normalizedName,
       updatedAt: serverTimestamp(),
       updatedByEmail: session.email,
       updatedByUid: session.uid,
+    }
+
+    await updateDoc(locationRef, updateData)
+
+    await logAudit({
+      action: 'UPDATE',
+      entityType: 'location',
+      entityId: id,
+      oldData,
+      newData: updateData,
+      performedById: session.uid,
     })
+
 
     return NextResponse.json({ success: true, id, name: normalizedName })
   } catch (error) {
