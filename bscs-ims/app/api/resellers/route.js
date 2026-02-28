@@ -8,43 +8,86 @@ import { logAudit } from '@/app/lib/audit'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
-// GET all resellers
-export async function GET() {
+// GET all resellers with filters
+export async function GET(req) {
 	try {
+		const { searchParams } = new URL(req.url)
+
+		const search = searchParams.get('search')?.toLowerCase() || ''
+		const status = searchParams.get('status') || ''
+		const productId = searchParams.get('productId') || ''
+		const sort = searchParams.get('sort') || ''
+
 		// 1️⃣ Fetch all resellers
 		const resSnap = await getDocs(collection(db, 'resellers'))
-		const resellers = resSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+		let resellers = resSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
 
-		// 2️⃣ Fetch all resellerProducts
+		// 2️⃣ Fetch reseller-product relations
 		const rpSnap = await getDocs(collection(db, 'resellers-product'))
 		const resellerProducts = rpSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
 
-		// 3️⃣ Fetch all products (optional, to show names)
+		// 3️⃣ Fetch products
 		const prodSnap = await getDocs(collection(db, 'products'))
 		const products = prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
 
-		// 4️⃣ Attach assigned products to each reseller
-		const resellersWithProducts = resellers.map(r => {
+		// 4️⃣ Attach assigned products
+		resellers = resellers.map(r => {
 			const assignedProductIds = resellerProducts
 				.filter(rp => rp.resellerId === r.id && rp.isActive)
 				.map(rp => rp.productId)
 
-			const assignedProducts = products.filter(p => assignedProductIds.includes(p.id))
+			const assignedProducts = products.filter(p =>
+				assignedProductIds.includes(p.id)
+			)
 
 			return { ...r, assignedProducts }
 		})
 
-		// Sort by createdAt (newest first)
-		resellersWithProducts.sort((a, b) => {
-			const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
-			const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
-			return bTime - aTime
-		})
+		// 🔍 SEARCH filter (businessName / ownerName)
+		if (search) {
+			resellers = resellers.filter(r =>
+				r.businessName?.toLowerCase().includes(search) ||
+				r.ownerName?.toLowerCase().includes(search)
+			)
+		}
 
-		return NextResponse.json(resellersWithProducts)
+		// 🟢 STATUS filter
+		if (status) {
+			resellers = resellers.filter(r => r.status === status)
+		}
+
+		// 📦 PRODUCTS OWNED filter
+		if (productId) {
+			resellers = resellers.filter(r =>
+				r.assignedProducts?.some(p => p.id === productId)
+			)
+		}
+
+		// ↕️ SORT
+		if (sort === 'asc') {
+			resellers.sort((a, b) =>
+				(a.businessName || '').localeCompare(b.businessName || '')
+			)
+		} else if (sort === 'desc') {
+			resellers.sort((a, b) =>
+				(b.businessName || '').localeCompare(a.businessName || '')
+			)
+		} else {
+			// Default: createdAt desc
+			resellers.sort((a, b) => {
+				const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+				const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+				return bTime - aTime
+			})
+		}
+
+		return NextResponse.json(resellers)
 	} catch (error) {
-		console.error(error)
-		return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+		console.error('GET /resellers error:', error)
+		return NextResponse.json(
+			{ success: false, error: error.message },
+			{ status: 500 }
+		)
 	}
 }
 
