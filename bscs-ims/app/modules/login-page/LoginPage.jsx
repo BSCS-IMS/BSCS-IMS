@@ -114,7 +114,7 @@ export default function LoginPage() {
 
       // Artificial delay for better UX (1.5 seconds)
       setTimeout(() => {
-        router.push('/products')
+        router.push('/dashboard')
       }, 1500)
 
     } catch (err) {
