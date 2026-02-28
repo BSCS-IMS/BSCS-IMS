@@ -1,117 +1,90 @@
-import { useState, useEffect } from 'react'
+'use client'
+
+import { useState } from 'react'
 import {
+  Chip,
+  IconButton,
   Paper,
+  Skeleton,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
   TablePagination,
-  IconButton,
-  Chip,
-  Avatar,
-  Skeleton,
-  Stack,
-  Tooltip
+  TableRow,
+  Tooltip,
+  Typography
 } from '@mui/material'
+
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 
-function AssignedProductsCell({ resellerId }) {
-  const [products, setProducts] = useState([])
-
-  useEffect(() => {
-    fetch(`/api/resellers-product/${resellerId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setProducts(d.products || [])
-      })
-      .catch((err) => console.error(err))
-  }, [resellerId])
-
-  if (!products.length) return '-'
-
-  return products.map((p) => p.name).join(', ')
+function formatDate(timestamp) {
+  if (!timestamp) return '-'
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp.seconds * 1000)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
-export default function ResellersTable({
-  paginatedResellers,
-  sortedResellers,
-  loading,
-  page,
-  rowsPerPage,
-  onChangePage,
-  onChangeRowsPerPage,
-  onEdit,
-  onDelete
-}) {
+function truncateText(text, maxLength = 60) {
+  if (!text) return '-'
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength).trim() + '...'
+}
+
+export default function AnnouncementsTable({ announcements, loading, onEdit, onDelete }) {
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
+  const handleChangePage = (_, newPage) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const paginatedAnnouncements = announcements.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
   return (
     <TableContainer component={Paper} sx={{ border: '1px solid #e5e7eb', boxShadow: 'none' }}>
       <Table sx={{ minWidth: 650, tableLayout: 'fixed' }}>
         <TableHead>
           <TableRow>
             <TableCell
-              align='center'
               sx={{
                 fontWeight: 600,
                 fontSize: '0.8125rem',
                 color: '#374151',
                 py: 1.5,
-                width: '8%',
+                width: '25%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
             >
-              Image
+              Title
             </TableCell>
-
             <TableCell
               sx={{
                 fontWeight: 600,
                 fontSize: '0.8125rem',
                 color: '#374151',
                 py: 1.5,
-                width: '20%',
+                width: '35%',
                 borderRight: '1px solid #e5e7eb',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
             >
-              Reseller
+              Content
             </TableCell>
-
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.8125rem',
-                color: '#374151',
-                py: 1.5,
-                width: '30%',
-                borderRight: '1px solid #e5e7eb',
-                borderBottom: '2px solid #e5e7eb',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-              }}
-            >
-              Products Owned
-            </TableCell>
-
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: '0.8125rem',
-                color: '#374151',
-                py: 1.5,
-                width: '15%',
-                borderRight: '1px solid #e5e7eb',
-                borderBottom: '2px solid #e5e7eb',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-              }}
-            >
-              Contact Number
-            </TableCell>
-
             <TableCell
               align='center'
               sx={{
@@ -127,7 +100,20 @@ export default function ResellersTable({
             >
               Status
             </TableCell>
-
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.8125rem',
+                color: '#374151',
+                py: 1.5,
+                width: '15%',
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '2px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}
+            >
+              Created
+            </TableCell>
             <TableCell
               align='center'
               sx={{
@@ -135,7 +121,7 @@ export default function ResellersTable({
                 fontSize: '0.8125rem',
                 color: '#374151',
                 py: 1.5,
-                width: '15%',
+                width: '13%',
                 borderBottom: '2px solid #e5e7eb',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
               }}
@@ -147,70 +133,89 @@ export default function ResellersTable({
 
         <TableBody>
           {loading ? (
-            Array.from({ length: rowsPerPage }).map((_, index) => (
+            Array.from({ length: 5 }).map((_, index) => (
               <TableRow key={`skeleton-${index}`}>
-                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
-                  <Skeleton variant='circular' width={42} height={42} sx={{ mx: 'auto' }} />
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rectangular' width='100%' height={20} />
                 </TableCell>
-                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
-                  <Skeleton variant='rectangular' width='100%' height={24} />
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rectangular' width='100%' height={20} />
                 </TableCell>
-                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
-                  <Skeleton variant='rectangular' width='100%' height={24} />
+                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rounded' width={70} height={24} sx={{ mx: 'auto' }} />
                 </TableCell>
-                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
-                  <Skeleton variant='rectangular' width='100%' height={24} />
+                <TableCell sx={{ borderRight: '1px solid #e5e7eb', py: 2 }}>
+                  <Skeleton variant='rectangular' width='100%' height={20} />
                 </TableCell>
-                <TableCell align='center' sx={{ borderRight: '1px solid #e5e7eb', py: 2.5 }}>
-                  <Skeleton variant='rectangular' width='100%' height={24} />
-                </TableCell>
-                <TableCell align='center' sx={{ py: 2.5 }}>
-                  <Skeleton variant='rectangular' width='100%' height={24} />
+                <TableCell align='center' sx={{ py: 2 }}>
+                  <Stack direction='row' spacing={0.75} justifyContent='center'>
+                    <Skeleton variant='circular' width={28} height={28} />
+                    <Skeleton variant='circular' width={28} height={28} />
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))
-          ) : paginatedResellers.length > 0 ? (
-            paginatedResellers.map((row) => (
-              <TableRow key={row.id}>
+          ) : announcements.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} align='center' sx={{ py: 6, color: '#6b7280', fontSize: '0.8125rem', boxShadow: 'none' }}>
+                No announcements found
+              </TableCell>
+            </TableRow>
+          ) : (
+            paginatedAnnouncements.map((announcement) => (
+              <TableRow key={announcement.id}>
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.8125rem',
+                      color: '#1F384C'
+                    }}
+                  >
+                    {announcement.title}
+                  </Typography>
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: '#374151',
+                    py: 2,
+                    borderRight: '1px solid #e5e7eb',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <Typography sx={{ fontSize: '0.75rem', color: '#374151' }}>
+                    {truncateText(announcement.content, 60)}
+                  </Typography>
+                </TableCell>
                 <TableCell
                   align='center'
                   sx={{
+                    color: '#374151',
                     py: 2,
                     borderRight: '1px solid #e5e7eb',
                     boxShadow: 'none'
                   }}
                 >
-                    <Avatar
-                    src={row.imageUrl || ''}
-                    alt={row.businessName}
-                    variant='rounded'
+                  <Chip
+                    label={announcement.isPublished ? 'Published' : 'Draft'}
+                    size='small'
                     sx={{
-                      width: 36,
-                      height: 36,
-                      mx: 'auto',
-                      bgcolor: '#E8F1FA'
+                      bgcolor: announcement.isPublished ? '#e8f5e9' : '#fff3e0',
+                      color: announcement.isPublished ? '#2e7d32' : '#e65100',
+                      fontWeight: 500,
+                      fontSize: '0.75rem',
+                      height: 24,
+                      border: 'none'
                     }}
-                    imgProps={{
-                      onError: (e) => { e.target.style.display = 'none' }
-                    }}
-                  >
-                    <img src='/LOGO_CLEAR.png' alt='logo' style={{ width: 24, height: 24, objectFit: 'contain' }} />
-                  </Avatar>
+                  />
                 </TableCell>
-
-                <TableCell
-                  sx={{
-                    color: '#1F384C',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    py: 2,
-                    borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none'
-                  }}
-                >
-                  {row.businessName}
-                </TableCell>
-
                 <TableCell
                   sx={{
                     color: '#1F384C',
@@ -220,56 +225,22 @@ export default function ResellersTable({
                     boxShadow: 'none'
                   }}
                 >
-                  <AssignedProductsCell resellerId={row.id} />
+                  {formatDate(announcement.createdAt)}
                 </TableCell>
-
-                <TableCell
-                  sx={{
-                    color: '#1F384C',
-                    fontSize: '0.8125rem',
-                    py: 2,
-                    borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none'
-                  }}
-                >
-                  {row.contactNumber || '-'}
-                </TableCell>
-
-                <TableCell
-                  align='center'
-                  sx={{
-                    py: 2,
-                    borderRight: '1px solid #e5e7eb',
-                    boxShadow: 'none'
-                  }}
-                >
-                  <Chip
-                    label={row.status === 'active' ? 'Active' : 'Not Active'}
-                    size='small'
-                    sx={{
-                      bgcolor: row.status === 'active' ? '#e8f5e9' : '#fff3e0',
-                      color: row.status === 'active' ? '#2e7d32' : '#e65100',
-                      fontWeight: 500,
-                      fontSize: '0.75rem',
-                      height: 24,
-                      border: 'none'
-                    }}
-                  />
-                </TableCell>
-
                 <TableCell align='center' sx={{ py: 2, boxShadow: 'none' }}>
                   <Stack direction='row' spacing={0.75} justifyContent='center'>
-                    <Tooltip title='Edit Reseller'>
+                    <Tooltip title='Edit Announcement'>
                       <IconButton
-                        onClick={() => onEdit(row)}
+                        onClick={() => onEdit(announcement)}
                         size='small'
                         sx={{
-                          bgcolor: '#e0f2fe',
-                          color: '#0369a1',
+                          bgcolor: '#e3f2fd',
+                          color: '#1565c0',
                           width: 28,
                           height: 28,
+                          cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: '#bae6fd',
+                            bgcolor: '#bbdefb'
                           }
                         }}
                       >
@@ -277,17 +248,18 @@ export default function ResellersTable({
                       </IconButton>
                     </Tooltip>
 
-                    <Tooltip title='Delete Reseller'>
+                    <Tooltip title='Delete Announcement'>
                       <IconButton
-                        onClick={() => onDelete(row)}
+                        onClick={() => onDelete(announcement)}
                         size='small'
                         sx={{
                           bgcolor: '#ffebee',
                           color: '#c62828',
                           width: 28,
                           height: 28,
+                          cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: '#ffcdd2',
+                            bgcolor: '#ffcdd2'
                           }
                         }}
                       >
@@ -298,12 +270,6 @@ export default function ResellersTable({
                 </TableCell>
               </TableRow>
             ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} align='center' sx={{ py: 6, color: '#6b7280', fontSize: '0.8125rem', boxShadow: 'none' }}>
-                No resellers found
-              </TableCell>
-            </TableRow>
           )}
         </TableBody>
       </Table>
@@ -311,11 +277,11 @@ export default function ResellersTable({
       <TablePagination
         rowsPerPageOptions={[5, 10, 25, 50]}
         component='div'
-        count={sortedResellers.length}
-        page={page}
-        onPageChange={onChangePage}
+        count={announcements.length}
         rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={onChangeRowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
         sx={{
           '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
             fontSize: '0.75rem'

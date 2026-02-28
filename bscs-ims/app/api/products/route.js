@@ -22,7 +22,7 @@ async function getSession(req) {
 }
 
 /* ==========================
-   GET - fetch all products
+   GET - fetch all non-deleted products
 ========================== */
 export async function GET(req) {
   try {
@@ -32,7 +32,14 @@ export async function GET(req) {
     }
 
     const snapshot = await getDocs(collection(db, 'products'))
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    const products = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(product => !product.deletedAt)
+      .sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+        const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+        return bTime - aTime // newest first
+      })
     return NextResponse.json({ success: true, products })
   } catch (error) {
     console.error('GET /products error:', error)
@@ -56,6 +63,7 @@ export async function POST(request) {
     const sku = formData.get('sku')
     const priceUnit = formData.get('priceUnit')
     const currentPriceRaw = formData.get('currentPrice')
+    const description = formData.get('description')
     const file = formData.get('file')
 
     // Validate required fields
@@ -123,6 +131,10 @@ export async function POST(request) {
 
     if (priceUnit?.trim()) {
       productData.priceUnit = priceUnit.trim()
+    }
+
+    if (description?.trim()) {
+      productData.description = description.trim()
     }
 
     if (imageUrl) {

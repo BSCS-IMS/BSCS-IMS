@@ -72,7 +72,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
@@ -102,7 +102,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
@@ -117,8 +117,10 @@ export async function PUT(request, { params }) {
     const name = formData.get('name')
     const currentPriceRaw = formData.get('currentPrice')
     const priceUnit = formData.get('priceUnit')
+    const description = formData.get('description')
     const isActive = formData.get('isActive') === 'true'
     const file = formData.get('file')
+    const removeImage = formData.get('removeImage') === 'true'
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -127,9 +129,13 @@ export async function PUT(request, { params }) {
       )
     }
 
-    // Handle image replacement
+    // Handle image removal
     let imageUrl = existingProduct.imageUrl ?? null
-    if (file && file.size > 0) {
+    if (removeImage) {
+      await deleteImage(existingProduct.imageUrl)
+      imageUrl = null
+    } else if (file && file.size > 0) {
+      // Handle image replacement
       await deleteImage(existingProduct.imageUrl)
 
       const result = await uploadImage(file)
@@ -159,6 +165,11 @@ export async function PUT(request, { params }) {
       updateData.priceUnit = priceUnit.trim()
     }
 
+    // Handle description - allow clearing it with empty string
+    if (description !== null) {
+      updateData.description = description?.trim() || ''
+    }
+
     await updateDoc(docRef, updateData)
 
     const updatedSnapshot = await getDoc(docRef)
@@ -183,7 +194,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
 
     const docRef = doc(db, 'products', id)
     const snapshot = await getDoc(docRef)
@@ -197,9 +208,8 @@ export async function DELETE(request, { params }) {
     // Delete image from Supabase
     await deleteImage(product.imageUrl)
 
-    // Soft delete — preserves history
+    // Soft delete — preserves history (does not modify isActive as it's user-controllable)
     await updateDoc(docRef, {
-      isActive: false,
       deletedAt: serverTimestamp(),
       deletedByEmail: session.email,
       deletedByUid: session.uid,

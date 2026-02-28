@@ -58,7 +58,15 @@ export async function GET(req) {
         locationId: data.locationId,
         locationName: location?.name ?? 'Unknown Location',
         quantity: data.quantity ?? 0,
+        createdAt: data.createdAt,
       }
+    })
+
+    // Sort by createdAt (newest first)
+    stocks.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+      const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+      return bTime - aTime
     })
 
     return NextResponse.json({ success: true, data: stocks })

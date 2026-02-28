@@ -3,12 +3,10 @@
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { ConditionalLayout } from "../components/ui/conditional-layout"
-import TokenRefresher from "../components/ui/token-refresher";
-
-
+import TokenRefresher from "../components/ui/token-refresher"
+import Toast from './components/Toast'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -57,24 +55,13 @@ export const metadata = {
   category: 'inventory management'
 }
 
-
 export default function RootLayout({ children }) {
   return (
     <html lang='en'>
       <body className={`${inter.variable} antialiased`}>
         <TokenRefresher />
-
-        <ConditionalLayout>
-          {children}
-        </ConditionalLayout>
-
-        {/* ✅ TOAST LIVES HERE */}
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          theme="colored"
-        />
-
+        <ConditionalLayout>{children}</ConditionalLayout>
+        <Toast />
         <Analytics />
       </body>
     </html>

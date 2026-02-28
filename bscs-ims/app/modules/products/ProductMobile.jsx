@@ -17,6 +17,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ProductFormModal from './ProductFormModal'
 
+function SkeletonCard() {
+  return (
+    <div className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden p-4'>
+      <div className='flex items-center justify-between'>
+        <div className='space-y-2 flex-1'>
+          <div className='h-4 w-32 bg-gray-200 rounded animate-pulse' />
+          <div className='h-3 w-20 bg-gray-200 rounded animate-pulse' />
+        </div>
+        <div className='h-5 w-5 bg-gray-200 rounded animate-pulse' />
+      </div>
+    </div>
+  )
+}
+
 export default function ProductMobile({
   products,
   search,
@@ -30,7 +44,8 @@ export default function ProductMobile({
   setIsProductModalOpen,
   productModalMode,
   productModalInitialValues,
-  onConfirm
+  onConfirm,
+  loading = false
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -150,13 +165,20 @@ export default function ProductMobile({
 
           {/* Product Cards */}
           <div className='space-y-3 pb-20'>
-            {filteredProducts.length === 0 && (
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : filteredProducts.length === 0 ? (
               <div className='bg-white rounded-lg py-10 text-center text-gray-500 shadow-sm border border-[#e5e7eb]'>
                 No products found
               </div>
-            )}
-
-            {filteredProducts.map((product) => {
+            ) : (
+            filteredProducts.map((product) => {
               const isOpen = expandedId === product.id
               return (
                 <div key={product.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
@@ -231,7 +253,8 @@ export default function ProductMobile({
                   )}
                 </div>
               )
-            })}
+            })
+            )}
           </div>
         </div>
       </div>

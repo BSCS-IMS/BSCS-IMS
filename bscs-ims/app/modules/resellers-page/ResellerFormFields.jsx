@@ -1,110 +1,125 @@
 import { useState } from 'react'
-import { Upload } from 'lucide-react'
+import { Upload, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 
-export default function ResellerFormFields({ form, setForm, products, imagePreview, onImageChange, errors }) {
+export default function ResellerFormFields({
+  form,
+  setForm,
+  products,
+  imageName,
+  imagePreviewUrl,
+  onImageChange,
+  onImageRemove,
+  errors,
+  isEditMode = false
+}) {
   const [showProductDropdown, setShowProductDropdown] = useState(false)
 
   return (
-    <div className='px-7 pb-6 space-y-5'>
-      <div className='space-y-1.5'>
-        <Label className='text-sm font-medium text-[#374151]'>
+    <div className='px-4 sm:px-6 pb-5 space-y-4'>
+      {/* Reseller Name */}
+      <div className='space-y-1'>
+        <Label className='text-xs font-medium text-[#374151]'>
           Reseller Name <span className='text-[#991b1b]'>*</span>
         </Label>
         <Input
           placeholder='Enter reseller name'
-          value={form.businessName}
+          value={form.businessName || ''}
           onChange={(e) => setForm({ ...form, businessName: e.target.value })}
-          className={`border ${errors?.businessName ? 'border-red-500' : 'border-[#e5e7eb]'}`}
+          className={`h-8 text-xs border ${errors?.businessName ? 'border-red-500' : 'border-[#e5e7eb]'}`}
         />
-
         {errors?.businessName && (
-          <p className='text-xs text-red-600 mt-1'>
-            {errors.businessName}
-          </p>
+          <p className='text-[10px] text-red-600'>{errors.businessName}</p>
         )}
-
       </div>
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-1.5'>
-          <Label className='text-sm font-medium text-[#374151]'>Contact Number</Label>
+      {/* Contact Number + Address */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+        <div className='space-y-1'>
+          <Label className='text-xs font-medium text-[#374151]'>
+            Contact Number
+          </Label>
           <Input
             placeholder='e.g. 09123456789'
-            value={form.contactNumber}
+            value={form.contactNumber || ''}
             onChange={(e) => {
               const value = e.target.value.replace(/\D/g, '')
               setForm({ ...form, contactNumber: value })
             }}
-            className={`border ${errors?.contactNumber ? 'border-red-500' : 'border-[#e5e7eb]'}`}
+            className={`h-8 text-xs border ${errors?.contactNumber ? 'border-red-500' : 'border-[#e5e7eb]'}`}
           />
-
           {errors?.contactNumber && (
-            <p className='text-xs text-red-600 mt-1'>
-              {errors.contactNumber}
-            </p>
+            <p className='text-[10px] text-red-600'>{errors.contactNumber}</p>
           )}
-
         </div>
-        <div className='space-y-1.5'>
-          <Label className='text-sm font-medium text-[#374151]'>Address</Label>
+        <div className='space-y-1'>
+          <Label className='text-xs font-medium text-[#374151]'>Address</Label>
           <Input
             placeholder='Enter address'
-            value={form.address}
+            value={form.address || ''}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
-            className='border-[#e5e7eb]'
+            className='h-8 text-xs border-[#e5e7eb]'
           />
         </div>
       </div>
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div className='space-y-1.5'>
-          <Label className='text-sm font-medium text-[#374151]'>Upload Image</Label>
-          <label className='cursor-pointer'>
+      {/* Upload Image + Status */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+        <div className='space-y-1'>
+          <Label className='text-xs font-medium text-[#374151]'>
+            {isEditMode ? 'Update image (optional)' : 'Upload image'}
+          </Label>
+          <label className='cursor-pointer block'>
             <input type='file' accept='image/*' className='hidden' onChange={onImageChange} />
-            <span className='inline-flex items-center gap-2 w-full h-9 px-3 rounded-md border border-[#e5e7eb] bg-white text-sm text-[#374151] hover:bg-[#f3f4f6] transition cursor-pointer'>
-              <Upload size={15} className='text-[#6b7280] shrink-0' />
-              {imagePreview ? 'Change Image' : 'Browse'}
-            </span>
+            <Button
+              type='button'
+              variant='outline'
+              className='w-full h-8 justify-start gap-2 font-normal text-xs border-[#e5e7eb] hover:bg-[#f3f4f6]'
+              asChild
+            >
+              <span>
+                <Upload size={14} className='text-[#6b7280] shrink-0' />
+                <span className='truncate flex-1 text-left'>
+                  {imageName || (isEditMode ? 'Change image' : 'Browse')}
+                </span>
+              </span>
+            </Button>
           </label>
+          <p className='text-[10px] text-[#9ca3af]'>PNG/JPG</p>
         </div>
 
-        <div className='space-y-1.5'>
-          <Label className='text-sm font-medium text-[#374151]'>
-            Status <span className='text-[#991b1b]'>*</span>
-          </Label>
-          <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}>
-            <SelectTrigger className='w-full h-9 border-[#e5e7eb] cursor-pointer'>
+        <div className='space-y-1'>
+          <Label className='text-xs font-medium text-[#374151]'>Status</Label>
+          <Select value={form.status || 'active'} onValueChange={(value) => setForm({ ...form, status: value })}>
+            <SelectTrigger className='w-full h-8 text-xs border-[#e5e7eb] cursor-pointer'>
               <SelectValue placeholder='Select status' />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='active' className='cursor-pointer'>
-                Active
-              </SelectItem>
-              <SelectItem value='inactive' className='cursor-pointer'>
-                Inactive
-              </SelectItem>
+              <SelectItem value='active' className='cursor-pointer text-xs'>Active</SelectItem>
+              <SelectItem value='inactive' className='cursor-pointer text-xs'>Inactive</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className='relative space-y-1.5'>
-        <Label className='text-sm font-medium text-[#374151]'>Assigned Products</Label>
+      {/* Assigned Products */}
+      <div className='relative space-y-1'>
+        <Label className='text-xs font-medium text-[#374151]'>Assigned Products</Label>
         <div
           onClick={() => setShowProductDropdown((prev) => !prev)}
-          className='w-full border border-[#e5e7eb] rounded-md px-3 py-2 min-h-[42px] flex flex-wrap gap-2 items-center cursor-pointer bg-white hover:bg-[#f9fafb] transition'
+          className='w-full border border-[#e5e7eb] rounded-md px-3 py-2 min-h-[36px] flex flex-wrap gap-1.5 items-center cursor-pointer bg-white hover:bg-[#f9fafb] transition'
         >
-          {form.assignedProducts.length === 0 && <span className='text-sm text-[#6b7280]'>Select products</span>}
+          {form.assignedProducts.length === 0 && <span className='text-xs text-[#6b7280]'>Select products</span>}
 
           {products
             .filter((p) => form.assignedProducts.includes(p.id))
             .map((p) => (
               <span
                 key={p.id}
-                className='flex items-center gap-1 text-xs px-2 py-1 bg-[#E8F1FA] text-[#1F384C] rounded-full'
+                className='flex items-center gap-1 text-[10px] px-2 py-0.5 bg-[#E8F1FA] text-[#1F384C] rounded-full'
               >
                 {p.name}
                 <button
@@ -115,7 +130,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
                       assignedProducts: prev.assignedProducts.filter((id) => id !== p.id)
                     }))
                   }}
-                  className='w-4 h-4 flex items-center justify-center rounded-full text-[10px] bg-[#D6E8F7] text-[#1F384C] hover:bg-[#1F384C] hover:text-white active:scale-90 transition cursor-pointer'
+                  className='w-3.5 h-3.5 flex items-center justify-center rounded-full text-[8px] bg-[#D6E8F7] text-[#1F384C] hover:bg-[#1F384C] hover:text-white active:scale-90 transition cursor-pointer'
                 >
                   ✕
                 </button>
@@ -124,9 +139,9 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         </div>
 
         {showProductDropdown && (
-          <div className='absolute z-10 w-full mt-1 bg-white border border-[#e5e7eb] rounded-md shadow-md max-h-40 overflow-y-auto'>
+          <div className='absolute z-[10000] w-full mt-1 bg-white border border-[#e5e7eb] rounded-md shadow-md max-h-40 overflow-y-auto'>
             {products.length === 0 ? (
-              <div className='px-3 py-4 text-center text-sm text-[#6b7280]'>No products available</div>
+              <div className='px-3 py-3 text-center text-xs text-[#6b7280]'>No products available</div>
             ) : (
               products.map((p) => {
                 const selected = form.assignedProducts.includes(p.id)
@@ -141,7 +156,7 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
                           : [...prev.assignedProducts, p.id]
                       }))
                     }}
-                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-[#1F384C]/10 ${
+                    className={`px-3 py-2 text-xs cursor-pointer hover:bg-[#1F384C]/10 ${
                       selected ? 'font-medium text-[#1F384C]' : ''
                     }`}
                   >
@@ -154,18 +169,41 @@ export default function ResellerFormFields({ form, setForm, products, imagePrevi
         )}
       </div>
 
-      <div className='space-y-1.5'>
-        <Label className='text-sm font-medium text-[#374151]'>
-          Description <span className='text-[#991b1b]'>*</span>
-        </Label>
+      {/* Description */}
+      <div className='space-y-1'>
+        <Label className='text-xs font-medium text-[#374151]'>Description</Label>
         <textarea
-          rows='3'
-          className='w-full border border-[#e5e7eb] rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1e40af]'
-          value={form.description}
+          className='min-h-20 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]'
+          value={form.description || ''}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder='Enter description'
+          placeholder='Write a short description...'
         />
       </div>
+
+      {/* Image Preview */}
+      {imagePreviewUrl && (
+        <div className='space-y-1.5'>
+          <Label className='text-xs font-medium text-[#374151]'>Image Preview</Label>
+          <div
+            className='relative w-full h-40 overflow-hidden rounded-lg border border-[#e5e7eb] bg-[#f3f4f6] group cursor-pointer'
+            onClick={onImageRemove}
+          >
+            <img
+              src={imagePreviewUrl}
+              alt='preview'
+              className='h-full w-full object-cover transition-all duration-200 group-hover:blur-sm group-hover:brightness-75'
+            />
+            {onImageRemove && (
+              <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                <div className='w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-md'>
+                  <Trash2 size={24} className='text-[#1F384C]' />
+                </div>
+              </div>
+            )}
+          </div>
+          <div className='text-[10px] text-[#6b7280] truncate'>{imageName || 'Selected image'}</div>
+        </div>
+      )}
     </div>
   )
 }

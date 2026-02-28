@@ -42,9 +42,9 @@ export async function POST(request) {
       )
     }
 
-    if (!Number.isInteger(quantity) || quantity <= 0) {
+    if (typeof quantity !== 'number' || quantity <= 0) {
       return NextResponse.json(
-        { success: false, error: 'Quantity must be a positive integer' },
+        { success: false, error: 'Quantity must be a positive number' },
         { status: 400 }
       )
     }

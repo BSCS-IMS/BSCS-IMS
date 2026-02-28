@@ -15,6 +15,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
+function SkeletonCard() {
+  return (
+    <div className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden p-4'>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-3'>
+          <div className='w-10 h-10 bg-gray-200 rounded-full animate-pulse' />
+          <div className='space-y-2'>
+            <div className='h-4 w-28 bg-gray-200 rounded animate-pulse' />
+            <div className='h-3 w-20 bg-gray-200 rounded animate-pulse' />
+          </div>
+        </div>
+        <div className='h-5 w-5 bg-gray-200 rounded animate-pulse' />
+      </div>
+    </div>
+  )
+}
+
 function AssignedProductsCell({ resellerId }) {
   const [products, setProducts] = useState([])
 
@@ -31,7 +48,7 @@ function AssignedProductsCell({ resellerId }) {
   return products.map((p) => p.name).join(', ')
 }
 
-export default function ResellersMobileView({ resellers, onEdit, onDelete, onCreate }) {
+export default function ResellersMobileView({ resellers, onEdit, onDelete, onCreate, loading = false }) {
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
@@ -150,14 +167,21 @@ export default function ResellersMobileView({ resellers, onEdit, onDelete, onCre
           </div>
         )}
 
-        <div className='space-y-3'>
-          {filteredResellers.length === 0 && (
+        <div className='space-y-3 pb-20'>
+          {loading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : filteredResellers.length === 0 ? (
             <div className='bg-white rounded-lg py-10 text-center text-gray-500 shadow-sm border border-[#e5e7eb]'>
               No resellers found
             </div>
-          )}
-
-          {filteredResellers.map((reseller) => {
+          ) : (
+          filteredResellers.map((reseller) => {
             const isOpen = expandedId === reseller.id
             return (
               <div key={reseller.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
@@ -238,7 +262,8 @@ export default function ResellersMobileView({ resellers, onEdit, onDelete, onCre
                 )}
               </div>
             )
-          })}
+          })
+          )}
         </div>
       </div>
     </div>

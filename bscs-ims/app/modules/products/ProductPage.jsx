@@ -10,6 +10,8 @@ import ProductMobile from './ProductMobile'
 import ProductFilter from './ProductFilter'
 import ProductSortDialog from './ProductSortDialog'
 import ProductFormModal from './ProductFormModal'
+import InventoryAdjustModal from './InventoryAdjustModal'
+import DeleteProductModal from './DeleteProductModal'
 
 export default function ProductPage() {
   const theme = useTheme()
@@ -28,10 +30,18 @@ export default function ProductPage() {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [inventory, setInventory] = useState([])
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [productModalMode, setProductModalMode] = useState('create')
   const [productModalInitialValues, setProductModalInitialValues] = useState(null)
+
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false)
+  const [inventoryModalMode, setInventoryModalMode] = useState('add')
+  const [inventoryModalProduct, setInventoryModalProduct] = useState(null)
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [deleteModalProduct, setDeleteModalProduct] = useState(null)
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -46,6 +56,7 @@ export default function ProductPage() {
             image: p.imageUrl,
             price: p.currentPrice,
             priceUnit: p.priceUnit,
+            description: p.description || '',
             status: p.isActive ? 'Available' : 'Not Available'
           }))
         )
@@ -57,13 +68,34 @@ export default function ProductPage() {
     }
   }
 
+  const fetchInventory = async () => {
+    try {
+      const res = await axios.get('/api/inventory')
+      if (res.data.success) {
+        setInventory(res.data.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch inventory:', error)
+    }
+  }
+
+  const refreshData = async () => {
+    await Promise.all([fetchProducts(), fetchInventory()])
+  }
+
   useEffect(() => {
     fetchProducts()
+    fetchInventory()
   }, [])
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this product?')) return
-    setProducts((prev) => prev.filter((p) => p.id !== id))
+  const openDeleteModal = (product) => {
+    setDeleteModalProduct(product)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setDeleteModalProduct(null)
   }
 
   const filteredProducts = products
@@ -91,12 +123,29 @@ export default function ProductPage() {
       priceUnit: product.priceUnit,
       isActive: product.status === 'Available',
       imageUrl: product.image,
-      description: ''
+      description: product.description || ''
     })
     setIsProductModalOpen(true)
   }
 
   const closeModal = () => setIsProductModalOpen(false)
+
+  const openAddModal = (product) => {
+    setInventoryModalMode('add')
+    setInventoryModalProduct(product)
+    setIsInventoryModalOpen(true)
+  }
+
+  const openSubtractModal = (product) => {
+    setInventoryModalMode('subtract')
+    setInventoryModalProduct(product)
+    setIsInventoryModalOpen(true)
+  }
+
+  const closeInventoryModal = () => {
+    setIsInventoryModalOpen(false)
+    setInventoryModalProduct(null)
+  }
 
   const handleConfirm = (updatedProducts) => {
     setProducts(
@@ -107,6 +156,7 @@ export default function ProductPage() {
         image: p.imageUrl,
         price: p.currentPrice,
         priceUnit: p.priceUnit,
+        description: p.description || '',
         status: p.isActive ? 'Available' : 'Not Available'
       }))
     )
@@ -124,12 +174,13 @@ export default function ProductPage() {
         setSortOrder={setSortOrder}
         onCreate={openCreateModal}
         onEdit={openEditModal}
-        onDelete={handleDelete}
+        onDelete={openDeleteModal}
         isProductModalOpen={isProductModalOpen}
         setIsProductModalOpen={setIsProductModalOpen}
         productModalMode={productModalMode}
         productModalInitialValues={productModalInitialValues}
         onConfirm={handleConfirm}
+        loading={loading}
       />
     )
   }
@@ -169,7 +220,7 @@ export default function ProductPage() {
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
           />
 
-          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={handleDelete} />
+          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={openDeleteModal} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
         </Box>
       </Box>
 
@@ -189,6 +240,23 @@ export default function ProductPage() {
           onClose={closeModal}
           product={productModalMode === 'edit' ? productModalInitialValues : null}
           onConfirm={handleConfirm}
+        />
+      )}
+
+      {isInventoryModalOpen && inventoryModalProduct && (
+        <InventoryAdjustModal
+          onClose={closeInventoryModal}
+          product={inventoryModalProduct}
+          mode={inventoryModalMode}
+          onSuccess={refreshData}
+        />
+      )}
+
+      {isDeleteModalOpen && deleteModalProduct && (
+        <DeleteProductModal
+          onClose={closeDeleteModal}
+          product={deleteModalProduct}
+          onSuccess={refreshData}
         />
       )}
     </>

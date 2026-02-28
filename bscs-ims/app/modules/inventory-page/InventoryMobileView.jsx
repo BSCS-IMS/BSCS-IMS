@@ -14,6 +14,20 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+function SkeletonCard() {
+  return (
+    <div className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden p-4'>
+      <div className='flex items-center justify-between'>
+        <div className='space-y-2 flex-1'>
+          <div className='h-4 w-32 bg-gray-200 rounded animate-pulse' />
+          <div className='h-3 w-24 bg-gray-200 rounded animate-pulse' />
+        </div>
+        <div className='h-5 w-5 bg-gray-200 rounded animate-pulse' />
+      </div>
+    </div>
+  )
+}
+
 export default function InventoryMobileView({ rows, loading, onEdit, onDelete }) {
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
@@ -27,7 +41,7 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
     .filter(
       (row) =>
         row.location.toLowerCase().includes(search.toLowerCase()) ||
-        row.product.name.toLowerCase().includes(search.toLowerCase())
+        row.items?.some((item) => item.productName?.toLowerCase().includes(search.toLowerCase()))
     )
     .sort((a, b) => {
       if (!sortOrder) return 0
@@ -141,15 +155,24 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
         )}
 
         {/* Inventory Cards */}
-        <div className='space-y-3'>
-          {filteredRows.length === 0 && (
+        <div className='space-y-3 pb-20'>
+          {loading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : filteredRows.length === 0 ? (
             <div className='bg-white rounded-lg py-10 text-center text-gray-500 shadow-sm border border-[#e5e7eb]'>
-              {loading ? 'Loading...' : 'No inventory found'}
+              No inventory found
             </div>
-          )}
-
-          {filteredRows.map((row) => {
+          ) : (
+          filteredRows.map((row) => {
             const isOpen = expandedId === row.id
+            const itemCount = row.items?.length || 0
+            const totalQty = row.items?.reduce((sum, item) => sum + Number(item.qty || 0), 0) || 0
             return (
               <div key={row.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
                 <Button
@@ -159,7 +182,7 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
                 >
                   <div className='text-left'>
                     <span className='font-semibold text-[#1F384C]'>{row.location}</span>
-                    <p className='text-xs text-[#6b7280] mt-0.5'>{row.product.name}</p>
+                    <p className='text-xs text-[#6b7280] mt-0.5'>{itemCount} product{itemCount !== 1 ? 's' : ''} · {totalQty} total qty</p>
                   </div>
                   {isOpen ? (
                     <ChevronUp size={18} className='text-[#6b7280] shrink-0' />
@@ -170,18 +193,15 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
 
                 {isOpen && (
                   <div className='px-4 pb-4 space-y-3 text-sm border-t border-[#e5e7eb]'>
-                    <div className='grid grid-cols-2 gap-y-2.5 pt-3'>
-                      <div>
-                        <span className='text-[#6b7280]'>Location</span>
-                        <p className='font-medium text-[#1F384C]'>{row.location}</p>
-                      </div>
-                      <div>
-                        <span className='text-[#6b7280]'>Product</span>
-                        <p className='font-medium text-[#1F384C]'>{row.product.name}</p>
-                      </div>
-                      <div>
-                        <span className='text-[#6b7280]'>Quantity</span>
-                        <p className='font-medium text-[#374151]'>{row.product.quantity} qty</p>
+                    <div className='pt-3'>
+                      <span className='text-[#6b7280] text-xs'>Products in this location</span>
+                      <div className='mt-2 space-y-2'>
+                        {row.items?.map((item, idx) => (
+                          <div key={item.id || idx} className='flex justify-between items-center'>
+                            <span className='font-medium text-[#1F384C]'>{item.productName}</span>
+                            <span className='text-[#6b7280]'>{Number(item.qty).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -200,14 +220,15 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
                         className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
                       >
                         <Trash2 size={15} className='mr-1.5' />
-                        Delete
+                        Clear
                       </Button>
                     </div>
                   </div>
                 )}
               </div>
             )
-          })}
+          })
+          )}
         </div>
       </div>
     </div>

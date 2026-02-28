@@ -1,7 +1,12 @@
+export const runtime = 'nodejs'
+
 import { NextResponse } from 'next/server'
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
+import { supabase } from '@/app/lib/supabaseClient'
 import { logAudit } from '@/app/lib/audit'
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 // GET all resellers
 export async function GET() {
@@ -29,6 +34,13 @@ export async function GET() {
 			return { ...r, assignedProducts }
 		})
 
+		// Sort by createdAt (newest first)
+		resellersWithProducts.sort((a, b) => {
+			const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+			const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+			return bTime - aTime
+		})
+
 		return NextResponse.json(resellersWithProducts)
 	} catch (error) {
 		console.error(error)
@@ -39,39 +51,80 @@ export async function GET() {
 // CREATE new reseller
 export async function POST(req) {
 	try {
-		const body = await req.json()
+		const formData = await req.formData()
 
-		const ref = await addDoc(collection(db, 'resellers'), {
-			businessName: body.businessName,
-			ownerName: body.ownerName || '',
-			contactNumber: body.contactNumber || '',
-			email: body.email || '',
-			address: body.address || '',
-			status: body.status || 'active',
-			notes: body.notes || '',
+		const businessName = formData.get('businessName')
+		const ownerName = formData.get('ownerName')
+		const contactNumber = formData.get('contactNumber')
+		const email = formData.get('email')
+		const address = formData.get('address')
+		const status = formData.get('status')
+		const notes = formData.get('notes')
+		const userId = formData.get('userId')
+		const file = formData.get('file')
+
+		// Validate required field
+		if (!businessName?.trim()) {
+			return NextResponse.json(
+				{ success: false, error: 'Business name is required' },
+				{ status: 400 }
+			)
+		}
+
+		// Handle image upload
+		let imageUrl = null
+		if (file && typeof file.name === 'string' && file.size > 0) {
+			if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+				return NextResponse.json(
+					{ success: false, error: 'Invalid file type. Allowed: JPEG, PNG, WEBP, GIF' },
+					{ status: 400 }
+				)
+			}
+
+			const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+			const fileName = `resellers/${Date.now()}-${Math.random().toString(36).slice(2)}-${sanitizedName}`
+
+			const { error: uploadError } = await supabase.storage
+				.from('resellerimages')
+				.upload(fileName, file, { contentType: file.type })
+
+			if (uploadError) {
+				return NextResponse.json(
+					{ success: false, error: `Image upload failed: ${uploadError.message}` },
+					{ status: 500 }
+				)
+			}
+
+			const { data } = supabase.storage.from('resellerimages').getPublicUrl(fileName)
+			imageUrl = data.publicUrl
+		}
+
+		// Build reseller data
+		const resellerData = {
+			businessName: businessName.trim(),
+			ownerName: ownerName?.trim() || '',
+			contactNumber: contactNumber?.trim() || '',
+			email: email?.trim() || '',
+			address: address?.trim() || '',
+			status: status || 'active',
+			notes: notes?.trim() || '',
 			createdAt: serverTimestamp(),
 			updatedAt: serverTimestamp(),
-			createdById: body.userId || 'SYSTEM'
-		})
-
-		// Optional: add assigned products mapping
-		if (body.assignedProducts?.length) {
-			for (const productId of body.assignedProducts) {
-				await addDoc(collection(db, 'resellers-product'), {
-					resellerId: ref.id,
-					productId,
-					isActive: true,
-					createdAt: serverTimestamp()
-				})
-			}
+			createdById: userId || 'SYSTEM'
 		}
+
+		if (imageUrl) {
+			resellerData.imageUrl = imageUrl
+		}
+
+		const ref = await addDoc(collection(db, 'resellers'), resellerData)
 
 		await logAudit({
 			action: 'CREATE',
 			entityType: 'reseller',
 			entityId: ref.id,
-			newData: body,
-			performedById: body.userId || 'SYSTEM'
+			newData: resellerData,
+			performedById: userId || 'SYSTEM'
 		})
 
 		return NextResponse.json({ success: true, id: ref.id })
