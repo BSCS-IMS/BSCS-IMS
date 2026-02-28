@@ -25,12 +25,9 @@ export default function ResellersPieChart({ data = [] }) {
   }))
 
   return (
-    <Box sx={{ height: '100%' }}>
-      <Typography variant="subtitle1" fontWeight={600} sx={{ color: PRIMARY_COLOR, mb: 0.5 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="body2" fontWeight={600} sx={{ color: PRIMARY_COLOR, flexShrink: 0 }}>
         Resellers by Products
-      </Typography>
-      <Typography variant="caption" sx={{ color: '#9CA3AF', display: 'block', mb: 1 }}>
-        Top resellers with most assigned products
       </Typography>
 
       {!hasData ? (
@@ -39,25 +36,25 @@ export default function ResellersPieChart({ data = [] }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 160,
+            flex: 1,
             color: '#9CA3AF'
           }}
         >
           <Typography variant="body2">No reseller data available</Typography>
         </Box>
       ) : (
-        <Box sx={{ width: '100%', height: 170, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ width: '100%', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 0 }}>
           <PieChart
             series={[
               {
                 data: pieData,
                 highlightScope: { fade: 'global', highlight: 'item' },
-                faded: { innerRadius: 15, additionalRadius: -5, color: 'gray' },
-                innerRadius: 20,
-                outerRadius: 55,
+                faded: { innerRadius: 12, additionalRadius: -4, color: 'gray' },
+                innerRadius: 18,
+                outerRadius: 50,
                 paddingAngle: 2,
-                cornerRadius: 3,
-                cx: 60
+                cornerRadius: 2,
+                cx: 55
               }
             ]}
             slotProps={{
@@ -68,15 +65,15 @@ export default function ResellersPieChart({ data = [] }) {
                 itemMarkWidth: 6,
                 itemMarkHeight: 6,
                 markGap: 3,
-                itemGap: 4,
+                itemGap: 3,
                 labelStyle: {
-                  fontSize: 9,
+                  fontSize: 8,
                   fill: '#6B7280'
                 }
               }
             }}
-            width={240}
-            height={170}
+            width={220}
+            height={140}
           />
         </Box>
       )}
