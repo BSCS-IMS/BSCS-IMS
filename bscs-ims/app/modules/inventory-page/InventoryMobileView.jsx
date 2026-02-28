@@ -171,8 +171,9 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
           ) : (
           filteredRows.map((row) => {
             const isOpen = expandedId === row.id
-            const itemCount = row.items?.length || 0
-            const totalQty = row.items?.reduce((sum, item) => sum + Number(item.qty || 0), 0) || 0
+            const filteredItems = (row.items ?? []).filter((item) => Number(item.qty) > 0)
+            const itemCount = filteredItems.length
+            const totalQty = filteredItems.reduce((sum, item) => sum + Number(item.qty || 0), 0)
             return (
               <div key={row.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
                 <Button
@@ -196,7 +197,7 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
                     <div className='pt-3'>
                       <span className='text-[#6b7280] text-xs'>Products in this location</span>
                       <div className='mt-2 space-y-2'>
-                        {row.items?.map((item, idx) => (
+                        {filteredItems.map((item, idx) => (
                           <div key={item.id || idx} className='flex justify-between items-center'>
                             <span className='font-medium text-[#1F384C]'>{item.productName}</span>
                             <span className='text-[#6b7280]'>{Number(item.qty).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>

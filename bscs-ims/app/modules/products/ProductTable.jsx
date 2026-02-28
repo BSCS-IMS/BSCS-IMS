@@ -242,7 +242,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                   }}
                 >
                   {(() => {
-                    const productInventory = inventory.filter((inv) => inv.productId === product.id)
+                    const productInventory = inventory.filter((inv) => inv.productId === product.id && Number(inv.quantity) > 0)
                     if (productInventory.length === 0) {
                       return (
                         <Typography variant='body2' sx={{ color: '#9ca3af', fontSize: '0.75rem' }}>
