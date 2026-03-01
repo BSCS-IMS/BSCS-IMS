@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Typography } from '@mui/material'
 import { PieChart } from '@mui/x-charts/PieChart'
 
@@ -26,9 +28,14 @@ export default function TopProductsPieChart({ data = [] }) {
 
   return (
     <Box>
-      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 4 }}>
-        Top 5 Products by Quantity
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
+          Top 5 Products by Quantity
+        </Typography>
+        <Link href="/products" passHref>
+          <ArrowOutwardIcon sx={{ fontSize: 16, color: '#9CA3AF', '&:hover': { color: PRIMARY_COLOR } }} />
+        </Link>
+      </Box>
 
       {!hasData ? (
         <Box

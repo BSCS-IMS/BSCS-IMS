@@ -23,12 +23,17 @@ export default function LatestAnnouncements({ data = [] }) {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="center" spacing={0.5} mb={1}>
-        <CampaignIcon sx={{ color: PRIMARY_COLOR, fontSize: 16 }} />
-        <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
-          Latest Announcements
-        </Typography>
-      </Stack>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Stack direction="row" alignItems="center" spacing={0.5}>
+          <CampaignIcon sx={{ color: PRIMARY_COLOR, fontSize: 16 }} />
+          <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
+            Latest Announcements
+          </Typography>
+        </Stack>
+        <Link href="/announcements" passHref>
+          <ArrowOutwardIcon sx={{ fontSize: 16, color: '#9CA3AF', '&:hover': { color: PRIMARY_COLOR } }} />
+        </Link>
+      </Box>
 
       {!hasData ? (
         <Box

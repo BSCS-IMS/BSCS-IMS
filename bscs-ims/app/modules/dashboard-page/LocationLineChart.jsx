@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Typography } from '@mui/material'
 import { LineChart } from '@mui/x-charts/LineChart'
 
@@ -15,9 +17,14 @@ export default function LocationLineChart({ data = [] }) {
 
   return (
     <Box>
-      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 1 }}>
-        Inventory by Location
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
+          Inventory by Location
+        </Typography>
+        <Link href="/inventory" passHref>
+          <ArrowOutwardIcon sx={{ fontSize: 16, color: '#9CA3AF', '&:hover': { color: PRIMARY_COLOR } }} />
+        </Link>
+      </Box>
 
       {!hasData ? (
         <Box
