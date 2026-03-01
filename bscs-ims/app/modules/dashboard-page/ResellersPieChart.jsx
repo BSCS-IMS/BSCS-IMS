@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Typography } from '@mui/material'
 import { PieChart } from '@mui/x-charts/PieChart'
 
@@ -26,9 +28,14 @@ export default function ResellersPieChart({ data = [] }) {
 
   return (
     <Box>
-      <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR, mb: 4 }}>
-        Resellers by Products
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
+          Resellers by Products
+        </Typography>
+        <Link href="/resellers" passHref>
+          <ArrowOutwardIcon sx={{ fontSize: 16, color: '#9CA3AF', '&:hover': { color: PRIMARY_COLOR } }} />
+        </Link>
+      </Box>
 
       {!hasData ? (
         <Box

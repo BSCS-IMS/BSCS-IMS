@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import ArrowOutwardIcon from '@mui/icons-material/ArrowOutward'
 import { Box, Typography, Stack, Chip } from '@mui/material'
 import CampaignIcon from '@mui/icons-material/Campaign'
 
