@@ -9,7 +9,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined'
 import SortIcon from '@mui/icons-material/Sort'
 
-export default function ResellersFilters({ search, setSearch, onSortClick, sortOrder }) {
+export default function ResellersFilters({ search, setSearch, onSortClick, onFilterClick, sortOrder }) {
   return (
     <Box sx={{ mb: 5 }}>
       <Stack direction='row' spacing={2} alignItems='center'>
@@ -52,6 +52,7 @@ export default function ResellersFilters({ search, setSearch, onSortClick, sortO
         />
 
         <Button
+          onClick={onFilterClick}
           variant='text'
           sx={{
             color: '#1F384C',

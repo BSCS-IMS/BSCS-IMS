@@ -10,7 +10,9 @@ import ResellersSortDialog from './ResellersSortDialog'
 import ResellersMobileView from './ResellersMobileView'
 import CreateResellerModal from './ResellerFormModal'
 import DeleteResellerModal from './DeleteResellerModal'
+import ResellersFilterDialog from './ResellersFilterDialog'
 import { toast } from 'react-toastify'
+
 
 export default function ResellersPage() {
   const theme = useTheme()
@@ -30,9 +32,46 @@ export default function ResellersPage() {
   const [editingReseller, setEditingReseller] = useState(null)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
   const [sortOrder, setSortOrder] = useState(null)
-
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteModalReseller, setDeleteModalReseller] = useState(null)
+  const [products, setProducts] = useState([])
+  const [filters, setFilters] = useState({
+    name: '',
+    status: '',
+    productId: ''
+  })
+
+const fetchProducts = async () => {
+	try {
+		const res = await axios.get('/api/products')
+
+		let list = []
+
+		if (Array.isArray(res.data)) {
+			list = res.data
+		} else if (Array.isArray(res.data?.products)) {
+			list = res.data.products
+		} else if (Array.isArray(res.data?.data)) {
+			list = res.data.data
+		} else {
+			console.warn('Unknown products response shape', res.data)
+		}
+
+		setProducts(list)
+	} catch (err) {
+		console.error('Failed to fetch products', err)
+	}
+}
+
+useEffect(() => {
+	fetchResellers()
+	fetchProducts()
+}, [])
+
+useEffect(() => {
+	console.log('PRODUCTS FROM API:', products)
+}, [products])
 
   const fetchResellers = async () => {
     setLoading(true)
@@ -46,10 +85,6 @@ export default function ResellersPage() {
     }
   }
 
-
-  useEffect(() => {
-    fetchResellers()
-  }, [])
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
@@ -89,8 +124,32 @@ export default function ResellersPage() {
     handleSortClose()
   }
 
-  const filteredResellers = resellers.filter((r) => r.businessName?.toLowerCase().includes(search.toLowerCase()))
+  const filteredResellers = resellers.filter((r) => {
+    // 🔍 search box
+    if (
+      search &&
+      !r.businessName?.toLowerCase().includes(search.toLowerCase())
+    ) return false
 
+    // 🏷 name filter (dialog)
+    if (
+      filters.name &&
+      !r.businessName?.toLowerCase().includes(filters.name.toLowerCase())
+    ) return false
+
+    // ✅ status filter
+    if (filters.status && r.status !== filters.status) return false
+
+    // 📦 product filter
+    if (filters.productId) {
+      const hasProduct = r.assignedProducts?.some(
+        (p) => p.id === filters.productId
+      )
+      if (!hasProduct) return false
+    }
+
+    return true
+  })
   const sortedResellers = [...filteredResellers].sort((a, b) => {
     if (!sortOrder) return 0 // preserve API order (newest first)
     if (sortOrder === 'asc') return a.businessName.localeCompare(b.businessName)
@@ -168,8 +227,23 @@ export default function ResellersPage() {
           </Button>
         </Stack>
 
-        <ResellersFilters search={search} setSearch={setSearch} onSortClick={handleSortClick} sortOrder={sortOrder} />
+        <ResellersFilters
+          search={search}
+          setSearch={setSearch}
+          onSortClick={handleSortClick}
+          sortOrder={sortOrder}
+          onFilterClick={() => setIsFilterOpen(true)}
+        />
 
+        <ResellersFilterDialog
+          open={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          products={products}
+          filters={filters}
+          onApply={(newFilters) => {
+            setFilters(newFilters)
+          }}
+        />
         <ResellersTable
           paginatedResellers={paginatedResellers}
           sortedResellers={sortedResellers}
