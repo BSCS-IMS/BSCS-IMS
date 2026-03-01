@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { db } from '@/app/lib/firebase'
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
+import { collection, getDocs, query, where, orderBy, limit, documentId } from 'firebase/firestore'
 import { admin } from '@/app/lib/firebaseAdmin'
 
 // Helper: verify session and return decoded token
@@ -32,39 +32,51 @@ export async function GET(req) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Fetch all data in parallel
+    // Fetch primary data in parallel
     const [
       auditLogsSnap,
       inventorySnap,
       productsSnap,
       resellersProductSnap,
-      resellersSnap,
       announcementsSnap,
       locationsSnap
     ] = await Promise.all([
-      // Audit logs for inventory changes (filter by date in JS to avoid composite index)
-      getDocs(query(
-        collection(db, 'auditLogs'),
-        where('entityType', '==', 'inventory')
-      )),
-      // All inventory
+      getDocs(query(collection(db, 'auditLogs'), where('entityType', '==', 'inventory'))),
       getDocs(collection(db, 'inventory')),
-      // Active products
       getDocs(query(collection(db, 'products'), where('isActive', '==', true))),
-      // Reseller-product mappings
       getDocs(collection(db, 'resellers-product')),
-      // All resellers
-      getDocs(collection(db, 'resellers')),
-      // Latest announcements (limit 3)
       getDocs(query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(3))),
-      // All locations
       getDocs(collection(db, 'locations'))
     ])
 
     // Build lookup maps
     const productMap = new Map(productsSnap.docs.map(d => [d.id, d.data()]))
-    const resellerMap = new Map(resellersSnap.docs.map(d => [d.id, d.data()]))
     const locationMap = new Map(locationsSnap.docs.map(d => [d.id, d.data()]))
+
+    // Filter for active reseller-product mappings (where the product is also active)
+    const activeMappings = resellersProductSnap.docs
+      .map(doc => doc.data())
+      .filter(data => data.isActive && data.productId && productMap.has(data.productId))
+
+    // Get unique reseller IDs from the active mappings
+    const resellerIds = [...new Set(activeMappings.map(data => data.resellerId))]
+
+    // Batch fetch only the resellers that have active products
+    const resellerMap = new Map()
+    if (resellerIds.length > 0) {
+      const CHUNK_SIZE = 30
+      const resellerPromises = []
+      for (let i = 0; i < resellerIds.length; i += CHUNK_SIZE) {
+        const chunk = resellerIds.slice(i, i + CHUNK_SIZE)
+        resellerPromises.push(getDocs(query(collection(db, 'resellers'), where(documentId(), 'in', chunk))))
+      }
+      const resellerSnaps = await Promise.all(resellerPromises)
+      resellerSnaps.forEach(snap => {
+        snap.docs.forEach(doc => {
+          resellerMap.set(doc.id, doc.data())
+        })
+      })
+    }
 
     // 1. Calculate today's inventory changes (added/subtracted per product)
     const todayChanges = {}
@@ -134,17 +146,18 @@ export async function GET(req) {
 
     // 3. Resellers with most products
     const resellerProductCounts = {}
-    resellersProductSnap.docs.forEach(doc => {
-      const data = doc.data()
-      if (!data.isActive) return
-
+    activeMappings.forEach(data => {
       const resellerId = data.resellerId
-      const resellerName = resellerMap.get(resellerId)?.businessName || 'Unknown'
+      const reseller = resellerMap.get(resellerId)
 
-      if (!resellerProductCounts[resellerId]) {
-        resellerProductCounts[resellerId] = { resellerId, resellerName, productCount: 0 }
+      // Only count if the reseller exists and has a name
+      if (reseller && reseller.businessName) {
+        const resellerName = reseller.businessName
+        if (!resellerProductCounts[resellerId]) {
+          resellerProductCounts[resellerId] = { resellerId, resellerName, productCount: 0 }
+        }
+        resellerProductCounts[resellerId].productCount++
       }
-      resellerProductCounts[resellerId].productCount++
     })
 
     const topResellers = Object.values(resellerProductCounts)
