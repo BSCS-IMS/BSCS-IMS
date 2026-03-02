@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>404 — Connection Lost</title>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: black;
+    color: #00ff88;
+    font-family: "Courier New", monospace;
+  }
+
+  .screen {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+  }
+
+  .terminal {
+    border: 2px solid #00ff88;
+    padding: 30px;
+    max-width: 700px;
+    width: 90%;
+    box-shadow: 0 0 20px #00ff8855;
+    animation: flicker 2s infinite;
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: 2.2em;
+  }
+
+  p {
+    margin: 6px 0;
+    opacity: 0.9;
+  }
+
+  .blink {
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  @keyframes flicker {
+    0% { opacity: 1; }
+    98% { opacity: 1; }
+    99% { opacity: 0.95; }
+    100% { opacity: 1; }
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <div id="ok" class="terminal">
+    <p>> STATUS: ONLINE</p>
+    <p>> CONNECTION STABLE</p>
+    <p>> MONITORING SESSION...</p>
+    <p class="blink">_</p>
+  </div>
+
+  <div id="error404" class="terminal hidden">
+    <h1>404 — NOT FOUND</h1>
+    <p>> ERROR: Connection Lost</p>
+    <p>> REASON: Network disconnected or session abandoned</p>
+    <p>> ACTION: Restore connection or return to tab</p>
+    <p class="blink">_</p>
+  </div>
+</div>
+
+<script>
+  const okScreen = document.getElementById("ok");
+  const errorScreen = document.getElementById("error404");
+
+  function updateStatus() {
+    const offline = !navigator.onLine;
+    const hidden = document.visibilityState === "hidden";
+
+    if (offline || hidden) {
+      okScreen.classList.add("hidden");
+      errorScreen.classList.remove("hidden");
+    } else {
+      errorScreen.classList.add("hidden");
+      okScreen.classList.remove("hidden");
+    }
+  }
+
+  window.addEventListener("online", updateStatus);
+  window.addEventListener("offline", updateStatus);
+  document.addEventListener("visibilitychange", updateStatus);
+
+  updateStatus();
+</script>
+
+</body>
+</html>
