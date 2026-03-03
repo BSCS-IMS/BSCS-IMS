@@ -13,6 +13,7 @@ import InventoryTable from './InventoryTable'
 import InventorySortDialog from './InventorySortDialog'
 import InventoryMobileView from './InventoryMobileView'
 import InventoryLocationModal from './InventorylocationModal'
+import InventoryFilterDialog from './InventoryFilterDialog'
 import { toast } from 'react-toastify'
 
 export default function InventoryPage() {
@@ -33,7 +34,9 @@ export default function InventoryPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [selectedItemsToDelete, setSelectedItemsToDelete] = useState([])  // ✅ new
+  const [selectedItemsToDelete, setSelectedItemsToDelete] = useState([])
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filters, setFilters] = useState({ locationId: '', productId: '' })
 
   // ── Data fetching ───────────────────────────────────────────────────────────
 
@@ -43,6 +46,8 @@ export default function InventoryPage() {
       if (res.data.success) {
         const grouped = {}
         res.data.data.forEach((item) => {
+          if (item.quantity <= 0) return
+
           if (!grouped[item.locationId]) {
             grouped[item.locationId] = {
               id: item.locationId,
@@ -75,9 +80,7 @@ export default function InventoryPage() {
     try {
       const res = await axios.get('/api/location')
       if (res.data?.success) {
-        setLocations(
-          res.data.locations.map((l) => ({ value: l.id, label: l.name }))
-        )
+        setLocations(res.data.locations.map((l) => ({ value: l.id, label: l.name })))
       }
     } catch (err) {
       console.error('Failed to fetch locations:', err)
@@ -127,7 +130,7 @@ export default function InventoryPage() {
 
   const handleDelete = async (row) => {
     setDeleteTarget(row)
-    setSelectedItemsToDelete([])  // ✅ reset selection on open
+    setSelectedItemsToDelete([])
   }
 
   const confirmDelete = async () => {
@@ -205,11 +208,20 @@ export default function InventoryPage() {
   const handleSortClose = () => setSortAnchorEl(null)
   const handleSortSelect = (order) => { setSortOrder(order); handleSortClose() }
 
-  const filteredRows = rows.filter(
-    (row) =>
+  // ── Filter + sort rows ──────────────────────────────────────────────────────
+
+  const filteredRows = rows.filter((row) => {
+    const matchesSearch =
       row.location.toLowerCase().includes(search.toLowerCase()) ||
       row.items.some((i) => i.productName.toLowerCase().includes(search.toLowerCase()))
-  )
+
+    const matchesLocation = !filters.locationId || row.locationId === filters.locationId
+
+    const matchesProduct = !filters.productId ||
+      row.items.some((i) => i.productId === filters.productId)
+
+    return matchesSearch && matchesLocation && matchesProduct
+  })
 
   const sortedRows = [...filteredRows].sort((a, b) => {
     if (!sortOrder) return 0
@@ -219,6 +231,11 @@ export default function InventoryPage() {
   })
 
   const paginatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  // Unique products from all rows for filter dropdown
+  const productOptions = rows
+    .flatMap((r) => r.items.map((i) => ({ value: i.productId, label: i.productName })))
+    .filter((p, idx, arr) => arr.findIndex((x) => x.value === p.value) === idx)
 
   if (!mounted) return null
 
@@ -263,7 +280,7 @@ export default function InventoryPage() {
           </Button>
         </Stack>
 
-        <InventoryFilters search={search} setSearch={setSearch} onSortClick={handleSortClick} />
+        <InventoryFilters search={search} setSearch={setSearch} onSortClick={handleSortClick} onFilterClick={() => setFilterOpen(true)} />
 
         <InventoryTable
           paginatedRows={paginatedRows}
@@ -294,6 +311,15 @@ export default function InventoryPage() {
           locations={locations}
         />
       )}
+
+      <InventoryFilterDialog
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        onApply={(newFilters) => { setFilters(newFilters); setPage(0) }}
+        locations={locations}
+        products={productOptions}
+      />
 
       {/* Delete confirm dialog */}
       {deleteTarget && (

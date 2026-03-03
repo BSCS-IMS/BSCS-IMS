@@ -7,7 +7,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined'
 import SortIcon from '@mui/icons-material/Sort'
 
-export default function InventoryFilters({ search, setSearch, onSortClick }) {
+export default function InventoryFilters({ search, setSearch, onSortClick, onFilterClick }) {
   return (
     <Box sx={{ mb: 5 }}>
       <Stack direction='row' spacing={2} alignItems='center'>
@@ -49,6 +49,7 @@ export default function InventoryFilters({ search, setSearch, onSortClick }) {
           }}
         />
         <Button
+          onClick={onFilterClick}
           variant='text'
           sx={{
             color: '#1F384C',
@@ -57,9 +58,7 @@ export default function InventoryFilters({ search, setSearch, onSortClick }) {
             textTransform: 'none',
             height: '48px',
             px: 2,
-            '&:hover': {
-              bgcolor: '#f3f4f6'
-            }
+            '&:hover': { bgcolor: '#f3f4f6' }
           }}
         >
           <FilterAltOutlinedIcon sx={{ fontSize: 18 }} />
@@ -75,9 +74,7 @@ export default function InventoryFilters({ search, setSearch, onSortClick }) {
             textTransform: 'none',
             height: '48px',
             px: 2,
-            '&:hover': {
-              bgcolor: '#f3f4f6'
-            }
+            '&:hover': { bgcolor: '#f3f4f6' }
           }}
         >
           <SortIcon sx={{ fontSize: 18 }} />
