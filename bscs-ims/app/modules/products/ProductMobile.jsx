@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ProductFormModal from './ProductFormModal'
+import ProductFilterDialog from './ProductFilterDialog'
 
 function SkeletonCard() {
   return (
@@ -45,7 +46,8 @@ export default function ProductMobile({
   productModalMode,
   productModalInitialValues,
   onConfirm,
-  loading = false
+  loading = false,
+  onApplyFilter
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -120,20 +122,14 @@ export default function ProductMobile({
 
           {/* Filter Panel */}
           {isFilterOpen && (
-            <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-              <p className='text-xs text-[#6b7280] mb-2'>Filter by status</p>
-              <div className='flex gap-2'>
-                <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
-                  All
-                </Button>
-                <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
-                  Available
-                </Button>
-                <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
-                  Not Available
-                </Button>
-              </div>
-            </div>
+            <ProductFilterDialog
+              open={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
+              onApply={(selectedFilter) => {
+                onApplyFilter(selectedFilter)
+                setIsFilterOpen(false)
+              }}
+            />
           )}
 
           {/* Sort Panel */}

@@ -12,6 +12,8 @@ import ProductSortDialog from './ProductSortDialog'
 import ProductFormModal from './ProductFormModal'
 import InventoryAdjustModal from './InventoryAdjustModal'
 import DeleteProductModal from './DeleteProductModal'
+import ProductFilterDialog from './ProductFilterDialog'
+
 
 export default function ProductPage() {
   const theme = useTheme()
@@ -21,6 +23,9 @@ export default function ProductPage() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [filter, setFilter] = useState(null)
 
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
@@ -99,13 +104,35 @@ export default function ProductPage() {
   }
 
   const filteredProducts = products
-    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (!sortOrder) return 0
-      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
-      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
-      return 0
-    })
+  .filter((p) => {
+    if (!filter) return true
+
+    if (filter.type === 'status') {
+      return p.status === filter.value
+    }
+
+    if (filter.type === 'sku') {
+      return p.sku.toLowerCase().includes(filter.value.toLowerCase())
+    }
+
+    if (filter.type === 'inventory') {
+      const productInventory = inventory.filter(
+        (inv) => inv.productId === p.id
+      )
+
+      return productInventory.some((inv) =>
+        inv.locationName.toLowerCase().includes(filter.value.toLowerCase())
+      )
+    }
+
+    return true
+  })
+  .sort((a, b) => {
+    if (!sortOrder) return 0
+    if (sortOrder === 'asc') return a.name.localeCompare(b.name)
+    if (sortOrder === 'desc') return b.name.localeCompare(a.name)
+    return 0
+  })
 
   const openCreateModal = () => {
     setProductModalMode('create')
@@ -181,6 +208,10 @@ export default function ProductPage() {
         productModalInitialValues={productModalInitialValues}
         onConfirm={handleConfirm}
         loading={loading}
+        // NEW: filter dialog props
+        isFilterOpen={isFilterOpen}
+        setIsFilterOpen={setIsFilterOpen}
+        onApplyFilter={(selectedFilter) => setFilter(selectedFilter)}
       />
     )
   }
@@ -216,7 +247,7 @@ export default function ProductPage() {
           <ProductFilter
             search={search}
             setSearch={setSearch}
-            onFilterClick={() => {}}
+            onFilterClick={() => setIsFilterOpen(true)}
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
           />
 
@@ -259,6 +290,15 @@ export default function ProductPage() {
           onSuccess={refreshData}
         />
       )}
+
+      <ProductFilterDialog
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onApply={(selectedFilter) => {
+          setFilter(selectedFilter)
+          setIsFilterOpen(false)
+        }}
+      />
     </>
   )
 }
