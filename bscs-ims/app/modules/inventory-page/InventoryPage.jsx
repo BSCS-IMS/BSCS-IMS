@@ -1,7 +1,8 @@
 'use client'
 
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useMediaQuery, useTheme } from '@mui/material'
 import Box from '@mui/material/Box'
 import Stack from '@mui/material/Stack'
@@ -21,60 +22,104 @@ export default function InventoryPage() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const [search, setSearch] = useState('')
+  // Read filters from URL params
+  const urlSearch = searchParams.get('search') || ''
+  const urlLocationId = searchParams.get('locationId') || ''
+  const urlProductId = searchParams.get('productId') || ''
+  const urlSort = searchParams.get('sort') || ''
+
+  const [search, setSearch] = useState(urlSearch)
+  const [sortAnchorEl, setSortAnchorEl] = useState(null)
+  const [sortOrder, setSortOrder] = useState(urlSort || null)
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(5)
   const [rows, setRows] = useState([])
+  const [allRows, setAllRows] = useState([])  // unfiltered, for filter dialog options
   const [loading, setLoading] = useState(true)
-  const [sortAnchorEl, setSortAnchorEl] = useState(null)
-  const [sortOrder, setSortOrder] = useState(null)
   const [locations, setLocations] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [selectedItemsToDelete, setSelectedItemsToDelete] = useState([])
-  const [filterOpen, setFilterOpen] = useState(false)
-  const [filters, setFilters] = useState({ locationId: '', productId: '' })
 
-  // ── Data fetching ───────────────────────────────────────────────────────────
+  useEffect(() => { setMounted(true) }, [])
 
-  const fetchInventory = async () => {
+  // Update URL params
+  const updateUrlParams = useCallback((params) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newSearchParams.set(key, value)
+      } else {
+        newSearchParams.delete(key)
+      }
+    })
+    const queryString = newSearchParams.toString()
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  // Fetch inventory — backend handles filtering
+  // Helper to group raw inventory data into rows
+  const groupInventory = (data) => {
+    const grouped = {}
+    data.forEach((item) => {
+      if (item.quantity <= 0) return
+      if (!grouped[item.locationId]) {
+        grouped[item.locationId] = {
+          id: item.locationId,
+          locationId: item.locationId,
+          location: item.locationName,
+          items: [],
+        }
+      }
+      grouped[item.locationId].items.push({
+        id: item.id,
+        productId: item.productId,
+        productName: item.productName,
+        qty: item.quantity,
+      })
+    })
+    Object.keys(grouped).forEach((key) => {
+      if (grouped[key].items.length === 0) delete grouped[key]
+    })
+    return Object.values(grouped)
+  }
+
+  const fetchInventory = useCallback(async () => {
+    setLoading(true)
     try {
-      const res = await axios.get('/api/inventory')
+      const params = new URLSearchParams()
+      if (urlSearch) params.set('search', urlSearch)
+      if (urlLocationId) params.set('locationId', urlLocationId)
+      if (urlProductId) params.set('productId', urlProductId)
+      if (urlSort) params.set('sort', urlSort)
+
+      const queryString = params.toString()
+      const url = queryString ? `/api/inventory?${queryString}` : '/api/inventory'
+
+      // Fetch filtered rows for table
+      const res = await axios.get(url)
       if (res.data.success) {
-        const grouped = {}
-        res.data.data.forEach((item) => {
-          if (item.quantity <= 0) return
+        setRows(groupInventory(res.data.data))
+      }
 
-          if (!grouped[item.locationId]) {
-            grouped[item.locationId] = {
-              id: item.locationId,
-              locationId: item.locationId,
-              location: item.locationName,
-              items: [],
-            }
-          }
-          grouped[item.locationId].items.push({
-            id: item.id,
-            productId: item.productId,
-            productName: item.productName,
-            qty: item.quantity,
-          })
-        })
-
-        Object.keys(grouped).forEach((key) => {
-          if (grouped[key].items.length === 0) delete grouped[key]
-        })
-        setRows(Object.values(grouped))
+      // Always fetch unfiltered data for filter dialog options
+      const allRes = await axios.get('/api/inventory')
+      if (allRes.data.success) {
+        setAllRows(groupInventory(allRes.data.data))
       }
     } catch (error) {
       console.error('Failed to fetch inventory:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [urlSearch, urlLocationId, urlProductId, urlSort])
 
   const fetchLocations = async () => {
     try {
@@ -89,8 +134,42 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchInventory()
+  }, [fetchInventory])
+
+  useEffect(() => {
     fetchLocations()
   }, [])
+
+  // Sync search + sort state with URL
+  useEffect(() => { setSearch(urlSearch) }, [urlSearch])
+  useEffect(() => { setSortOrder(urlSort || null) }, [urlSort])
+
+  const handleSearchSubmit = () => {
+    updateUrlParams({ search: search.trim() })
+  }
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') handleSearchSubmit()
+  }
+
+  // Handle filter apply — updates URL, triggers re-fetch
+  const handleFilterApply = (filters) => {
+    updateUrlParams({
+      locationId: filters.locationId,
+      productId: filters.productId,
+    })
+    setPage(0)
+  }
+
+  // Handle sort
+  const handleSortSelect = (order) => {
+    setSortOrder(order)
+    updateUrlParams({ sort: order || '' })
+    setSortAnchorEl(null)
+  }
+
+  // Active filter count for badge
+  const activeFilterCount = [urlLocationId, urlProductId].filter(Boolean).length
 
   // ── Modal helpers ───────────────────────────────────────────────────────────
 
@@ -147,11 +226,9 @@ export default function InventoryPage() {
           })
         )
       )
-
       const failed = results.filter(
         (r) => r.status === 'rejected' || r.value?.data?.success === false
       )
-
       if (failed.length > 0) {
         const firstErr =
           failed[0].reason?.response?.data?.error ||
@@ -161,7 +238,6 @@ export default function InventoryPage() {
       } else {
         toast.success(`"${row.location}" stock cleared successfully`)
       }
-
       fetchInventory()
     } catch (err) {
       console.error('Delete failed:', err)
@@ -174,29 +250,22 @@ export default function InventoryPage() {
     const selectedItems = row.items.filter((item) => selectedItemsToDelete.includes(item.productId))
     setDeleteTarget(null)
     setSelectedItemsToDelete([])
-
     try {
       const results = await Promise.allSettled(
         selectedItems.map((item) =>
           axios.delete('/api/inventory', {
-            data: {
-              productId: item.productId,
-              locationId: row.locationId,
-            }
+            data: { productId: item.productId, locationId: row.locationId }
           })
         )
       )
-
       const failed = results.filter(
         (r) => r.status === 'rejected' || r.value?.data?.success === false
       )
-
       if (failed.length > 0) {
         toast.error('Some items failed to delete')
       } else {
         toast.success('Selected inventory deleted successfully')
       }
-
       fetchInventory()
     } catch (err) {
       console.error('Delete inventory failed:', err)
@@ -204,26 +273,7 @@ export default function InventoryPage() {
     }
   }
 
-  const handleSortClick = (event) => setSortAnchorEl(event.currentTarget)
-  const handleSortClose = () => setSortAnchorEl(null)
-  const handleSortSelect = (order) => { setSortOrder(order); handleSortClose() }
-
-  // ── Filter + sort rows ──────────────────────────────────────────────────────
-
-  const filteredRows = rows.filter((row) => {
-    const matchesSearch =
-      row.location.toLowerCase().includes(search.toLowerCase()) ||
-      row.items.some((i) => i.productName.toLowerCase().includes(search.toLowerCase()))
-
-    const matchesLocation = !filters.locationId || row.locationId === filters.locationId
-
-    const matchesProduct = !filters.productId ||
-      row.items.some((i) => i.productId === filters.productId)
-
-    return matchesSearch && matchesLocation && matchesProduct
-  })
-
-  const sortedRows = [...filteredRows].sort((a, b) => {
+  const sortedRows = [...rows].sort((a, b) => {
     if (!sortOrder) return 0
     if (sortOrder === 'asc') return a.location.localeCompare(b.location)
     if (sortOrder === 'desc') return b.location.localeCompare(a.location)
@@ -232,8 +282,8 @@ export default function InventoryPage() {
 
   const paginatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
-  // Unique products from all rows for filter dropdown
-  const productOptions = rows
+  // Product options for filter dialog — derived from current rows
+  const productOptions = allRows
     .flatMap((r) => r.items.map((i) => ({ value: i.productId, label: i.productName })))
     .filter((p, idx, arr) => arr.findIndex((x) => x.value === p.value) === idx)
 
@@ -248,7 +298,6 @@ export default function InventoryPage() {
             onClose={closeModal}
             entry={editingEntry}
             onConfirm={handleModalConfirm}
-            locations={locations}
           />
         )}
       </>
@@ -256,72 +305,82 @@ export default function InventoryPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', py: 6 }}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={5}>
-          <Typography variant="h4" fontWeight={700} sx={{ color: '#1F384C' }}>
-            Inventory Locations
-          </Typography>
-          <Button
-            variant="text"
-            onClick={openCreateModal}
-            sx={{
-              color: '#1F384C',
-              flexDirection: 'column',
-              minWidth: 'auto',
-              textTransform: 'none',
-              px: 1.5,
-              py: 1,
-              '&:hover': { bgcolor: '#f3f4f6' },
-            }}
-          >
-            <AddIcon sx={{ fontSize: 24 }} />
-            Create
-          </Button>
-        </Stack>
+    <>
+      <Box sx={{ minHeight: '100vh', py: 6 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={5}>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#1F384C' }}>
+              Inventory Locations
+            </Typography>
+            <Button
+              variant="text"
+              onClick={openCreateModal}
+              sx={{
+                color: '#1F384C',
+                flexDirection: 'column',
+                minWidth: 'auto',
+                textTransform: 'none',
+                px: 1.5,
+                py: 1,
+                '&:hover': { bgcolor: '#f3f4f6' },
+              }}
+            >
+              <AddIcon sx={{ fontSize: 24 }} />
+              Create
+            </Button>
+          </Stack>
 
-        <InventoryFilters search={search} setSearch={setSearch} onSortClick={handleSortClick} onFilterClick={() => setFilterOpen(true)} />
+          <InventoryFilters
+            search={search}
+            setSearch={setSearch}
+            onSearchSubmit={handleSearchSubmit}
+            onSearchKeyDown={handleSearchKeyDown}
+            onFilterClick={() => setIsFilterDialogOpen(true)}
+            onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
+            activeFilterCount={activeFilterCount}
+            sortOrder={sortOrder}
+          />
 
-        <InventoryTable
-          paginatedRows={paginatedRows}
-          sortedRows={sortedRows}
-          loading={loading}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onChangePage={handleChangePage}
-          onChangeRowsPerPage={handleChangeRowsPerPage}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        <InventorySortDialog
-          anchorEl={sortAnchorEl}
-          open={Boolean(sortAnchorEl)}
-          onClose={handleSortClose}
-          sortOrder={sortOrder}
-          onSortSelect={handleSortSelect}
-        />
+          <InventoryTable
+            paginatedRows={paginatedRows}
+            sortedRows={sortedRows}
+            loading={loading}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </Box>
       </Box>
+
+      <InventorySortDialog
+        anchorEl={sortAnchorEl}
+        open={Boolean(sortAnchorEl)}
+        onClose={() => setSortAnchorEl(null)}
+        sortOrder={sortOrder}
+        onSortSelect={handleSortSelect}
+      />
+
+      <InventoryFilterDialog
+        open={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        filters={{ locationId: urlLocationId, productId: urlProductId }}
+        onApply={handleFilterApply}
+        locations={locations}
+        products={productOptions}
+        rows={allRows}
+      />
 
       {modalOpen && (
         <InventoryLocationModal
           onClose={closeModal}
           entry={editingEntry}
           onConfirm={handleModalConfirm}
-          locations={locations}
         />
       )}
 
-      <InventoryFilterDialog
-        open={filterOpen}
-        onClose={() => setFilterOpen(false)}
-        filters={filters}
-        onApply={(newFilters) => { setFilters(newFilters); setPage(0) }}
-        locations={locations}
-        products={productOptions}
-      />
-
-      {/* Delete confirm dialog */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
@@ -329,8 +388,6 @@ export default function InventoryPage() {
             <p className="text-xs text-[#6b7280] mb-3">
               Select items to delete, or clear all stock at <strong>{deleteTarget.location}</strong>.
             </p>
-
-            {/* Checklist */}
             <div className="flex flex-col gap-2 mb-5 max-h-48 overflow-y-auto">
               {deleteTarget.items.map((item) => (
                 <label key={item.productId} className="flex items-center gap-2 text-xs text-[#1F384C] cursor-pointer">
@@ -351,7 +408,6 @@ export default function InventoryPage() {
                 </label>
               ))}
             </div>
-
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => { setDeleteTarget(null); setSelectedItemsToDelete([]) }}
@@ -376,6 +432,6 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
-    </Box>
+    </>
   )
 }

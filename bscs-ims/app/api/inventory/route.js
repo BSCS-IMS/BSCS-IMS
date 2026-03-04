@@ -6,11 +6,9 @@ import { collection, getDocs, query, where, doc, deleteDoc, getDoc } from 'fireb
 import { admin } from '@/app/lib/firebaseAdmin'
 import { logAudit } from '@/app/lib/audit'
 
-// Helper: verify session and return decoded token
 async function getSession(req) {
   const token = req.cookies.get('session')?.value
   if (!token) return null
-
   try {
     return await admin.auth().verifySessionCookie(token, true)
   } catch (err) {
@@ -29,6 +27,12 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(req.url)
+    const search = searchParams.get('search')?.toLowerCase() || ''
+    const filterLocationId = searchParams.get('locationId') || ''
+    const filterProductId = searchParams.get('productId') || ''
+    const sort = searchParams.get('sort') || ''
+
     // Fetch all data in parallel
     const [inventorySnap, productsSnap, locationsSnap] = await Promise.all([
       getDocs(collection(db, 'inventory')),
@@ -36,21 +40,13 @@ export async function GET(req) {
       getDocs(collection(db, 'locations')),
     ])
 
-    // Build lookup maps
-    const productMap = new Map(
-      productsSnap.docs.map((d) => [d.id, d.data()])
-    )
-    const locationMap = new Map(
-      locationsSnap.docs.map((d) => [d.id, d.data()])
-    )
+    const productMap = new Map(productsSnap.docs.map((d) => [d.id, d.data()]))
+    const locationMap = new Map(locationsSnap.docs.map((d) => [d.id, d.data()]))
 
-    // Map inventory with resolved names
-    const stocks = inventorySnap.docs.map((docSnap) => {
+    let stocks = inventorySnap.docs.map((docSnap) => {
       const data = docSnap.data()
-
       const product = productMap.get(data.productId)
       const location = locationMap.get(data.locationId)
-
       return {
         id: docSnap.id,
         productId: data.productId,
@@ -63,12 +59,33 @@ export async function GET(req) {
       }
     })
 
-    // Sort by createdAt (newest first)
-    stocks.sort((a, b) => {
-      const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
-      const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
-      return bTime - aTime
-    })
+    // Apply filters
+    if (search) {
+      stocks = stocks.filter((s) =>
+        s.locationName.toLowerCase().includes(search) ||
+        s.productName.toLowerCase().includes(search)
+      )
+    }
+    if (filterLocationId) {
+      stocks = stocks.filter((s) => s.locationId === filterLocationId)
+    }
+    if (filterProductId) {
+      stocks = stocks.filter((s) => s.productId === filterProductId)
+    }
+
+    // Apply sort
+    if (sort === 'asc') {
+      stocks.sort((a, b) => a.locationName.localeCompare(b.locationName))
+    } else if (sort === 'desc') {
+      stocks.sort((a, b) => b.locationName.localeCompare(a.locationName))
+    } else {
+      // Default: newest first
+      stocks.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+        const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+        return bTime - aTime
+      })
+    }
 
     return NextResponse.json({ success: true, data: stocks })
   } catch (error) {
@@ -105,7 +122,6 @@ export async function DELETE(req) {
     }
 
     const oldData = snapshot.data()
-
     await deleteDoc(inventoryRef)
 
     await logAudit({
@@ -118,7 +134,6 @@ export async function DELETE(req) {
     })
 
     return NextResponse.json({ success: true, message: 'Inventory deleted successfully' })
-
   } catch (error) {
     console.error('DELETE /inventory error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })

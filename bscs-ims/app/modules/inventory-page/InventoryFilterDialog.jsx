@@ -19,9 +19,16 @@ export default function InventoryFilterDialog({
   onApply,
   locations = [],  // [{ value: id, label: name }]
   products = [],   // [{ value: id, label: name }]
+  rows = [],       // full grouped rows to filter products by location
 }) {
   const [location, setLocation] = useState(null)
   const [product, setProduct] = useState(null)
+
+  // When location changes, reset product selection
+  const handleLocationChange = (newLocation) => {
+    setLocation(newLocation)
+    setProduct(null)
+  }
 
   // Sync internal state with external filters when dialog opens
   useEffect(() => {
@@ -82,7 +89,7 @@ export default function InventoryFilterDialog({
                 size='small'
                 options={locations}
                 value={location}
-                onChange={(_, newValue) => setLocation(newValue)}
+                onChange={(_, newValue) => handleLocationChange(newValue)}
                 getOptionLabel={(option) => option.label}
                 isOptionEqualToValue={(option, value) => option.value === value.value}
                 slotProps={{ popper: { sx: { zIndex: 10000 } } }}
@@ -110,7 +117,15 @@ export default function InventoryFilterDialog({
               </Typography>
               <Autocomplete
                 size='small'
-                options={products}
+                options={
+                  location
+                    ? products.filter((p) =>
+                        rows
+                          .find((r) => r.locationId === location.value)
+                          ?.items.some((i) => i.productId === p.value) ?? false
+                      )
+                    : products
+                }
                 value={product}
                 onChange={(_, newValue) => setProduct(newValue)}
                 getOptionLabel={(option) => option.label}
