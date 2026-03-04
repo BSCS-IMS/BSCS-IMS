@@ -1,5 +1,4 @@
 export const runtime = 'nodejs'
-
 import { NextResponse } from 'next/server'
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
@@ -13,18 +12,19 @@ export async function GET(req) {
 	try {
 		const { searchParams } = new URL(req.url)
 
-		const status = searchParams.get('status')
-		const query = searchParams.get('q')?.toLowerCase()
-		const productId = searchParams.get('productId')
+		const search = searchParams.get('search')?.toLowerCase() || ''
+		const status = searchParams.get('status') || ''
+		const productId = searchParams.get('productId') || ''
+		const sort = searchParams.get('sort') || ''
 
-		// 1️⃣ Fetch all resellers
+		// 1️⃣ Fetch resellers
 		const resSnap = await getDocs(collection(db, 'resellers'))
 		let resellers = resSnap.docs.map(doc => ({
 			id: doc.id,
 			...doc.data()
 		}))
 
-		// 2️⃣ Fetch resellerProducts
+		// 2️⃣ Fetch reseller-product relations
 		const rpSnap = await getDocs(collection(db, 'resellers-product'))
 		const resellerProducts = rpSnap.docs.map(doc => ({
 			id: doc.id,
@@ -38,8 +38,8 @@ export async function GET(req) {
 			...doc.data()
 		}))
 
-		// 4️⃣ Attach products to reseller
-		let resellersWithProducts = resellers.map(r => {
+		// 4️⃣ Attach assigned products to each reseller
+		resellers = resellers.map(r => {
 			const assignedProductIds = resellerProducts
 				.filter(rp => rp.resellerId === r.id && rp.isActive)
 				.map(rp => rp.productId)
@@ -54,48 +54,47 @@ export async function GET(req) {
 			}
 		})
 
-		// =============================
-		// 🔍 FILTERS (same style as announcement)
-		// =============================
+		// 🔍 Search (businessName / ownerName)
+		if (search) {
+			resellers = resellers.filter(r =>
+				r.businessName?.toLowerCase().includes(search) ||
+				r.ownerName?.toLowerCase().includes(search)
+			)
+		}
 
-		// Status filter
+		// 🟢 Status filter
 		if (status) {
-			resellersWithProducts = resellersWithProducts.filter(
-				r => r.status === status
-			)
+			resellers = resellers.filter(r => r.status === status)
 		}
 
-		// Reseller name search
-		if (query) {
-			resellersWithProducts = resellersWithProducts.filter(r =>
-				r.businessName?.toLowerCase().includes(query) ||
-				r.ownerName?.toLowerCase().includes(query)
-			)
-		}
-
-		// Products owned filter
+		// 📦 Product filter
 		if (productId) {
-			resellersWithProducts = resellersWithProducts.filter(r =>
+			resellers = resellers.filter(r =>
 				r.assignedProducts?.some(p => p.id === productId)
 			)
 		}
 
-		// Sort by createdAt (newest first)
-		resellersWithProducts.sort((a, b) => {
-			const aTime =
-				a.createdAt?.toMillis?.() ||
-				a.createdAt?.seconds * 1000 ||
-				0
-			const bTime =
-				b.createdAt?.toMillis?.() ||
-				b.createdAt?.seconds * 1000 ||
-				0
-			return bTime - aTime
-		})
+		// ↕️ Sorting
+		if (sort === 'asc') {
+			resellers.sort((a, b) =>
+				(a.businessName || '').localeCompare(b.businessName || '')
+			)
+		} else if (sort === 'desc') {
+			resellers.sort((a, b) =>
+				(b.businessName || '').localeCompare(a.businessName || '')
+			)
+		} else {
+			// default: newest first
+			resellers.sort((a, b) => {
+				const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
+				const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
+				return bTime - aTime
+			})
+		}
 
-		return NextResponse.json(resellersWithProducts)
+		return NextResponse.json(resellers)
 	} catch (error) {
-		console.error(error)
+		console.error('GET /resellers error:', error)
 		return NextResponse.json(
 			{ success: false, error: error.message },
 			{ status: 500 }
@@ -118,7 +117,6 @@ export async function POST(req) {
 		const userId = formData.get('userId')
 		const file = formData.get('file')
 
-		// Validate required field
 		if (!businessName?.trim()) {
 			return NextResponse.json(
 				{ success: false, error: 'Business name is required' },
@@ -126,18 +124,19 @@ export async function POST(req) {
 			)
 		}
 
-		// Handle image upload
 		let imageUrl = null
 		if (file && typeof file.name === 'string' && file.size > 0) {
 			if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
 				return NextResponse.json(
-					{ success: false, error: 'Invalid file type. Allowed: JPEG, PNG, WEBP, GIF' },
+					{ success: false, error: 'Invalid file type' },
 					{ status: 400 }
 				)
 			}
 
 			const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-			const fileName = `resellers/${Date.now()}-${Math.random().toString(36).slice(2)}-${sanitizedName}`
+			const fileName = `resellers/${Date.now()}-${Math.random()
+				.toString(36)
+				.slice(2)}-${sanitizedName}`
 
 			const { error: uploadError } = await supabase.storage
 				.from('resellerimages')
@@ -145,16 +144,18 @@ export async function POST(req) {
 
 			if (uploadError) {
 				return NextResponse.json(
-					{ success: false, error: `Image upload failed: ${uploadError.message}` },
+					{ success: false, error: uploadError.message },
 					{ status: 500 }
 				)
 			}
 
-			const { data } = supabase.storage.from('resellerimages').getPublicUrl(fileName)
+			const { data } = supabase.storage
+				.from('resellerimages')
+				.getPublicUrl(fileName)
+
 			imageUrl = data.publicUrl
 		}
 
-		// Build reseller data
 		const resellerData = {
 			businessName: businessName.trim(),
 			ownerName: ownerName?.trim() || '',
@@ -165,11 +166,8 @@ export async function POST(req) {
 			notes: notes?.trim() || '',
 			createdAt: serverTimestamp(),
 			updatedAt: serverTimestamp(),
-			createdById: userId || 'SYSTEM'
-		}
-
-		if (imageUrl) {
-			resellerData.imageUrl = imageUrl
+			createdById: userId || 'SYSTEM',
+			...(imageUrl && { imageUrl })
 		}
 
 		const ref = await addDoc(collection(db, 'resellers'), resellerData)
@@ -185,6 +183,9 @@ export async function POST(req) {
 		return NextResponse.json({ success: true, id: ref.id })
 	} catch (error) {
 		console.error(error)
-		return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+		return NextResponse.json(
+			{ success: false, error: error.message },
+			{ status: 500 }
+		)
 	}
 }

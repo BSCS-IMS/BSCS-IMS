@@ -11,6 +11,7 @@ import ResellersMobileView from './ResellersMobileView'
 import CreateResellerModal from './ResellerFormModal'
 import DeleteResellerModal from './DeleteResellerModal'
 import ResellersFilterDialog from './ResellersFilterDialog'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 
 
@@ -22,8 +23,9 @@ export default function ResellersPage() {
   useEffect(() => {
     setMounted(true)
   }, [])
+  const searchParams = useSearchParams()
+  const router = useRouter()
 
-  const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [resellers, setResellers] = useState([])
@@ -31,8 +33,9 @@ export default function ResellersPage() {
   const [openForm, setOpenForm] = useState(false)
   const [editingReseller, setEditingReseller] = useState(null)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
-  const [sortOrder, setSortOrder] = useState(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [search, setSearch] = useState(searchParams.get('search') || '')
+  const [sortOrder, setSortOrder] = useState(searchParams.get('sort') || null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteModalReseller, setDeleteModalReseller] = useState(null)
   const [products, setProducts] = useState([])
@@ -63,6 +66,24 @@ const fetchProducts = async () => {
 		console.error('Failed to fetch products', err)
 	}
 }
+
+
+useEffect(() => {
+  const params = new URLSearchParams()
+
+  // 🔍 search
+  if (search) params.set('search', search)
+
+  // ↕️ sort
+  if (sortOrder) params.set('sort', sortOrder)
+
+  // 🧪 filters
+  if (filters.name) params.set('name', filters.name)
+  if (filters.status) params.set('status', filters.status)
+  if (filters.productId) params.set('productId', filters.productId)
+
+  router.replace(`?${params.toString()}`)
+}, [search, sortOrder, filters, router])
 
 useEffect(() => {
 	fetchResellers()
