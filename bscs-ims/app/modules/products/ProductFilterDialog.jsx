@@ -1,170 +1,260 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Select,
-  MenuItem,
-  TextField,
   Stack,
+  TextField,
   FormControl,
   InputLabel,
-  IconButton,
-  Typography,
-  useMediaQuery,
-  useTheme
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { X } from 'lucide-react'
 
-export default function ProductFilterDialog({
-  open,
-  onClose,
-  onApply
-}) {
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+export default function ProductFilterDialog({ open, onClose, onApply }) {
 
-  const [filterType, setFilterType] = useState('')
-  const [value, setValue] = useState('')
-  const [statusValue, setStatusValue] = useState('')
+  const [status, setStatus] = useState('')
+
+  const [nameEnabled, setNameEnabled] = useState(false)
+  const [productName, setProductName] = useState('')
+
+  const [skuEnabled, setSkuEnabled] = useState(false)
+  const [sku, setSku] = useState('')
+
+  const [location, setLocation] = useState('')
+  const [locations, setLocations] = useState([])
+
+  /* ==========================
+     Fetch Locations from API
+  ========================== */
+
+  const fetchLocations = async () => {
+    try {
+      const res = await axios.get('/api/inventory')
+
+      if (res.data.success) {
+
+        // extract unique locations
+        const uniqueLocations = [
+          ...new Set(res.data.data.map((item) => item.locationName))
+        ]
+
+        setLocations(uniqueLocations)
+      }
+
+    } catch (error) {
+      console.error('Failed to fetch locations', error)
+    }
+  }
 
   useEffect(() => {
-    if (!open) {
-      setFilterType('')
-      setValue('')
-      setStatusValue('')
+    if (open) {
+      fetchLocations()
     }
   }, [open])
 
+  if (!open) return null
+
+  /* ==========================
+     Apply Filters
+  ========================== */
+
   const handleApply = () => {
-    if (!filterType) return
 
-    if (filterType === 'status') {
-      onApply({ type: 'status', value: statusValue })
-    } else {
-      onApply({ type: filterType, value })
-    }
+    const filters = {}
 
+    if (status) filters.status = status
+    if (nameEnabled && productName) filters.name = productName
+    if (skuEnabled && sku) filters.sku = sku
+    if (location) filters.location = location
+
+    onApply(filters)
     onClose()
   }
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleApply()
-    }
+  const handleClear = () => {
+    setStatus('')
+    setNameEnabled(false)
+    setProductName('')
+    setSkuEnabled(false)
+    setSku('')
+    setLocation('')
   }
 
+  const hasFilter =
+    status ||
+    (nameEnabled && productName) ||
+    (skuEnabled && sku) ||
+    location
+
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          borderRadius: isMobile ? 0 : 3,
-          p: 1
-        }
-      }}
-    >
-      {/* TITLE + CLOSE */}
-      <DialogTitle
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          pb: 1
-        }}
-      >
-        <Typography fontSize={14} fontWeight={600}>
-          Filter Products
-        </Typography>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
 
-        <IconButton size="small" onClick={onClose}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </DialogTitle>
+      <div className="bg-white w-full max-w-[450px] rounded-xl shadow-xl overflow-hidden">
 
-      <DialogContent>
-        <Stack spacing={2} mt={1}>
-          <FormControl fullWidth>
-            <InputLabel sx={{ fontSize: 12 }}>Filter By</InputLabel>
-            <Select
-              value={filterType}
-              label="Filter By"
-              onChange={(e) => {
-                setFilterType(e.target.value)
-                setValue('')
-                setStatusValue('')
-              }}
-              sx={{ fontSize: 12 }}
-            >
-              <MenuItem value="status">Status</MenuItem>
-              <MenuItem value="sku">Product SKU</MenuItem>
-              <MenuItem value="inventory">Inventory Location</MenuItem>
-            </Select>
-          </FormControl>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
 
-          {filterType === 'status' && (
-            <FormControl fullWidth>
-              <InputLabel sx={{ fontSize: 12 }}>Status</InputLabel>
+          <div>
+            <h2 className="text-base font-semibold text-[#1F384C]">
+              Filter Products
+            </h2>
+
+            <p className="text-xs text-gray-500">
+              Apply filters to narrow down results
+            </p>
+          </div>
+
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="h-7 w-7 p-0 hover:bg-gray-100"
+          >
+            <X size={16} />
+          </Button>
+
+        </div>
+
+        <Separator className="my-3" />
+
+        {/* Filters */}
+        <div className="px-5 pb-5">
+
+          <Stack spacing={2.5}>
+
+            {/* STATUS */}
+            <FormControl fullWidth size="small">
+              <InputLabel>Status</InputLabel>
+
               <Select
-                value={statusValue}
+                value={status}
                 label="Status"
-                onChange={(e) => setStatusValue(e.target.value)}
-                sx={{ fontSize: 12 }}
+                onChange={(e) => setStatus(e.target.value)}
               >
+                <MenuItem value="">All</MenuItem>
                 <MenuItem value="Available">Available</MenuItem>
                 <MenuItem value="Not Available">Not Available</MenuItem>
               </Select>
+
             </FormControl>
-          )}
 
-          {(filterType === 'sku' || filterType === 'inventory') && (
-            <TextField
-              fullWidth
-              label={
-                filterType === 'sku'
-                  ? 'Enter Product SKU'
-                  : 'Enter Inventory Location'
-              }
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              InputLabelProps={{ sx: { fontSize: 12 } }}
-              inputProps={{ style: { fontSize: 12 } }}
-            />
-          )}
-        </Stack>
-      </DialogContent>
 
-      {filterType && (
-        <DialogActions sx={{ px: 3, pb: 2 }}>
+            {/* PRODUCT NAME */}
+            <div>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={nameEnabled}
+                    onChange={(e) => setNameEnabled(e.target.checked)}
+                  />
+                }
+                label="Filter by Product Name"
+              />
+
+              {nameEnabled && (
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Enter Product Name"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                />
+              )}
+
+            </div>
+
+
+            {/* SKU */}
+            <div>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={skuEnabled}
+                    onChange={(e) => setSkuEnabled(e.target.checked)}
+                  />
+                }
+                label="Filter by Product SKU"
+              />
+
+              {skuEnabled && (
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Enter Product SKU"
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                />
+              )}
+
+            </div>
+
+
+            {/* LOCATION */}
+            <FormControl fullWidth size="small">
+
+              <InputLabel>Location</InputLabel>
+
+              <Select
+                value={location}
+                label="Location"
+                onChange={(e) => setLocation(e.target.value)}
+              >
+
+                <MenuItem value="">All Locations</MenuItem>
+
+                {locations.map((loc) => (
+                  <MenuItem key={loc} value={loc}>
+                    {loc}
+                  </MenuItem>
+                ))}
+
+              </Select>
+
+            </FormControl>
+
+          </Stack>
+
+        </div>
+
+        <Separator />
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3">
+
           <Button
+            variant="ghost"
+            onClick={handleClear}
+            className="text-xs text-gray-500"
+          >
+            Clear All
+          </Button>
+
+          <Button
+            variant="outline"
             onClick={onClose}
-            sx={{ textTransform: 'none', fontSize: 12 }}
+            className="text-xs"
           >
             Cancel
           </Button>
 
           <Button
-            variant="contained"
             onClick={handleApply}
-            sx={{ textTransform: 'none', fontSize: 12 }}
-            disabled={
-              (filterType === 'status' && !statusValue) ||
-              (filterType !== 'status' && !value)
-            }
+            disabled={!hasFilter}
+            className="bg-[#1F384C] text-white hover:bg-[#162A3F] text-xs"
           >
-            Confirm
+            Apply Filters
           </Button>
-        </DialogActions>
-      )}
-    </Dialog>
+
+        </div>
+
+      </div>
+    </div>
   )
 }

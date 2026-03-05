@@ -14,8 +14,8 @@ import InventoryAdjustModal from './InventoryAdjustModal'
 import DeleteProductModal from './DeleteProductModal'
 import ProductFilterDialog from './ProductFilterDialog'
 
-
 export default function ProductPage() {
+
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
   const [mounted, setMounted] = useState(false)
@@ -25,7 +25,9 @@ export default function ProductPage() {
   }, [])
 
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [filter, setFilter] = useState(null)
+
+  // MULTI FILTER STATE
+  const [filters, setFilters] = useState({})
 
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
@@ -50,8 +52,10 @@ export default function ProductPage() {
 
   const fetchProducts = async () => {
     setLoading(true)
+
     try {
       const res = await axios.get('/api/products')
+
       if (res.data.success) {
         setProducts(
           res.data.products.map((p) => ({
@@ -76,6 +80,7 @@ export default function ProductPage() {
   const fetchInventory = async () => {
     try {
       const res = await axios.get('/api/inventory')
+
       if (res.data.success) {
         setInventory(res.data.data)
       }
@@ -103,36 +108,38 @@ export default function ProductPage() {
     setDeleteModalProduct(null)
   }
 
+  // UPDATED MULTI FILTER LOGIC
   const filteredProducts = products
-  .filter((p) => {
-    if (!filter) return true
+    .filter((p) => {
 
-    if (filter.type === 'status') {
-      return p.status === filter.value
-    }
+      if (filters.status && p.status !== filters.status) return false
 
-    if (filter.type === 'sku') {
-      return p.sku.toLowerCase().includes(filter.value.toLowerCase())
-    }
+      if (filters.name && !p.name.toLowerCase().includes(filters.name.toLowerCase()))
+        return false
 
-    if (filter.type === 'inventory') {
-      const productInventory = inventory.filter(
-        (inv) => inv.productId === p.id
-      )
+      if (filters.sku && !p.sku.toLowerCase().includes(filters.sku.toLowerCase()))
+        return false
 
-      return productInventory.some((inv) =>
-        inv.locationName.toLowerCase().includes(filter.value.toLowerCase())
-      )
-    }
+      if (filters.location) {
+        const productInventory = inventory.filter(
+          (inv) => inv.productId === p.id
+        )
 
-    return true
-  })
-  .sort((a, b) => {
-    if (!sortOrder) return 0
-    if (sortOrder === 'asc') return a.name.localeCompare(b.name)
-    if (sortOrder === 'desc') return b.name.localeCompare(a.name)
-    return 0
-  })
+        const match = productInventory.some(
+          (inv) => inv.locationName === filters.location
+        )
+
+        if (!match) return false
+      }
+
+      return true
+    })
+    .sort((a, b) => {
+      if (!sortOrder) return 0
+      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
+      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
+      return 0
+    })
 
   const openCreateModal = () => {
     setProductModalMode('create')
@@ -142,6 +149,7 @@ export default function ProductPage() {
 
   const openEditModal = (product) => {
     setProductModalMode('edit')
+
     setProductModalInitialValues({
       id: product.id,
       name: product.name,
@@ -152,6 +160,7 @@ export default function ProductPage() {
       imageUrl: product.image,
       description: product.description || ''
     })
+
     setIsProductModalOpen(true)
   }
 
@@ -208,10 +217,9 @@ export default function ProductPage() {
         productModalInitialValues={productModalInitialValues}
         onConfirm={handleConfirm}
         loading={loading}
-        // NEW: filter dialog props
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
-        onApplyFilter={(selectedFilter) => setFilter(selectedFilter)}
+        onApplyFilter={(selectedFilters) => setFilters(selectedFilters)}
       />
     )
   }
@@ -220,10 +228,12 @@ export default function ProductPage() {
     <>
       <Box sx={{ minHeight: '100vh', py: 6 }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
+
           <Stack direction='row' justifyContent='space-between' alignItems='center' mb={5}>
             <Typography variant='h4' fontWeight={700} sx={{ color: '#1F384C' }}>
               Products
             </Typography>
+
             <Button
               variant='text'
               onClick={openCreateModal}
@@ -234,9 +244,7 @@ export default function ProductPage() {
                 textTransform: 'none',
                 px: 1.5,
                 py: 1,
-                '&:hover': {
-                  bgcolor: '#f3f4f6'
-                }
+                '&:hover': { bgcolor: '#f3f4f6' }
               }}
             >
               <AddIcon sx={{ fontSize: 24 }} />
@@ -251,7 +259,16 @@ export default function ProductPage() {
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
           />
 
-          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={openDeleteModal} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
+          <ProductTable
+            products={filteredProducts}
+            loading={loading}
+            onEdit={openEditModal}
+            onDelete={openDeleteModal}
+            onAdd={openAddModal}
+            onMinus={openSubtractModal}
+            inventory={inventory}
+          />
+
         </Box>
       </Box>
 
@@ -294,8 +311,8 @@ export default function ProductPage() {
       <ProductFilterDialog
         open={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
-        onApply={(selectedFilter) => {
-          setFilter(selectedFilter)
+        onApply={(selectedFilters) => {
+          setFilters(selectedFilters)
           setIsFilterOpen(false)
         }}
       />
