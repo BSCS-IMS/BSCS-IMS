@@ -99,7 +99,11 @@ export async function GET(req) {
 
       if (!productId) return
 
-      const productName = productMap.get(productId)?.name || 'Unknown'
+      // Skip if product doesn't exist or is deleted/inactive
+      const product = productMap.get(productId)
+      if (!product) return
+
+      const productName = product.name
 
       if (!todayChanges[productId]) {
         todayChanges[productId] = { productId, productName, added: 0, subtracted: 0 }
@@ -132,7 +136,12 @@ export async function GET(req) {
     inventorySnap.docs.forEach(doc => {
       const data = doc.data()
       const productId = data.productId
-      const productName = productMap.get(productId)?.name || 'Unknown'
+
+      // Skip if product doesn't exist or is deleted/inactive
+      const product = productMap.get(productId)
+      if (!product) return
+
+      const productName = product.name
 
       if (!productQuantities[productId]) {
         productQuantities[productId] = { productId, productName, quantity: 0 }
@@ -141,6 +150,7 @@ export async function GET(req) {
     })
 
     const topProducts = Object.values(productQuantities)
+      .filter(item => item.quantity > 0) // Only show products with quantity
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5)
 
@@ -181,7 +191,14 @@ export async function GET(req) {
     inventorySnap.docs.forEach(doc => {
       const data = doc.data()
       const locationId = data.locationId
-      const locationName = locationMap.get(locationId)?.name || 'Unknown'
+      const productId = data.productId
+
+      // Skip if location or product doesn't exist
+      const location = locationMap.get(locationId)
+      const product = productMap.get(productId)
+      if (!location || !product) return
+
+      const locationName = location.name
 
       if (!locationInventory[locationId]) {
         locationInventory[locationId] = { locationId, locationName, totalQuantity: 0, productCount: 0 }
@@ -191,6 +208,7 @@ export async function GET(req) {
     })
 
     const locationData = Object.values(locationInventory)
+      .filter(item => item.totalQuantity > 0) // Only show locations with inventory
       .sort((a, b) => b.totalQuantity - a.totalQuantity)
 
     return NextResponse.json({
