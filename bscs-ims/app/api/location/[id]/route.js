@@ -129,18 +129,23 @@ export async function DELETE(req, { params }) {
 
     await batch.commit()
 
-    // Log audit for the location inventory clearing
-    await logAudit({
-      action: 'DELETE',
-      entityType: 'inventory-location',
-      entityId: id,
-      oldData: {
-        location: locationData,
-        inventoryRecords
-      },
-      newData: null,
-      performedById: session.uid,
+    // Log individual audit logs for each inventory item deleted
+    const auditPromises = inventoryRecords.map((record) => {
+      return logAudit({
+        action: 'DELETE',
+        entityType: 'inventory',
+        entityId: `${record.productId}_${record.locationId}`,
+        oldData: {
+          productId: record.productId,
+          locationId: record.locationId,
+          quantity: record.quantity
+        },
+        newData: null,
+        performedById: session.uid,
+      })
     })
+
+    await Promise.all(auditPromises)
 
     return NextResponse.json({
       success: true,
