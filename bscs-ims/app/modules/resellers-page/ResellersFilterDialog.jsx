@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Stack,
@@ -22,49 +22,37 @@ export default function ResellersFilterDialog({
   open,
   onClose,
   products = [],
+  resellers = [],
   filters,
   onApply
 }) {
-  const [status, setStatus] = useState(null)
-  const [product, setProduct] = useState(null)
-  const [name, setName] = useState('')
-
-  // sync when opened
-  useEffect(() => {
-    if (open) {
-      setName(filters?.name || '')
-      setStatus(
-        statusOptions.find((s) => s.value === filters?.status) || null
-      )
-      setProduct(
-        products.find((p) => p.id === filters?.productId) || null
-      )
-    }
-  }, [open, filters, products])
+  // Use lazy initialization to avoid setState in effect
+  const [status, setStatus] = useState(() => statusOptions.find((opt) => opt.value === filters.status) || null)
+  const [product, setProduct] = useState(() => products.find((p) => p.id === filters.productId) || null)
+  const [reseller, setReseller] = useState(() => resellers.find((r) => r.id === filters.resellerId) || null)
 
   const handleApply = () => {
     onApply({
-      name,
       status: status?.value || '',
-      productId: product?.id || ''
+      productId: product?.id || '',
+      resellerId: reseller?.id || ''
     })
     onClose()
   }
 
   const handleClear = () => {
-    setName('')
     setStatus(null)
     setProduct(null)
+    setReseller(null)
     onApply({
-      name: '',
       status: '',
-      productId: ''
+      productId: '',
+      resellerId: ''
     })
     onClose()
   }
 
-  const hasActiveFilters =
-    name || status?.value || product?.id
+  const hasActiveFilters = status?.value || product?.id || reseller?.id
 
   if (!open) return null
 
@@ -100,21 +88,33 @@ export default function ResellersFilterDialog({
 
             {/* Reseller Name */}
             <Box>
-              <Typography variant="caption" fontWeight={500}>
+              <Typography variant="caption" fontWeight={500} sx={{ color: '#1F384C' }}>
                 Reseller Name
               </Typography>
-              <TextField
+              <Autocomplete
                 size="small"
-                placeholder="Search reseller name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                fullWidth
+                options={Array.isArray(resellers) ? resellers : []}
+                value={reseller}
+                onChange={(_, v) => setReseller(v)}
+                getOptionLabel={(o) => o?.businessName || o?.ownerName || ''}
+                isOptionEqualToValue={(a, b) => a.id === b.id}
+                disablePortal
+                slotProps={{
+                  popper: {
+                    sx: {
+                      zIndex: 10000
+                    }
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} placeholder="Select reseller" />
+                )}
               />
             </Box>
 
             {/* Status */}
             <Box>
-              <Typography variant="caption" fontWeight={500}>
+              <Typography variant="caption" fontWeight={500} sx={{ color: '#1F384C' }}>
                 Status
               </Typography>
               <Autocomplete
@@ -140,7 +140,7 @@ export default function ResellersFilterDialog({
 
             {/* Products Owned */}
             <Box>
-              <Typography variant="caption" fontWeight={500}>
+              <Typography variant="caption" fontWeight={500} sx={{ color: '#1F384C' }}>
                 Products Owned
               </Typography>
               <Autocomplete
