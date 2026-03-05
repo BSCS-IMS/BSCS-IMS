@@ -66,8 +66,20 @@ export default function InventoryPage() {
 
   // Fetch inventory — backend handles filtering
   // Helper to group raw inventory data into rows
-  const groupInventory = (data) => {
+  const groupInventory = (data, allLocations = []) => {
     const grouped = {}
+
+    // First, initialize all locations (even empty ones)
+    allLocations.forEach((loc) => {
+      grouped[loc.id] = {
+        id: loc.id,
+        locationId: loc.id,
+        location: loc.name,
+        items: [],
+      }
+    })
+
+    // Then add inventory items to their respective locations
     data.forEach((item) => {
       if (item.quantity <= 0) return
       if (!grouped[item.locationId]) {
@@ -85,9 +97,7 @@ export default function InventoryPage() {
         qty: item.quantity,
       })
     })
-    Object.keys(grouped).forEach((key) => {
-      if (grouped[key].items.length === 0) delete grouped[key]
-    })
+
     return Object.values(grouped)
   }
 
@@ -103,16 +113,20 @@ export default function InventoryPage() {
       const queryString = params.toString()
       const url = queryString ? `/api/inventory?${queryString}` : '/api/inventory'
 
+      // Fetch all locations first
+      const locationsRes = await axios.get('/api/location')
+      const allLocations = locationsRes.data?.success ? locationsRes.data.locations : []
+
       // Fetch filtered rows for table
       const res = await axios.get(url)
       if (res.data.success) {
-        setRows(groupInventory(res.data.data))
+        setRows(groupInventory(res.data.data, allLocations))
       }
 
       // Always fetch unfiltered data for filter dialog options
       const allRes = await axios.get('/api/inventory')
       if (allRes.data.success) {
-        setAllRows(groupInventory(allRes.data.data))
+        setAllRows(groupInventory(allRes.data.data, allLocations))
       }
     } catch (error) {
       console.error('Failed to fetch inventory:', error)
