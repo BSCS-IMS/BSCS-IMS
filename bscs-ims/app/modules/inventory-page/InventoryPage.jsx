@@ -66,20 +66,23 @@ export default function InventoryPage() {
 
   // Fetch inventory — backend handles filtering
   // Helper to group raw inventory data into rows
-  const groupInventory = (data, allLocations = []) => {
+  const groupInventory = (data, allLocations = [], hasSearchFilter = false) => {
     const grouped = {}
 
-    // First, initialize all locations (even empty ones)
-    allLocations.forEach((loc) => {
-      grouped[loc.id] = {
-        id: loc.id,
-        locationId: loc.id,
-        location: loc.name,
-        items: [],
-      }
-    })
+    // If there's a search filter, only show locations with matching inventory
+    // Otherwise, initialize all locations (including empty ones)
+    if (!hasSearchFilter) {
+      allLocations.forEach((loc) => {
+        grouped[loc.id] = {
+          id: loc.id,
+          locationId: loc.id,
+          location: loc.name,
+          items: [],
+        }
+      })
+    }
 
-    // Then add inventory items to their respective locations
+    // Add inventory items to their respective locations
     data.forEach((item) => {
       if (item.quantity <= 0) return
       if (!grouped[item.locationId]) {
@@ -108,7 +111,7 @@ export default function InventoryPage() {
       if (urlSearch) params.set('search', urlSearch)
       if (urlLocationId) params.set('locationId', urlLocationId)
       if (urlProductId) params.set('productId', urlProductId)
-      if (urlSort) params.set('sort', urlSort)
+      // Don't send sort to backend since we sort grouped data on frontend
 
       const queryString = params.toString()
       const url = queryString ? `/api/inventory?${queryString}` : '/api/inventory'
@@ -120,13 +123,15 @@ export default function InventoryPage() {
       // Fetch filtered rows for table
       const res = await axios.get(url)
       if (res.data.success) {
-        setRows(groupInventory(res.data.data, allLocations))
+        // Pass hasSearchFilter flag to groupInventory
+        const hasFilter = !!(urlSearch || urlLocationId || urlProductId)
+        setRows(groupInventory(res.data.data, allLocations, hasFilter))
       }
 
       // Always fetch unfiltered data for filter dialog options
       const allRes = await axios.get('/api/inventory')
       if (allRes.data.success) {
-        setAllRows(groupInventory(allRes.data.data, allLocations))
+        setAllRows(groupInventory(allRes.data.data, allLocations, false))
       }
     } catch (error) {
       console.error('Failed to fetch inventory:', error)
@@ -160,6 +165,7 @@ export default function InventoryPage() {
 
   const handleSearchSubmit = () => {
     updateUrlParams({ search: search.trim() })
+    setPage(0)
   }
 
   const handleSearchKeyDown = (e) => {
