@@ -4,13 +4,10 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import {
   Stack,
-  TextField,
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
-  Checkbox,
-  FormControlLabel
+  MenuItem
 } from '@mui/material'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -19,27 +16,26 @@ import { X } from 'lucide-react'
 export default function ProductFilterDialog({ open, onClose, onApply }) {
 
   const [status, setStatus] = useState('')
-
-  const [nameEnabled, setNameEnabled] = useState(false)
   const [productName, setProductName] = useState('')
+  const [productNames, setProductNames] = useState([])
 
-  const [skuEnabled, setSkuEnabled] = useState(false)
   const [sku, setSku] = useState('')
+  const [skuList, setSkuList] = useState([])
 
   const [location, setLocation] = useState('')
   const [locations, setLocations] = useState([])
 
   /* ==========================
-     Fetch Locations from API
+     Fetch Locations
   ========================== */
 
   const fetchLocations = async () => {
     try {
+
       const res = await axios.get('/api/inventory')
 
       if (res.data.success) {
 
-        // extract unique locations
         const uniqueLocations = [
           ...new Set(res.data.data.map((item) => item.locationName))
         ]
@@ -52,10 +48,45 @@ export default function ProductFilterDialog({ open, onClose, onApply }) {
     }
   }
 
+  /* ==========================
+     Fetch Products
+  ========================== */
+
+  const fetchProducts = async () => {
+
+    try {
+
+      const res = await axios.get('/api/products')
+
+      if (res.data.success) {
+
+        const products = res.data.products
+
+        const uniqueNames = [
+          ...new Set(products.map((p) => p.name))
+        ]
+
+        const uniqueSku = [
+          ...new Set(products.map((p) => p.sku))
+        ]
+
+        setProductNames(uniqueNames)
+        setSkuList(uniqueSku)
+      }
+
+    } catch (error) {
+      console.error('Failed to fetch products', error)
+    }
+
+  }
+
   useEffect(() => {
+
     if (open) {
       fetchLocations()
+      fetchProducts()
     }
+
   }, [open])
 
   if (!open) return null
@@ -69,27 +100,28 @@ export default function ProductFilterDialog({ open, onClose, onApply }) {
     const filters = {}
 
     if (status) filters.status = status
-    if (nameEnabled && productName) filters.name = productName
-    if (skuEnabled && sku) filters.sku = sku
+    if (productName) filters.name = productName
+    if (sku) filters.sku = sku
     if (location) filters.location = location
 
     onApply(filters)
     onClose()
+
   }
 
   const handleClear = () => {
+
     setStatus('')
-    setNameEnabled(false)
     setProductName('')
-    setSkuEnabled(false)
     setSku('')
     setLocation('')
+
   }
 
   const hasFilter =
     status ||
-    (nameEnabled && productName) ||
-    (skuEnabled && sku) ||
+    productName ||
+    sku ||
     location
 
   return (
@@ -129,6 +161,7 @@ export default function ProductFilterDialog({ open, onClose, onApply }) {
 
             {/* STATUS */}
             <FormControl fullWidth size="small">
+
               <InputLabel>Status</InputLabel>
 
               <Select
@@ -136,64 +169,62 @@ export default function ProductFilterDialog({ open, onClose, onApply }) {
                 label="Status"
                 onChange={(e) => setStatus(e.target.value)}
               >
+
                 <MenuItem value="">All</MenuItem>
                 <MenuItem value="Available">Available</MenuItem>
                 <MenuItem value="Not Available">Not Available</MenuItem>
+
               </Select>
 
             </FormControl>
 
 
             {/* PRODUCT NAME */}
-            <div>
+            <FormControl fullWidth size="small">
 
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={nameEnabled}
-                    onChange={(e) => setNameEnabled(e.target.checked)}
-                  />
-                }
-                label="Filter by Product Name"
-              />
+              <InputLabel>Product Name</InputLabel>
 
-              {nameEnabled && (
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Enter Product Name"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                />
-              )}
+              <Select
+                value={productName}
+                label="Product Name"
+                onChange={(e) => setProductName(e.target.value)}
+              >
 
-            </div>
+                <MenuItem value="">All</MenuItem>
+
+                {productNames.map((name) => (
+                  <MenuItem key={name} value={name}>
+                    {name}
+                  </MenuItem>
+                ))}
+
+              </Select>
+
+            </FormControl>
 
 
             {/* SKU */}
-            <div>
+            <FormControl fullWidth size="small">
 
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={skuEnabled}
-                    onChange={(e) => setSkuEnabled(e.target.checked)}
-                  />
-                }
-                label="Filter by Product SKU"
-              />
+              <InputLabel>SKU</InputLabel>
 
-              {skuEnabled && (
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Enter Product SKU"
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                />
-              )}
+              <Select
+                value={sku}
+                label="SKU"
+                onChange={(e) => setSku(e.target.value)}
+              >
 
-            </div>
+                <MenuItem value="">All</MenuItem>
+
+                {skuList.map((s) => (
+                  <MenuItem key={s} value={s}>
+                    {s}
+                  </MenuItem>
+                ))}
+
+              </Select>
+
+            </FormControl>
 
 
             {/* LOCATION */}
