@@ -15,6 +15,7 @@ import InventorySortDialog from './InventorySortDialog'
 import InventoryMobileView from './InventoryMobileView'
 import InventoryLocationModal from './InventorylocationModal'
 import InventoryFilterDialog from './InventoryFilterDialog'
+import DeleteInventoryModal from './DeleteInventoryModal'
 import { toast } from 'react-toastify'
 
 export default function InventoryPage() {
@@ -46,7 +47,6 @@ export default function InventoryPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [selectedItemsToDelete, setSelectedItemsToDelete] = useState([])
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -221,70 +221,16 @@ export default function InventoryPage() {
 
   const handleEdit = (row) => openEditModal(row)
 
-  const handleDelete = async (row) => {
+  const handleDelete = (row) => {
     setDeleteTarget(row)
-    setSelectedItemsToDelete([])
   }
 
-  const confirmDelete = async () => {
-    const row = deleteTarget
+  const closeDeleteModal = () => {
     setDeleteTarget(null)
-    setSelectedItemsToDelete([])
-    try {
-      const results = await Promise.allSettled(
-        row.items.map((item) =>
-          axios.post('/api/inventory/deduct', {
-            productId: item.productId,
-            locationId: row.locationId,
-            quantity: item.qty,
-          })
-        )
-      )
-      const failed = results.filter(
-        (r) => r.status === 'rejected' || r.value?.data?.success === false
-      )
-      if (failed.length > 0) {
-        const firstErr =
-          failed[0].reason?.response?.data?.error ||
-          failed[0].value?.data?.error ||
-          'Some items failed to clear'
-        toast.error(firstErr)
-      } else {
-        toast.success(`"${row.location}" stock cleared successfully`)
-      }
-      fetchInventory()
-    } catch (err) {
-      console.error('Delete failed:', err)
-      toast.error('Failed to clear inventory')
-    }
   }
 
-  const confirmDeleteInventory = async () => {
-    const row = deleteTarget
-    const selectedItems = row.items.filter((item) => selectedItemsToDelete.includes(item.productId))
-    setDeleteTarget(null)
-    setSelectedItemsToDelete([])
-    try {
-      const results = await Promise.allSettled(
-        selectedItems.map((item) =>
-          axios.delete('/api/inventory', {
-            data: { productId: item.productId, locationId: row.locationId }
-          })
-        )
-      )
-      const failed = results.filter(
-        (r) => r.status === 'rejected' || r.value?.data?.success === false
-      )
-      if (failed.length > 0) {
-        toast.error('Some items failed to delete')
-      } else {
-        toast.success('Selected inventory deleted successfully')
-      }
-      fetchInventory()
-    } catch (err) {
-      console.error('Delete inventory failed:', err)
-      toast.error('Failed to delete inventory')
-    }
+  const handleDeleteSuccess = () => {
+    fetchInventory()
   }
 
   const sortedRows = [...rows].sort((a, b) => {
@@ -312,6 +258,13 @@ export default function InventoryPage() {
             onClose={closeModal}
             entry={editingEntry}
             onConfirm={handleModalConfirm}
+          />
+        )}
+        {deleteTarget && (
+          <DeleteInventoryModal
+            onClose={closeDeleteModal}
+            location={deleteTarget}
+            onSuccess={handleDeleteSuccess}
           />
         )}
       </>
@@ -396,55 +349,11 @@ export default function InventoryPage() {
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-            <h3 className="text-sm font-semibold text-[#1F384C] mb-1">Manage inventory</h3>
-            <p className="text-xs text-[#6b7280] mb-3">
-              Select items to delete, or clear all stock at <strong>{deleteTarget.location}</strong>.
-            </p>
-            <div className="flex flex-col gap-2 mb-5 max-h-48 overflow-y-auto">
-              {deleteTarget.items.map((item) => (
-                <label key={item.productId} className="flex items-center gap-2 text-xs text-[#1F384C] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedItemsToDelete.includes(item.productId)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedItemsToDelete((prev) => [...prev, item.productId])
-                      } else {
-                        setSelectedItemsToDelete((prev) => prev.filter((id) => id !== item.productId))
-                      }
-                    }}
-                    className="rounded border-[#d1d5db]"
-                  />
-                  <span>{item.productName}</span>
-                  <span className="ml-auto text-[#6b7280]">qty: {item.qty}</span>
-                </label>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => { setDeleteTarget(null); setSelectedItemsToDelete([]) }}
-                className="h-8 px-3 text-xs rounded-md border border-[#d1d5db] text-[#374151] hover:bg-[#f3f4f6] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="h-8 px-3 text-xs rounded-md bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
-              >
-                Clear stock
-              </button>
-              <button
-                onClick={confirmDeleteInventory}
-                disabled={selectedItemsToDelete.length === 0}
-                className="h-8 px-3 text-xs rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Delete inventory
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteInventoryModal
+          onClose={closeDeleteModal}
+          location={deleteTarget}
+          onSuccess={handleDeleteSuccess}
+        />
       )}
     </>
   )
