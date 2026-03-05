@@ -221,7 +221,7 @@ export default function ProductMobile({
                           <span className='text-[#6b7280]'>Status</span>
                           <p
                             className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${
-                              product.status === 'Available'
+                              product.status === 'Active'
                                 ? 'bg-green-100 text-green-700'
                                 : 'bg-yellow-100 text-yellow-700'
                             }`}

@@ -100,7 +100,7 @@ export default function ProductPage() {
             price: p.currentPrice,
             priceUnit: p.priceUnit,
             description: p.description || '',
-            status: p.isActive ? 'Available' : 'Not Available'
+            status: p.isActive ? 'Active' : 'Inactive'
           }))
         )
       }
@@ -230,7 +230,7 @@ export default function ProductPage() {
       sku: product.sku,
       currentPrice: product.price,
       priceUnit: product.priceUnit,
-      isActive: product.status === 'Available',
+      isActive: product.status === 'Active',
       imageUrl: product.image,
       description: product.description || ''
     })
@@ -266,7 +266,7 @@ export default function ProductPage() {
         price: p.currentPrice,
         priceUnit: p.priceUnit,
         description: p.description || '',
-        status: p.isActive ? 'Available' : 'Not Available'
+        status: p.isActive ? 'Active' : 'Inactive'
       }))
     )
   }

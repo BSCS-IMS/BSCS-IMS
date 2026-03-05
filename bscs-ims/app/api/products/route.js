@@ -62,17 +62,18 @@ export async function GET(req) {
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(product => !product.deletedAt)
 
-    // Apply search filter (by name)
+    // Apply search filter (by name or SKU)
     if (search) {
       products = products.filter((p) =>
-        p.name?.toLowerCase().includes(search)
+        p.name?.toLowerCase().includes(search) ||
+        p.sku?.toLowerCase().includes(search)
       )
     }
 
     // Apply status filter
-    if (status === 'available') {
+    if (status === 'active') {
       products = products.filter((p) => p.isActive === true)
-    } else if (status === 'not-available') {
+    } else if (status === 'inactive') {
       products = products.filter((p) => p.isActive === false)
     }
 

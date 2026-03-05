@@ -84,12 +84,22 @@ export default function InventoryLocationModal({
   const title = isEditing ? 'Edit Inventory Location' : 'Add Inventory Location'
   const subtitle = isEditing
     ? 'Update the location and its assigned products.'
-    : 'Create a location and assign products to it.'
+    : 'Create a location and optionally assign products to it.'
 
   const isValid = useMemo(
-    () =>
-      locationName.trim().length > 0 &&
-      items.every((r) => r.productId && r.qty !== '' && Number(r.qty) > 0),
+    () => {
+      // Location name is always required
+      if (locationName.trim().length === 0) return false
+
+      // If there are any filled items, they must be complete
+      const filledItems = items.filter((r) => r.productId || r.qty)
+      if (filledItems.length > 0) {
+        return filledItems.every((r) => r.productId && r.qty !== '' && Number(r.qty) > 0)
+      }
+
+      // Allow creating location without any products
+      return true
+    },
     [locationName, items]
   )
 
@@ -145,7 +155,10 @@ export default function InventoryLocationModal({
         }
       }
 
-      const currentProductIds = items.map((r) => r.productId)
+      // Filter out items that are actually filled (have productId and quantity)
+      const filledItems = items.filter((r) => r.productId && r.qty && Number(r.qty) > 0)
+
+      const currentProductIds = filledItems.map((r) => r.productId)
       const removedItems = isEditing
         ? (entry.items ?? []).filter((i) => !currentProductIds.includes(i.productId) && Number(i.qty) > 0)
         : []
@@ -158,7 +171,7 @@ export default function InventoryLocationModal({
             quantity: Number(i.qty),
           })
         ),
-        ...items.map((row) => {
+        ...filledItems.map((row) => {
           const newQty = Number(row.qty)
 
           if (isEditing) {
@@ -190,19 +203,22 @@ export default function InventoryLocationModal({
         }),
       ]
 
-      const results = await Promise.allSettled(allOps)
-      const failed = results.filter(
-        (r) => r.status === 'rejected' || r.value?.data?.success === false
-      )
+      // Only process inventory operations if there are any
+      if (allOps.length > 0) {
+        const results = await Promise.allSettled(allOps)
+        const failed = results.filter(
+          (r) => r.status === 'rejected' || r.value?.data?.success === false
+        )
 
-      if (failed.length > 0) {
-        const firstErr =
-          failed[0].reason?.response?.data?.error ||
-          failed[0].value?.data?.error ||
-          'Some products failed to save'
-        toast.error(firstErr)
-        onConfirm?.()
-        return
+        if (failed.length > 0) {
+          const firstErr =
+            failed[0].reason?.response?.data?.error ||
+            failed[0].value?.data?.error ||
+            'Some products failed to save'
+          toast.error(firstErr)
+          onConfirm?.()
+          return
+        }
       }
 
       toast.success(isEditing ? 'Inventory location updated' : 'Inventory location created')
@@ -256,10 +272,10 @@ export default function InventoryLocationModal({
           <div>
             <div className="grid grid-cols-[1fr_90px_32px] gap-2 mb-1.5">
               <span className="text-xs font-medium text-[#1F384C]">
-                Product Name <span className="text-red-500">*</span>
+                Product Name <span className="text-[#6b7280] font-normal">(Optional)</span>
               </span>
               <span className="text-xs font-medium text-[#1F384C]">
-                Qty <span className="text-red-500">*</span>
+                Qty <span className="text-[#6b7280] font-normal">(Optional)</span>
               </span>
               <span />
             </div>

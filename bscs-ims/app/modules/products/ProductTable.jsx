@@ -321,8 +321,8 @@ export default function ProductTable({ products, loading, onEdit, onDelete, onAd
                     label={product.status}
                     size='small'
                     sx={{
-                      bgcolor: product.status === 'Available' ? '#e8f5e9' : '#fff3e0',
-                      color: product.status === 'Available' ? '#2e7d32' : '#e65100',
+                      bgcolor: product.status === 'Active' ? '#e8f5e9' : '#fff3e0',
+                      color: product.status === 'Active' ? '#2e7d32' : '#e65100',
                       fontWeight: 500,
                       fontSize: '0.75rem',
                       height: 24,

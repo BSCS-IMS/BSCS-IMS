@@ -8,8 +8,8 @@ import { Separator } from '@/components/ui/separator'
 
 const statusOptions = [
   { label: 'All', value: '' },
-  { label: 'Available', value: 'available' },
-  { label: 'Not Available', value: 'not-available' }
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' }
 ]
 
 function ProductFilterDialogInner({ onClose, filters, onApply, products = [], locations = [] }) {
