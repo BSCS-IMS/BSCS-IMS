@@ -23,7 +23,7 @@ async function getSession(req) {
 }
 
 /* ==========================
-   GET - fetch all non-deleted products
+   GET - fetch all non-deleted products with filters
 ========================== */
 export async function GET(req) {
   try {
@@ -32,15 +32,77 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const snapshot = await getDocs(collection(db, 'products'))
-    const products = snapshot.docs
+    const { searchParams } = new URL(req.url)
+    const search = searchParams.get('search')?.toLowerCase() || ''
+    const sort = searchParams.get('sort') || ''
+    const status = searchParams.get('status') || ''
+    const productId = searchParams.get('productId') || ''
+    const locationId = searchParams.get('locationId') || ''
+
+    // Fetch products and inventory in parallel
+    const [productsSnapshot, inventorySnapshot] = await Promise.all([
+      getDocs(collection(db, 'products')),
+      getDocs(collection(db, 'inventory'))
+    ])
+
+    // Build inventory map: productId -> array of { locationId, quantity }
+    const inventoryMap = new Map()
+    inventorySnapshot.docs.forEach((doc) => {
+      const data = doc.data()
+      if (!inventoryMap.has(data.productId)) {
+        inventoryMap.set(data.productId, [])
+      }
+      inventoryMap.get(data.productId).push({
+        locationId: data.locationId,
+        quantity: data.quantity || 0
+      })
+    })
+
+    let products = productsSnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(product => !product.deletedAt)
-      .sort((a, b) => {
+
+    // Apply search filter (by name)
+    if (search) {
+      products = products.filter((p) =>
+        p.name?.toLowerCase().includes(search)
+      )
+    }
+
+    // Apply status filter
+    if (status === 'available') {
+      products = products.filter((p) => p.isActive === true)
+    } else if (status === 'not-available') {
+      products = products.filter((p) => p.isActive === false)
+    }
+
+    // Apply product ID filter
+    if (productId) {
+      products = products.filter((p) => p.id === productId)
+    }
+
+    // Apply location filter (products that have inventory in the specified location)
+    if (locationId) {
+      products = products.filter((product) => {
+        const inventory = inventoryMap.get(product.id) || []
+        return inventory.some((inv) => inv.locationId === locationId && inv.quantity > 0)
+      })
+    }
+
+    // Apply sort (by name)
+    if (sort === 'asc') {
+      products.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    } else if (sort === 'desc') {
+      products.sort((a, b) => (b.name || '').localeCompare(a.name || ''))
+    } else {
+      // Default sort: newest first
+      products.sort((a, b) => {
         const aTime = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0
         const bTime = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0
-        return bTime - aTime // newest first
+        return bTime - aTime
       })
+    }
+
     return NextResponse.json({ success: true, products })
   } catch (error) {
     console.error('GET /products error:', error)
