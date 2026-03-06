@@ -3,10 +3,29 @@ export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
 import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
+import { admin } from '@/app/lib/firebaseAdmin'
 import { supabase } from '@/app/lib/supabaseClient'
 import { logAudit } from '@/app/lib/audit'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+
+// Helper: verify session and return decoded token
+async function getSession(req) {
+  const token = req.cookies.get("session")?.value;
+  if (!token) return null;
+
+  try {
+    return await admin.auth().verifySessionCookie(token, true);
+  } catch (err) {
+    console.error("Invalid session cookie:", err.message);
+    return null;
+  }
+}
+
+// Helper: standard unauthorized response
+function unauthorized() {
+  return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+}
 
 // Helper: extract file path from Supabase URL
 function getFilePathFromUrl(url) {
@@ -52,102 +71,125 @@ async function deleteImage(imageUrl) {
 
 // DELETE reseller
 export async function DELETE(req, context) {
-	const { id: resellerId } = await context.params
-	if (!resellerId) return NextResponse.json({ message: 'Missing reseller ID' }, { status: 400 })
+	try {
+		// Get session from cookies
+		const session = await getSession(req);
+		if (!session) return unauthorized();
 
-	const ref = doc(db, 'resellers', resellerId)
-	const snap = await getDoc(ref)
+		const { id: resellerId } = await context.params
+		if (!resellerId) return NextResponse.json({ message: 'Missing reseller ID' }, { status: 400 })
 
-	if (snap.exists()) {
-		const reseller = snap.data()
+		const ref = doc(db, 'resellers', resellerId)
+		const snap = await getDoc(ref)
+
+		if (!snap.exists()) {
+			return NextResponse.json({ message: 'Reseller not found' }, { status: 404 })
+		}
+
+		const oldData = snap.data()
+
 		// Delete image from Supabase if exists
-		await deleteImage(reseller.imageUrl)
+		await deleteImage(oldData.imageUrl)
+
+		await deleteDoc(ref)
+
+		await logAudit({
+			action: 'DELETE',
+			entityType: 'reseller',
+			entityId: resellerId,
+			oldData,
+			performedById: session.uid // ✅ Use session
+		})
+
+		return NextResponse.json({ success: true })
+	} catch (error) {
+		console.error('DELETE reseller error:', error)
+		return NextResponse.json({ success: false, error: error.message }, { status: 500 })
 	}
-
-	await deleteDoc(ref)
-
-	await logAudit({
-		action: 'DELETE',
-		entityType: 'reseller',
-		entityId: resellerId,
-		performedById: 'SYSTEM'
-	})
-
-	return NextResponse.json({ success: true })
 }
 
 // UPDATE reseller
 export async function PUT(req, context) {
-	const { id: resellerId } = await context.params
-	if (!resellerId) return NextResponse.json({ message: 'Missing reseller ID' }, { status: 400 })
+	try {
+		// Get session from cookies
+		const session = await getSession(req);
+		if (!session) return unauthorized();
 
-	const ref = doc(db, 'resellers', resellerId)
-	const snap = await getDoc(ref)
-	if (!snap.exists()) return NextResponse.json({ message: 'Reseller not found' }, { status: 404 })
+		const { id: resellerId } = await context.params
+		if (!resellerId) return NextResponse.json({ message: 'Missing reseller ID' }, { status: 400 })
 
-	const oldData = snap.data()
+		const ref = doc(db, 'resellers', resellerId)
+		const snap = await getDoc(ref)
+		if (!snap.exists()) return NextResponse.json({ message: 'Reseller not found' }, { status: 404 })
 
-	const formData = await req.formData()
+		const oldData = snap.data()
 
-	const businessName = formData.get('businessName')
-	const ownerName = formData.get('ownerName')
-	const contactNumber = formData.get('contactNumber')
-	const email = formData.get('email')
-	const address = formData.get('address')
-	const status = formData.get('status')
-	const notes = formData.get('notes')
-	const userId = formData.get('userId')
-	const file = formData.get('file')
-	const removeImage = formData.get('removeImage') === 'true'
+		const formData = await req.formData()
 
-	// Validate required field
-	if (!businessName?.trim()) {
-		return NextResponse.json(
-			{ success: false, error: 'Business name is required' },
-			{ status: 400 }
-		)
-	}
+		const businessName = formData.get('businessName')
+		const ownerName = formData.get('ownerName')
+		const contactNumber = formData.get('contactNumber')
+		const email = formData.get('email')
+		const address = formData.get('address')
+		const status = formData.get('status')
+		const notes = formData.get('notes')
+		const file = formData.get('file')
+		const removeImage = formData.get('removeImage') === 'true'
 
-	// Handle image removal
-	let imageUrl = oldData.imageUrl ?? null
-	if (removeImage) {
-		await deleteImage(oldData.imageUrl)
-		imageUrl = null
-	} else if (file && file.size > 0) {
-		// Handle image replacement
-		await deleteImage(oldData.imageUrl)
-
-		const result = await uploadImage(file)
-		if (result.error) {
-			return NextResponse.json({ success: false, error: result.error }, { status: 400 })
+		// Validate required field
+		if (!businessName?.trim()) {
+			return NextResponse.json(
+				{ success: false, error: 'Business name is required' },
+				{ status: 400 }
+			)
 		}
 
-		imageUrl = result.imageUrl
+		// Handle image removal
+		let imageUrl = oldData.imageUrl ?? null
+		if (removeImage) {
+			await deleteImage(oldData.imageUrl)
+			imageUrl = null
+		} else if (file && file.size > 0) {
+			// Handle image replacement
+			await deleteImage(oldData.imageUrl)
+
+			const result = await uploadImage(file)
+			if (result.error) {
+				return NextResponse.json({ success: false, error: result.error }, { status: 400 })
+			}
+
+			imageUrl = result.imageUrl
+		}
+
+		// Build update object
+		const updateData = {
+			businessName: businessName.trim(),
+			ownerName: ownerName?.trim() || '',
+			contactNumber: contactNumber?.trim() || '',
+			email: email?.trim() || '',
+			address: address?.trim() || '',
+			status: status || 'active',
+			notes: notes?.trim() || '',
+			imageUrl,
+			updatedAt: serverTimestamp(),
+			updatedById: session.uid,
+			updatedByEmail: session.email
+		}
+
+		await updateDoc(ref, updateData)
+
+		await logAudit({
+			action: 'UPDATE',
+			entityType: 'reseller',
+			entityId: resellerId,
+			oldData,
+			newData: updateData,
+			performedById: session.uid // ✅ Use session
+		})
+
+		return NextResponse.json({ success: true, updatedFields: updateData })
+	} catch (error) {
+		console.error('PUT reseller error:', error)
+		return NextResponse.json({ success: false, error: error.message }, { status: 500 })
 	}
-
-	// Build update object
-	const updateData = {
-		businessName: businessName.trim(),
-		ownerName: ownerName?.trim() || '',
-		contactNumber: contactNumber?.trim() || '',
-		email: email?.trim() || '',
-		address: address?.trim() || '',
-		status: status || 'active',
-		notes: notes?.trim() || '',
-		imageUrl,
-		updatedAt: serverTimestamp()
-	}
-
-	await updateDoc(ref, updateData)
-
-	await logAudit({
-		action: 'UPDATE',
-		entityType: 'reseller',
-		entityId: resellerId,
-		oldData,
-		newData: updateData,
-		performedById: userId || 'SYSTEM'
-	})
-
-	return NextResponse.json({ success: true, updatedFields: updateData })
 }

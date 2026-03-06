@@ -2,10 +2,29 @@ export const runtime = 'nodejs'
 import { NextResponse } from 'next/server'
 import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
+import { admin } from '@/app/lib/firebaseAdmin'
 import { supabase } from '@/app/lib/supabaseClient'
 import { logAudit } from '@/app/lib/audit'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+
+// Helper: verify session and return decoded token
+async function getSession(req) {
+  const token = req.cookies.get("session")?.value;
+  if (!token) return null;
+
+  try {
+    return await admin.auth().verifySessionCookie(token, true);
+  } catch (err) {
+    console.error("Invalid session cookie:", err.message);
+    return null;
+  }
+}
+
+// Helper: standard unauthorized response
+function unauthorized() {
+  return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+}
 
 // GET all resellers (with filters)
 export async function GET(req) {
@@ -118,6 +137,10 @@ export async function GET(req) {
 // CREATE new reseller
 export async function POST(req) {
 	try {
+		// Get session from cookies
+		const session = await getSession(req);
+		if (!session) return unauthorized();
+
 		const formData = await req.formData()
 
 		const businessName = formData.get('businessName')
@@ -127,7 +150,6 @@ export async function POST(req) {
 		const address = formData.get('address')
 		const status = formData.get('status')
 		const notes = formData.get('notes')
-		const userId = formData.get('userId')
 		const file = formData.get('file')
 
 		if (!businessName?.trim()) {
@@ -179,7 +201,8 @@ export async function POST(req) {
 			notes: notes?.trim() || '',
 			createdAt: serverTimestamp(),
 			updatedAt: serverTimestamp(),
-			createdById: userId || 'SYSTEM',
+			createdById: session.uid,
+			createdByEmail: session.email,
 			...(imageUrl && { imageUrl })
 		}
 
@@ -190,7 +213,7 @@ export async function POST(req) {
 			entityType: 'reseller',
 			entityId: ref.id,
 			newData: resellerData,
-			performedById: userId || 'SYSTEM'
+			performedById: session.uid // ✅ Now using session.uid instead of form data
 		})
 
 		return NextResponse.json({ success: true, id: ref.id })
