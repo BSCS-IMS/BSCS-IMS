@@ -34,6 +34,7 @@ export async function GET(req) {
 		const search = searchParams.get('search')?.toLowerCase() || ''
 		const status = searchParams.get('status') || ''
 		const productId = searchParams.get('productId') || ''
+		const resellerId = searchParams.get('resellerId') || ''
 		const sort = searchParams.get('sort') || ''
 
 		// 1️⃣ Fetch resellers
@@ -73,12 +74,19 @@ export async function GET(req) {
 			}
 		})
 
-		// 🔍 Search (businessName / ownerName)
+		// 🔍 Search (businessName / ownerName / product names)
 		if (search) {
-			resellers = resellers.filter(r =>
-				r.businessName?.toLowerCase().includes(search) ||
-				r.ownerName?.toLowerCase().includes(search)
-			)
+			resellers = resellers.filter(r => {
+				// Search in reseller name
+				if (r.businessName?.toLowerCase().includes(search)) return true
+				if (r.ownerName?.toLowerCase().includes(search)) return true
+
+				// Search in assigned product names
+				const hasMatchingProduct = r.assignedProducts?.some(p =>
+					p.name?.toLowerCase().includes(search)
+				)
+				return hasMatchingProduct
+			})
 		}
 
 		// 🟢 Status filter
@@ -91,6 +99,11 @@ export async function GET(req) {
 			resellers = resellers.filter(r =>
 				r.assignedProducts?.some(p => p.id === productId)
 			)
+		}
+
+		// 👤 Reseller filter
+		if (resellerId) {
+			resellers = resellers.filter(r => r.id === resellerId)
 		}
 
 		// ↕️ Sorting

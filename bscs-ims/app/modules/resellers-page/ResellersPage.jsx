@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import axios from 'axios'
 import { Box, Stack, Typography, Button, useMediaQuery, useTheme } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -11,7 +12,6 @@ import ResellersMobileView from './ResellersMobileView'
 import CreateResellerModal from './ResellerFormModal'
 import DeleteResellerModal from './DeleteResellerModal'
 import ResellersFilterDialog from './ResellersFilterDialog'
-import { useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
 
 
@@ -20,11 +20,19 @@ export default function ResellersPage() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-  const searchParams = useSearchParams()
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Read filters from URL params
+  const urlSearch = searchParams.get('search') || ''
+  const urlSort = searchParams.get('sort') || ''
+  const urlStatus = searchParams.get('status') || ''
+  const urlProductId = searchParams.get('productId') || ''
+  const urlResellerId = searchParams.get('resellerId') || ''
+
+  const [search, setSearch] = useState(urlSearch)
+  const [sortOrder, setSortOrder] = useState(urlSort || null)
 
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -34,77 +42,123 @@ export default function ResellersPage() {
   const [editingReseller, setEditingReseller] = useState(null)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [sortOrder, setSortOrder] = useState(searchParams.get('sort') || null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteModalReseller, setDeleteModalReseller] = useState(null)
   const [products, setProducts] = useState([])
-  const [filters, setFilters] = useState({
-    name: '',
-    status: '',
-    productId: ''
-  })
 
-const fetchProducts = async () => {
-	try {
-		const res = await axios.get('/api/products')
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-		let list = []
+  // Update URL params
+  const updateUrlParams = useCallback((params) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
 
-		if (Array.isArray(res.data)) {
-			list = res.data
-		} else if (Array.isArray(res.data?.products)) {
-			list = res.data.products
-		} else if (Array.isArray(res.data?.data)) {
-			list = res.data.data
-		} else {
-			console.warn('Unknown products response shape', res.data)
-		}
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newSearchParams.set(key, value)
+      } else {
+        newSearchParams.delete(key)
+      }
+    })
 
-		setProducts(list)
-	} catch (err) {
-		console.error('Failed to fetch products', err)
-	}
-}
+    const queryString = newSearchParams.toString()
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [searchParams, router, pathname])
 
-
-useEffect(() => {
-  const params = new URLSearchParams()
-
-  // 🔍 search
-  if (search) params.set('search', search)
-
-  // ↕️ sort
-  if (sortOrder) params.set('sort', sortOrder)
-
-  // 🧪 filters
-  if (filters.name) params.set('name', filters.name)
-  if (filters.status) params.set('status', filters.status)
-  if (filters.productId) params.set('productId', filters.productId)
-
-  router.replace(`?${params.toString()}`)
-}, [search, sortOrder, filters, router])
-
-useEffect(() => {
-	fetchResellers()
-	fetchProducts()
-}, [])
-
-useEffect(() => {
-	console.log('PRODUCTS FROM API:', products)
-}, [products])
-
-  const fetchResellers = async () => {
+  // Fetch resellers with filters
+  const fetchResellers = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await axios.get('/api/resellers')
+      const params = new URLSearchParams()
+      if (urlSearch) params.set('search', urlSearch)
+      if (urlSort) params.set('sort', urlSort)
+      if (urlStatus) params.set('status', urlStatus)
+      if (urlProductId) params.set('productId', urlProductId)
+      if (urlResellerId) params.set('resellerId', urlResellerId)
+
+      const queryString = params.toString()
+      const url = queryString ? `/api/resellers?${queryString}` : '/api/resellers'
+
+      const res = await axios.get(url)
       setResellers(res.data)
     } catch {
       toast.error('Failed to load resellers')
     } finally {
       setLoading(false)
     }
+  }, [urlSearch, urlSort, urlStatus, urlProductId, urlResellerId])
+
+  // Fetch products for filter dropdown
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get('/api/products')
+      let list = []
+
+      if (Array.isArray(res.data)) {
+        list = res.data
+      } else if (Array.isArray(res.data?.products)) {
+        list = res.data.products
+      } else if (Array.isArray(res.data?.data)) {
+        list = res.data.data
+      }
+
+      setProducts(list)
+    } catch (err) {
+      console.error('Failed to fetch products', err)
+    }
   }
+
+  useEffect(() => {
+    fetchResellers()
+  }, [fetchResellers])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  // Sync search state with URL
+  useEffect(() => {
+    setSearch(urlSearch)
+  }, [urlSearch])
+
+  // Sync sort state with URL
+  useEffect(() => {
+    setSortOrder(urlSort || null)
+  }, [urlSort])
+
+  // Handle search submit
+  const handleSearchSubmit = () => {
+    updateUrlParams({ search: search.trim() })
+    setPage(0)
+  }
+
+  // Handle search on Enter key
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit()
+    }
+  }
+
+  // Handle sort change
+  const handleSortSelect = (order) => {
+    setSortOrder(order)
+    updateUrlParams({ sort: order || '' })
+    setSortAnchorEl(null)
+  }
+
+  // Handle filter apply
+  const handleFilterApply = (filters) => {
+    updateUrlParams({
+      status: filters.status,
+      productId: filters.productId,
+      resellerId: filters.resellerId
+    })
+    setPage(0)
+  }
+
+  // Count active filters
+  const activeFilterCount = [urlStatus, urlProductId, urlResellerId].filter(Boolean).length
 
 
   const handleChangePage = (event, newPage) => {
@@ -131,54 +185,7 @@ useEffect(() => {
     setDeleteModalReseller(null)
   }
 
-
-  const handleSortClick = (event) => {
-    setSortAnchorEl(event.currentTarget)
-  }
-
-  const handleSortClose = () => {
-    setSortAnchorEl(null)
-  }
-
-  const handleSortSelect = (order) => {
-    setSortOrder(order)
-    handleSortClose()
-  }
-
-  const filteredResellers = resellers.filter((r) => {
-    // 🔍 search box
-    if (
-      search &&
-      !r.businessName?.toLowerCase().includes(search.toLowerCase())
-    ) return false
-
-    // 🏷 name filter (dialog)
-    if (
-      filters.name &&
-      !r.businessName?.toLowerCase().includes(filters.name.toLowerCase())
-    ) return false
-
-    // ✅ status filter
-    if (filters.status && r.status !== filters.status) return false
-
-    // 📦 product filter
-    if (filters.productId) {
-      const hasProduct = r.assignedProducts?.some(
-        (p) => p.id === filters.productId
-      )
-      if (!hasProduct) return false
-    }
-
-    return true
-  })
-  const sortedResellers = [...filteredResellers].sort((a, b) => {
-    if (!sortOrder) return 0 // preserve API order (newest first)
-    if (sortOrder === 'asc') return a.businessName.localeCompare(b.businessName)
-    if (sortOrder === 'desc') return b.businessName.localeCompare(a.businessName)
-    return 0
-  })
-
-  const paginatedResellers = sortedResellers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  const paginatedResellers = resellers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   if (!mounted) return null
 
@@ -251,23 +258,30 @@ useEffect(() => {
         <ResellersFilters
           search={search}
           setSearch={setSearch}
-          onSortClick={handleSortClick}
+          onSearchSubmit={handleSearchSubmit}
+          onSearchKeyDown={handleSearchKeyDown}
+          onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
           sortOrder={sortOrder}
           onFilterClick={() => setIsFilterOpen(true)}
+          activeFilterCount={activeFilterCount}
         />
 
         <ResellersFilterDialog
           open={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}
           products={products}
-          filters={filters}
-          onApply={(newFilters) => {
-            setFilters(newFilters)
+          resellers={resellers}
+          filters={{
+            status: urlStatus,
+            productId: urlProductId,
+            resellerId: urlResellerId
           }}
+          onApply={handleFilterApply}
         />
+
         <ResellersTable
           paginatedResellers={paginatedResellers}
-          sortedResellers={sortedResellers}
+          sortedResellers={resellers}
           page={page}
           rowsPerPage={rowsPerPage}
           onChangePage={handleChangePage}
@@ -280,7 +294,7 @@ useEffect(() => {
         <ResellersSortDialog
           anchorEl={sortAnchorEl}
           open={Boolean(sortAnchorEl)}
-          onClose={handleSortClose}
+          onClose={() => setSortAnchorEl(null)}
           sortOrder={sortOrder}
           onSortSelect={handleSortSelect}
         />

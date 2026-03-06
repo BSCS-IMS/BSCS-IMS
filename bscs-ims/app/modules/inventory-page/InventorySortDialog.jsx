@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import Divider from '@mui/material/Divider'
 
 export default function InventorySortDialog({ anchorEl, open, onClose, sortOrder, onSortSelect }) {
   return (
@@ -27,6 +28,7 @@ export default function InventorySortDialog({ anchorEl, open, onClose, sortOrder
           px: 2.5,
           mb: 0.5,
           borderRadius: 1.5,
+          cursor: 'pointer',
           '&:hover': {
             bgcolor: '#f3f4f6'
           },
@@ -47,6 +49,7 @@ export default function InventorySortDialog({ anchorEl, open, onClose, sortOrder
           </Typography>
         </Box>
       </MenuItem>
+
       <MenuItem
         onClick={() => onSortSelect('desc')}
         selected={sortOrder === 'desc'}
@@ -54,6 +57,7 @@ export default function InventorySortDialog({ anchorEl, open, onClose, sortOrder
           py: 2,
           px: 2.5,
           borderRadius: 1.5,
+          cursor: 'pointer',
           '&:hover': {
             bgcolor: '#f3f4f6'
           },
@@ -74,6 +78,28 @@ export default function InventorySortDialog({ anchorEl, open, onClose, sortOrder
           </Typography>
         </Box>
       </MenuItem>
+
+      {sortOrder && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          <MenuItem
+            onClick={() => onSortSelect(null)}
+            sx={{
+              py: 1.5,
+              px: 2.5,
+              borderRadius: 1.5,
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: '#f3f4f6'
+              }
+            }}
+          >
+            <Typography variant='body2' sx={{ color: '#6b7280' }}>
+              Clear sort
+            </Typography>
+          </MenuItem>
+        </>
+      )}
     </Menu>
   )
 }

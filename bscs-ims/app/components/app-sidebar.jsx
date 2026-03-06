@@ -31,11 +31,6 @@ const menuitems = [
     icon: ShoppingCart
   },
   {
-    title: 'History',
-    url: '/history',
-    icon: ClipboardClock
-  },
-  {
     title: 'Resellers',
     url: '/resellers',
     icon: UserRound

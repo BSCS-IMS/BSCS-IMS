@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import axios from 'axios'
 import { Box, Typography, Stack, Button, useMediaQuery, useTheme } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -9,6 +10,7 @@ import ProductTable from './ProductTable'
 import ProductMobile from './ProductMobile'
 import ProductFilter from './ProductFilter'
 import ProductSortDialog from './ProductSortDialog'
+import ProductFilterDialog from './ProductFilterDialog'
 import ProductFormModal from './ProductFormModal'
 import InventoryAdjustModal from './InventoryAdjustModal'
 import DeleteProductModal from './DeleteProductModal'
@@ -18,17 +20,27 @@ export default function ProductPage() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'), { ssrMatchMedia: () => ({ matches: true }) })
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const [search, setSearch] = useState('')
-  const [sortOrder, setSortOrder] = useState(null)
+  // Read filters from URL params
+  const urlSearch = searchParams.get('search') || ''
+  const urlSort = searchParams.get('sort') || ''
+  const urlStatus = searchParams.get('status') || ''
+  const urlProductId = searchParams.get('productId') || ''
+  const urlLocationId = searchParams.get('locationId') || ''
+
+  const [search, setSearch] = useState(urlSearch)
+  const [sortOrder, setSortOrder] = useState(urlSort || null)
 
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const isSortOpen = Boolean(sortAnchorEl)
 
   const [products, setProducts] = useState([])
+  const [allProducts, setAllProducts] = useState([])
+  const [locations, setLocations] = useState([])
   const [loading, setLoading] = useState(true)
   const [inventory, setInventory] = useState([])
 
@@ -43,10 +55,41 @@ export default function ProductPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteModalProduct, setDeleteModalProduct] = useState(null)
 
-  const fetchProducts = async () => {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Update URL params
+  const updateUrlParams = useCallback((params) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newSearchParams.set(key, value)
+      } else {
+        newSearchParams.delete(key)
+      }
+    })
+
+    const queryString = newSearchParams.toString()
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  // Fetch products with filters
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await axios.get('/api/products')
+      const params = new URLSearchParams()
+      if (urlSearch) params.set('search', urlSearch)
+      if (urlSort) params.set('sort', urlSort)
+      if (urlStatus) params.set('status', urlStatus)
+      if (urlProductId) params.set('productId', urlProductId)
+      if (urlLocationId) params.set('locationId', urlLocationId)
+
+      const queryString = params.toString()
+      const url = queryString ? `/api/products?${queryString}` : '/api/products'
+
+      const res = await axios.get(url)
       if (res.data.success) {
         setProducts(
           res.data.products.map((p) => ({
@@ -57,7 +100,7 @@ export default function ProductPage() {
             price: p.currentPrice,
             priceUnit: p.priceUnit,
             description: p.description || '',
-            status: p.isActive ? 'Available' : 'Not Available'
+            status: p.isActive ? 'Active' : 'Inactive'
           }))
         )
       }
@@ -65,6 +108,35 @@ export default function ProductPage() {
       console.error('Failed to fetch products:', error)
     } finally {
       setLoading(false)
+    }
+  }, [urlSearch, urlSort, urlStatus, urlProductId, urlLocationId])
+
+  // Fetch all products for filter dropdown
+  const fetchAllProducts = async () => {
+    try {
+      const res = await axios.get('/api/products')
+      if (res.data.success) {
+        setAllProducts(
+          res.data.products.map((p) => ({
+            id: p.id,
+            name: p.name
+          }))
+        )
+      }
+    } catch (error) {
+      console.error('Failed to fetch all products:', error)
+    }
+  }
+
+  // Fetch locations for filter dropdown
+  const fetchLocations = async () => {
+    try {
+      const res = await axios.get('/api/location')
+      if (res.data.success) {
+        setLocations(res.data.locations)
+      }
+    } catch (error) {
+      console.error('Failed to fetch locations:', error)
     }
   }
 
@@ -85,8 +157,54 @@ export default function ProductPage() {
 
   useEffect(() => {
     fetchProducts()
+  }, [fetchProducts])
+
+  useEffect(() => {
     fetchInventory()
+    fetchAllProducts()
+    fetchLocations()
   }, [])
+
+  // Sync search state with URL
+  useEffect(() => {
+    setSearch(urlSearch)
+  }, [urlSearch])
+
+  // Sync sort state with URL
+  useEffect(() => {
+    setSortOrder(urlSort || null)
+  }, [urlSort])
+
+  // Handle search submit
+  const handleSearchSubmit = () => {
+    updateUrlParams({ search: search.trim() })
+  }
+
+  // Handle search on Enter key
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit()
+    }
+  }
+
+  // Handle sort change
+  const handleSortSelect = (order) => {
+    setSortOrder(order)
+    updateUrlParams({ sort: order || '' })
+    setSortAnchorEl(null)
+  }
+
+  // Handle filter apply
+  const handleFilterApply = (filters) => {
+    updateUrlParams({
+      status: filters.status,
+      productId: filters.productId,
+      locationId: filters.locationId
+    })
+  }
+
+  // Count active filters
+  const activeFilterCount = [urlStatus, urlProductId, urlLocationId].filter(Boolean).length
 
   const openDeleteModal = (product) => {
     setDeleteModalProduct(product)
@@ -97,15 +215,6 @@ export default function ProductPage() {
     setIsDeleteModalOpen(false)
     setDeleteModalProduct(null)
   }
-
-  const filteredProducts = products
-    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (!sortOrder) return 0
-      if (sortOrder === 'asc') return a.name.localeCompare(b.name)
-      if (sortOrder === 'desc') return b.name.localeCompare(a.name)
-      return 0
-    })
 
   const openCreateModal = () => {
     setProductModalMode('create')
@@ -121,7 +230,7 @@ export default function ProductPage() {
       sku: product.sku,
       currentPrice: product.price,
       priceUnit: product.priceUnit,
-      isActive: product.status === 'Available',
+      isActive: product.status === 'Active',
       imageUrl: product.image,
       description: product.description || ''
     })
@@ -157,7 +266,7 @@ export default function ProductPage() {
         price: p.currentPrice,
         priceUnit: p.priceUnit,
         description: p.description || '',
-        status: p.isActive ? 'Available' : 'Not Available'
+        status: p.isActive ? 'Active' : 'Inactive'
       }))
     )
   }
@@ -166,22 +275,39 @@ export default function ProductPage() {
 
   if (!isDesktop) {
     return (
-      <ProductMobile
-        products={filteredProducts}
-        search={search}
-        setSearch={setSearch}
-        sortOrder={sortOrder}
-        setSortOrder={setSortOrder}
-        onCreate={openCreateModal}
-        onEdit={openEditModal}
-        onDelete={openDeleteModal}
-        isProductModalOpen={isProductModalOpen}
-        setIsProductModalOpen={setIsProductModalOpen}
-        productModalMode={productModalMode}
-        productModalInitialValues={productModalInitialValues}
-        onConfirm={handleConfirm}
-        loading={loading}
-      />
+      <>
+        <ProductMobile
+          products={products}
+          search={search}
+          setSearch={setSearch}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          onCreate={openCreateModal}
+          onEdit={openEditModal}
+          onDelete={openDeleteModal}
+          isProductModalOpen={isProductModalOpen}
+          setIsProductModalOpen={setIsProductModalOpen}
+          productModalMode={productModalMode}
+          productModalInitialValues={productModalInitialValues}
+          onConfirm={handleConfirm}
+          loading={loading}
+        />
+        {isInventoryModalOpen && inventoryModalProduct && (
+          <InventoryAdjustModal
+            onClose={closeInventoryModal}
+            product={inventoryModalProduct}
+            mode={inventoryModalMode}
+            onSuccess={refreshData}
+          />
+        )}
+        {isDeleteModalOpen && deleteModalProduct && (
+          <DeleteProductModal
+            onClose={closeDeleteModal}
+            product={deleteModalProduct}
+            onSuccess={refreshData}
+          />
+        )}
+      </>
     )
   }
 
@@ -216,11 +342,15 @@ export default function ProductPage() {
           <ProductFilter
             search={search}
             setSearch={setSearch}
-            onFilterClick={() => {}}
+            onSearchSubmit={handleSearchSubmit}
+            onSearchKeyDown={handleSearchKeyDown}
+            onFilterClick={() => setIsFilterDialogOpen(true)}
             onSortClick={(e) => setSortAnchorEl(e.currentTarget)}
+            activeFilterCount={activeFilterCount}
+            sortOrder={sortOrder}
           />
 
-          <ProductTable products={filteredProducts} loading={loading} onEdit={openEditModal} onDelete={openDeleteModal} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
+          <ProductTable products={products} loading={loading} onEdit={openEditModal} onDelete={openDeleteModal} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
         </Box>
       </Box>
 
@@ -229,10 +359,20 @@ export default function ProductPage() {
         open={isSortOpen}
         onClose={() => setSortAnchorEl(null)}
         sortOrder={sortOrder}
-        onSortSelect={(order) => {
-          setSortOrder(order)
-          setSortAnchorEl(null)
+        onSortSelect={handleSortSelect}
+      />
+
+      <ProductFilterDialog
+        open={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        filters={{
+          status: urlStatus,
+          productId: urlProductId,
+          locationId: urlLocationId
         }}
+        onApply={handleFilterApply}
+        products={allProducts}
+        locations={locations}
       />
 
       {isProductModalOpen && (
