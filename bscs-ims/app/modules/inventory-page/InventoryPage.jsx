@@ -32,14 +32,13 @@ export default function InventoryPage() {
   const urlLocationId = searchParams.get('locationId') || ''
   const urlProductId = searchParams.get('productId') || ''
   const urlSort = searchParams.get('sort') || ''
+  const urlPage = parseInt(searchParams.get('page') || '0', 10)
+  const urlRowsPerPage = parseInt(searchParams.get('rowsPerPage') || '5', 10)
 
   const [search, setSearch] = useState(urlSearch)
   const [sortAnchorEl, setSortAnchorEl] = useState(null)
   const [sortOrder, setSortOrder] = useState(urlSort || null)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
-
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(5)
   const [rows, setRows] = useState([])
   const [allRows, setAllRows] = useState([])  // unfiltered, for filter dialog options
   const [loading, setLoading] = useState(true)
@@ -138,7 +137,7 @@ export default function InventoryPage() {
     } finally {
       setLoading(false)
     }
-  }, [urlSearch, urlLocationId, urlProductId, urlSort])
+  }, [urlSearch, urlLocationId, urlProductId, urlSort, urlPage, urlRowsPerPage])
 
   const fetchLocations = async () => {
     try {
@@ -164,8 +163,7 @@ export default function InventoryPage() {
   useEffect(() => { setSortOrder(urlSort || null) }, [urlSort])
 
   const handleSearchSubmit = () => {
-    updateUrlParams({ search: search.trim() })
-    setPage(0)
+    updateUrlParams({ search: search.trim(), page: '0' })
   }
 
   const handleSearchKeyDown = (e) => {
@@ -177,8 +175,8 @@ export default function InventoryPage() {
     updateUrlParams({
       locationId: filters.locationId,
       productId: filters.productId,
+      page: '0'
     })
-    setPage(0)
   }
 
   // Handle sort
@@ -218,11 +216,15 @@ export default function InventoryPage() {
 
   // ── Table helpers ───────────────────────────────────────────────────────────
 
-  const handleChangePage = (event, newPage) => setPage(newPage)
+  const handleChangePage = (event, newPage) => {
+    updateUrlParams({ page: String(newPage) })
+  }
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
+    updateUrlParams({
+      rowsPerPage: event.target.value,
+      page: '0'
+    })
   }
 
   const handleEdit = (row) => openEditModal(row)
@@ -246,7 +248,7 @@ export default function InventoryPage() {
     return 0
   })
 
-  const paginatedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  const paginatedRows = sortedRows.slice(urlPage * urlRowsPerPage, urlPage * urlRowsPerPage + urlRowsPerPage)
 
   // Product options for filter dialog — derived from current rows
   const productOptions = allRows
@@ -318,8 +320,8 @@ export default function InventoryPage() {
             paginatedRows={paginatedRows}
             sortedRows={sortedRows}
             loading={loading}
-            page={page}
-            rowsPerPage={rowsPerPage}
+            page={urlPage}
+            rowsPerPage={urlRowsPerPage}
             onChangePage={handleChangePage}
             onChangeRowsPerPage={handleChangeRowsPerPage}
             onEdit={handleEdit}

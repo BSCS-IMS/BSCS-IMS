@@ -29,6 +29,8 @@ export default function AnnouncementsPage() {
   const urlStatus = searchParams.get('status') || ''
   const urlDateFrom = searchParams.get('dateFrom') || ''
   const urlDateTo = searchParams.get('dateTo') || ''
+  const urlPage = parseInt(searchParams.get('page') || '0', 10)
+  const urlRowsPerPage = parseInt(searchParams.get('rowsPerPage') || '10', 10)
 
   const [search, setSearch] = useState(urlSearch)
   const [sortOrder, setSortOrder] = useState(urlSort || null)
@@ -87,7 +89,7 @@ export default function AnnouncementsPage() {
     } finally {
       setLoading(false)
     }
-  }, [urlSearch, urlSort, urlStatus, urlDateFrom, urlDateTo])
+  }, [urlSearch, urlSort, urlStatus, urlDateFrom, urlDateTo, urlPage, urlRowsPerPage])
 
   useEffect(() => {
     fetchAnnouncements()
@@ -105,7 +107,7 @@ export default function AnnouncementsPage() {
 
   // Handle search submit
   const handleSearchSubmit = () => {
-    updateUrlParams({ search: search.trim() })
+    updateUrlParams({ search: search.trim(), page: '0' })
   }
 
   // Handle search on Enter key
@@ -127,7 +129,20 @@ export default function AnnouncementsPage() {
     updateUrlParams({
       status: filters.status,
       dateFrom: filters.dateFrom,
-      dateTo: filters.dateTo
+      dateTo: filters.dateTo,
+      page: '0'
+    })
+  }
+
+  // Handle pagination
+  const handleChangePage = (event, newPage) => {
+    updateUrlParams({ page: String(newPage) })
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    updateUrlParams({
+      rowsPerPage: event.target.value,
+      page: '0'
     })
   }
 
@@ -237,6 +252,10 @@ export default function AnnouncementsPage() {
             loading={loading}
             onEdit={openEditModal}
             onDelete={openDeleteModal}
+            page={urlPage}
+            rowsPerPage={urlRowsPerPage}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </Box>
       </Box>

@@ -30,12 +30,11 @@ export default function ResellersPage() {
   const urlStatus = searchParams.get('status') || ''
   const urlProductId = searchParams.get('productId') || ''
   const urlResellerId = searchParams.get('resellerId') || ''
+  const urlPage = parseInt(searchParams.get('page') || '0', 10)
+  const urlRowsPerPage = parseInt(searchParams.get('rowsPerPage') || '10', 10)
 
   const [search, setSearch] = useState(urlSearch)
   const [sortOrder, setSortOrder] = useState(urlSort || null)
-
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [resellers, setResellers] = useState([])
   const [loading, setLoading] = useState(true)
   const [openForm, setOpenForm] = useState(false)
@@ -87,7 +86,7 @@ export default function ResellersPage() {
     } finally {
       setLoading(false)
     }
-  }, [urlSearch, urlSort, urlStatus, urlProductId, urlResellerId])
+  }, [urlSearch, urlSort, urlStatus, urlProductId, urlResellerId, urlPage, urlRowsPerPage])
 
   // Fetch products for filter dropdown
   const fetchProducts = async () => {
@@ -129,8 +128,7 @@ export default function ResellersPage() {
 
   // Handle search submit
   const handleSearchSubmit = () => {
-    updateUrlParams({ search: search.trim() })
-    setPage(0)
+    updateUrlParams({ search: search.trim(), page: '0' })
   }
 
   // Handle search on Enter key
@@ -152,9 +150,9 @@ export default function ResellersPage() {
     updateUrlParams({
       status: filters.status,
       productId: filters.productId,
-      resellerId: filters.resellerId
+      resellerId: filters.resellerId,
+      page: '0'
     })
-    setPage(0)
   }
 
   // Count active filters
@@ -162,12 +160,14 @@ export default function ResellersPage() {
 
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage)
+    updateUrlParams({ page: String(newPage) })
   }
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
+    updateUrlParams({
+      rowsPerPage: event.target.value,
+      page: '0'
+    })
   }
 
   const handleEdit = (reseller) => {
@@ -185,7 +185,7 @@ export default function ResellersPage() {
     setDeleteModalReseller(null)
   }
 
-  const paginatedResellers = resellers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  const paginatedResellers = resellers.slice(urlPage * urlRowsPerPage, urlPage * urlRowsPerPage + urlRowsPerPage)
 
   if (!mounted) return null
 
@@ -282,8 +282,8 @@ export default function ResellersPage() {
         <ResellersTable
           paginatedResellers={paginatedResellers}
           sortedResellers={resellers}
-          page={page}
-          rowsPerPage={rowsPerPage}
+          page={urlPage}
+          rowsPerPage={urlRowsPerPage}
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
           onEdit={handleEdit}

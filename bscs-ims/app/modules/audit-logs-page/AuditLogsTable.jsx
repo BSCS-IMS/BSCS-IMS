@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Chip,
   Paper,
@@ -261,19 +260,7 @@ function formatChanges(log) {
   return '-'
 }
 
-export default function AuditLogsTable({ logs, loading }) {
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-
-  const handleChangePage = (_, newPage) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
-
+export default function AuditLogsTable({ logs, loading, page, rowsPerPage, onChangePage, onChangeRowsPerPage }) {
   const paginatedLogs = logs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   return (
@@ -499,8 +486,8 @@ export default function AuditLogsTable({ logs, loading }) {
         count={logs.length}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
+        onPageChange={onChangePage}
+        onRowsPerPageChange={onChangeRowsPerPage}
         sx={{
           '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
             fontSize: '0.75rem'

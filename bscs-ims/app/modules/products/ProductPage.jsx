@@ -30,6 +30,8 @@ export default function ProductPage() {
   const urlStatus = searchParams.get('status') || ''
   const urlProductId = searchParams.get('productId') || ''
   const urlLocationId = searchParams.get('locationId') || ''
+  const urlPage = parseInt(searchParams.get('page') || '0', 10)
+  const urlRowsPerPage = parseInt(searchParams.get('rowsPerPage') || '10', 10)
 
   const [search, setSearch] = useState(urlSearch)
   const [sortOrder, setSortOrder] = useState(urlSort || null)
@@ -109,7 +111,7 @@ export default function ProductPage() {
     } finally {
       setLoading(false)
     }
-  }, [urlSearch, urlSort, urlStatus, urlProductId, urlLocationId])
+  }, [urlSearch, urlSort, urlStatus, urlProductId, urlLocationId, urlPage, urlRowsPerPage])
 
   // Fetch all products for filter dropdown
   const fetchAllProducts = async () => {
@@ -177,7 +179,7 @@ export default function ProductPage() {
 
   // Handle search submit
   const handleSearchSubmit = () => {
-    updateUrlParams({ search: search.trim() })
+    updateUrlParams({ search: search.trim(), page: '0' })
   }
 
   // Handle search on Enter key
@@ -199,7 +201,20 @@ export default function ProductPage() {
     updateUrlParams({
       status: filters.status,
       productId: filters.productId,
-      locationId: filters.locationId
+      locationId: filters.locationId,
+      page: '0'
+    })
+  }
+
+  // Handle pagination
+  const handleChangePage = (event, newPage) => {
+    updateUrlParams({ page: String(newPage) })
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    updateUrlParams({
+      rowsPerPage: event.target.value,
+      page: '0'
     })
   }
 
@@ -350,7 +365,19 @@ export default function ProductPage() {
             sortOrder={sortOrder}
           />
 
-          <ProductTable products={products} loading={loading} onEdit={openEditModal} onDelete={openDeleteModal} onAdd={openAddModal} onMinus={openSubtractModal} inventory={inventory} />
+          <ProductTable
+            products={products}
+            loading={loading}
+            onEdit={openEditModal}
+            onDelete={openDeleteModal}
+            onAdd={openAddModal}
+            onMinus={openSubtractModal}
+            inventory={inventory}
+            page={urlPage}
+            rowsPerPage={urlRowsPerPage}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+          />
         </Box>
       </Box>
 

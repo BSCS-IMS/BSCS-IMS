@@ -27,6 +27,8 @@ export default function AuditLogsPage() {
   const urlModule = searchParams.get('module') || ''
   const urlDateFrom = searchParams.get('dateFrom') || ''
   const urlDateTo = searchParams.get('dateTo') || ''
+  const urlPage = parseInt(searchParams.get('page') || '0', 10)
+  const urlRowsPerPage = parseInt(searchParams.get('rowsPerPage') || '10', 10)
 
   const [search, setSearch] = useState(urlSearch)
   const [sortOrder, setSortOrder] = useState(urlSort || null)
@@ -41,57 +43,41 @@ export default function AuditLogsPage() {
     setMounted(true)
   }, [])
 
-  // Update URL params - USING WINDOW.HISTORY
-  const updateUrlParams = (params) => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()))
+  // Update URL params
+  const updateUrlParams = useCallback((params) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString())
 
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
-        current.set(key, value)
+        newSearchParams.set(key, value)
       } else {
-        current.delete(key)
+        newSearchParams.delete(key)
       }
     })
 
-    const search = current.toString()
-    const query = search ? `?${search}` : ''
-    const newUrl = `${pathname}${query}`
-    
-    console.log('Updating URL to:', newUrl)
-    
-    // Use window.history.pushState as a workaround
-    window.history.pushState(null, '', newUrl)
-    
-    // Trigger a manual re-fetch
-    fetchLogsWithParams(current)
-  }
+    const queryString = newSearchParams.toString()
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+  }, [searchParams, router, pathname])
 
-  // Fetch with specific params
-  const fetchLogsWithParams = async (params) => {
+  // Fetch logs with filters
+  const fetchLogs = useCallback(async () => {
     setLoading(true)
     try {
-      const currentSearch = params.get('search') || ''
-      const currentSort = params.get('sort') || ''
-      const currentAction = params.get('action') || ''
-      const currentModule = params.get('module') || ''
-      const currentDateFrom = params.get('dateFrom') || ''
-      const currentDateTo = params.get('dateTo') || ''
-
       console.log('Fetching logs with params:', {
-        search: currentSearch,
-        sort: currentSort,
-        action: currentAction,
-        module: currentModule,
-        dateFrom: currentDateFrom,
-        dateTo: currentDateTo
+        search: urlSearch,
+        sort: urlSort,
+        action: urlAction,
+        module: urlModule,
+        dateFrom: urlDateFrom,
+        dateTo: urlDateTo
       })
 
       const res = await axios.get('/api/audit')
       let fetchedLogs = res.data
 
       // Apply search filter (Module or Record ID only)
-      if (currentSearch) {
-        const searchLower = currentSearch.toLowerCase()
+      if (urlSearch) {
+        const searchLower = urlSearch.toLowerCase()
         fetchedLogs = fetchedLogs.filter((log) =>
           log.entityType?.toLowerCase().includes(searchLower) ||
           log.entityId?.toLowerCase().includes(searchLower)
@@ -99,18 +85,18 @@ export default function AuditLogsPage() {
       }
 
       // Apply action filter
-      if (currentAction) {
-        fetchedLogs = fetchedLogs.filter((log) => log.action === currentAction)
+      if (urlAction) {
+        fetchedLogs = fetchedLogs.filter((log) => log.action === urlAction)
       }
 
       // Apply module filter
-      if (currentModule) {
-        fetchedLogs = fetchedLogs.filter((log) => log.entityType === currentModule)
+      if (urlModule) {
+        fetchedLogs = fetchedLogs.filter((log) => log.entityType === urlModule)
       }
 
       // Apply date range filter
-      if (currentDateFrom) {
-        const fromDate = new Date(currentDateFrom)
+      if (urlDateFrom) {
+        const fromDate = new Date(urlDateFrom)
         fromDate.setHours(0, 0, 0, 0)
         fetchedLogs = fetchedLogs.filter((log) => {
           if (!log.timestamp) return false
@@ -119,8 +105,8 @@ export default function AuditLogsPage() {
         })
       }
 
-      if (currentDateTo) {
-        const toDate = new Date(currentDateTo)
+      if (urlDateTo) {
+        const toDate = new Date(urlDateTo)
         toDate.setHours(23, 59, 59, 999)
         fetchedLogs = fetchedLogs.filter((log) => {
           if (!log.timestamp) return false
@@ -130,17 +116,17 @@ export default function AuditLogsPage() {
       }
 
       // Apply sort
-      if (currentSort === 'module-asc') {
+      if (urlSort === 'module-asc') {
         fetchedLogs.sort((a, b) => (a.entityType || '').localeCompare(b.entityType || ''))
-      } else if (currentSort === 'module-desc') {
+      } else if (urlSort === 'module-desc') {
         fetchedLogs.sort((a, b) => (b.entityType || '').localeCompare(a.entityType || ''))
-      } else if (currentSort === 'date-asc') {
+      } else if (urlSort === 'date-asc') {
         fetchedLogs.sort((a, b) => {
           const aTime = a.timestamp?.seconds || 0
           const bTime = b.timestamp?.seconds || 0
           return aTime - bTime
         })
-      } else if (currentSort === 'date-desc') {
+      } else if (urlSort === 'date-desc') {
         fetchedLogs.sort((a, b) => {
           const aTime = a.timestamp?.seconds || 0
           const bTime = b.timestamp?.seconds || 0
@@ -154,14 +140,11 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [urlSearch, urlSort, urlAction, urlModule, urlDateFrom, urlDateTo, urlPage, urlRowsPerPage])
 
-  // Initial fetch on mount
   useEffect(() => {
-    if (mounted) {
-      fetchLogsWithParams(searchParams)
-    }
-  }, [mounted])
+    fetchLogs()
+  }, [fetchLogs])
 
   // Sync search state with URL
   useEffect(() => {
@@ -176,7 +159,7 @@ export default function AuditLogsPage() {
   // Handle search submit
   const handleSearchSubmit = () => {
     console.log('Search submit:', search.trim())
-    updateUrlParams({ search: search.trim() })
+    updateUrlParams({ search: search.trim(), page: '0' })
   }
 
   // Handle search on Enter key
@@ -201,9 +184,22 @@ export default function AuditLogsPage() {
       action: filters.action,
       module: filters.module,
       dateFrom: filters.dateFrom,
-      dateTo: filters.dateTo
+      dateTo: filters.dateTo,
+      page: '0'
     })
     setIsFilterDialogOpen(false)
+  }
+
+  // Handle pagination
+  const handleChangePage = (event, newPage) => {
+    updateUrlParams({ page: String(newPage) })
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    updateUrlParams({
+      rowsPerPage: event.target.value,
+      page: '0'
+    })
   }
 
   // Count active filters
@@ -221,13 +217,13 @@ export default function AuditLogsPage() {
           setSearch={setSearch}
           onSearchSubmit={handleSearchSubmit}
           actionFilter={urlAction}
-          setActionFilter={(value) => updateUrlParams({ action: value })}
+          setActionFilter={(value) => updateUrlParams({ action: value, page: '0' })}
           moduleFilter={urlModule}
-          setModuleFilter={(value) => updateUrlParams({ module: value })}
+          setModuleFilter={(value) => updateUrlParams({ module: value, page: '0' })}
           sortOrder={sortOrder}
           setSortOrder={(value) => {
             setSortOrder(value)
-            updateUrlParams({ sort: value || '' })
+            updateUrlParams({ sort: value || '', page: '0' })
           }}
         />
       </>
@@ -256,6 +252,10 @@ export default function AuditLogsPage() {
           <AuditLogsTable
             logs={logs}
             loading={loading}
+            page={urlPage}
+            rowsPerPage={urlRowsPerPage}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </Box>
       </Box>
