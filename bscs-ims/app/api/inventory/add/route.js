@@ -56,6 +56,8 @@ export async function POST(request) {
     let oldInventoryData = null
     let isNewRecord = false
     let newInventoryData = null
+    let productName = ''
+    let locationName = ''
     await runTransaction(db, async (transaction) => {
       const productRef = doc(db, 'products', productId)
       const locationRef = doc(db, 'locations', locationId)
@@ -80,6 +82,10 @@ export async function POST(request) {
       if (!locationSnap.exists()) {
         throw new Error('Location not found')
       }
+
+      // Store names for audit log
+      productName = productSnap.data().name
+      locationName = locationSnap.data().name
 
       if (inventorySnap.exists()) {
         // Update existing record
@@ -108,15 +114,15 @@ export async function POST(request) {
         }
 
         transaction.set(inventoryRef, newInventoryData)
-      }    
+      }
     })
 
     await logAudit({
           action: isNewRecord ? 'CREATE' : 'UPDATE',
           entityType: 'inventory',
           entityId: inventoryId,
-          oldData: isNewRecord ? null : oldInventoryData,
-          newData: isNewRecord ? newInventoryData : { quantity: finalQuantity },
+          oldData: isNewRecord ? null : { ...oldInventoryData, productName, locationName },
+          newData: isNewRecord ? { ...newInventoryData, productName, locationName } : { quantity: finalQuantity, productName, locationName },
           performedById: session.uid,
         })
 

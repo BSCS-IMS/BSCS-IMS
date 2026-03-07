@@ -122,13 +122,23 @@ export async function DELETE(req) {
     }
 
     const oldData = snapshot.data()
+
+    // Fetch product and location names for audit log
+    const [productSnap, locationSnap] = await Promise.all([
+      getDoc(doc(db, 'products', productId)),
+      getDoc(doc(db, 'locations', locationId))
+    ])
+
+    const productName = productSnap.exists() ? productSnap.data().name : 'Unknown Product'
+    const locationName = locationSnap.exists() ? locationSnap.data().name : 'Unknown Location'
+
     await deleteDoc(inventoryRef)
 
     await logAudit({
       action: 'DELETE',
       entityType: 'inventory',
       entityId: inventoryId,
-      oldData,
+      oldData: { ...oldData, productName, locationName },
       newData: null,
       performedById: session.uid,
     })

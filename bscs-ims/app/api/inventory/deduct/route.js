@@ -49,13 +49,17 @@ export async function POST(request) {
     const inventoryId = `${productId}_${locationId}`
     let finalQuantity = 0
     let oldInventoryData = null
+    let productName = ''
+    let locationName = ''
 
     await runTransaction(db, async (transaction) => {
       const productRef = doc(db, 'products', productId)
+      const locationRef = doc(db, 'locations', locationId)
       const inventoryRef = doc(db, 'inventory', inventoryId)
 
-      const [productSnap, inventorySnap] = await Promise.all([
+      const [productSnap, locationSnap, inventorySnap] = await Promise.all([
         transaction.get(productRef),
+        transaction.get(locationRef),
         transaction.get(inventoryRef),
       ])
 
@@ -67,10 +71,19 @@ export async function POST(request) {
         throw new Error('Product is inactive')
       }
 
+      // Validate location
+      if (!locationSnap.exists()) {
+        throw new Error('Location not found')
+      }
+
       // Validate inventory
       if (!inventorySnap.exists()) {
         throw new Error('Stock not found')
       }
+
+      // Store names for audit log
+      productName = productSnap.data().name
+      locationName = locationSnap.data().name
 
       const currentQty = inventorySnap.data().quantity ?? 0
       oldInventoryData = inventorySnap.data()
@@ -92,8 +105,8 @@ export async function POST(request) {
       action: 'UPDATE',
       entityType: 'inventory',
       entityId: inventoryId,
-      oldData: oldInventoryData,
-      newData: { quantity: finalQuantity },
+      oldData: { ...oldInventoryData, productName, locationName },
+      newData: { quantity: finalQuantity, productName, locationName },
       performedById: session.uid,
     })
 
