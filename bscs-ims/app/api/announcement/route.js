@@ -127,13 +127,13 @@ export async function POST(req) {
     const body = await req.json();
     const { title, content, isPublished = false, publishAt } = body;
 
-    if (!title?.trim() || !content?.trim()) {
-      return NextResponse.json({ message: "Title and content are required" }, { status: 400 });
+    if (!title?.trim()) {
+      return NextResponse.json({ message: "Title is required" }, { status: 400 });
     }
 
     const announcementData = {
       title: title.trim(),
-      content: content.trim(),
+      content: content?.trim() || '',
       isPublished,
       publishAt: isPublished ? serverTimestamp() : publishAt ? new Date(publishAt) : null,
       createdAt: serverTimestamp(),
@@ -176,8 +176,8 @@ export async function PUT(req) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    if (!title?.trim() || !content?.trim()) {
-      return NextResponse.json({ message: "Title and content are required" }, { status: 400 });
+    if (!title?.trim()) {
+      return NextResponse.json({ message: "Title is required" }, { status: 400 });
     }
 
     // Check announcement exists
@@ -191,7 +191,7 @@ export async function PUT(req) {
 
     const updateData = {
       title: title.trim(),
-      content: content.trim(),
+      content: content?.trim() || '',
       isPublished,
       publishAt: isPublished ? existing.publishAt ?? serverTimestamp() : publishAt ? new Date(publishAt) : null,
       updatedAt: serverTimestamp(),

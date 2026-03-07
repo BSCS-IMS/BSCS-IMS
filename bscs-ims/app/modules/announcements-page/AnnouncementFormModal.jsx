@@ -39,9 +39,8 @@ export default function AnnouncementFormModal({ announcement = null, onSuccess, 
 
   const isValid = useMemo(() => {
     if (!form.title.trim()) return false
-    if (!form.content.trim()) return false
     return true
-  }, [form.title, form.content])
+  }, [form.title])
 
   async function handleSubmit() {
     if (loading) return
@@ -114,7 +113,7 @@ export default function AnnouncementFormModal({ announcement = null, onSuccess, 
 
           <div className='space-y-1.5'>
             <Label htmlFor='content' className='text-xs font-medium text-[#374151]'>
-              Content <span className='text-red-500'>*</span>
+              Content
             </Label>
             <Textarea
               id='content'
