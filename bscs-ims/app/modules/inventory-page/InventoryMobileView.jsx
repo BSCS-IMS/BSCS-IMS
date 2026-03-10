@@ -28,7 +28,7 @@ function SkeletonCard() {
   )
 }
 
-export default function InventoryMobileView({ rows, loading, onEdit, onDelete }) {
+export default function InventoryMobileView({ rows, loading, onEdit, onDelete, onCreate }) {
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
@@ -59,7 +59,10 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
         </div>
 
         {/* Floating Add Button */}
-        <Button className='fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#1F384C] text-white shadow-lg flex items-center justify-center hover:bg-[#162A3F] active:scale-95 p-0'>
+        <Button
+          onClick={onCreate}
+          className='fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#1F384C] text-white shadow-lg flex items-center justify-center hover:bg-[#162A3F] active:scale-95 p-0'
+        >
           <Plus size={24} />
         </Button>
 
@@ -169,66 +172,73 @@ export default function InventoryMobileView({ rows, loading, onEdit, onDelete })
               No inventory found
             </div>
           ) : (
-          filteredRows.map((row) => {
-            const isOpen = expandedId === row.id
-            const filteredItems = (row.items ?? []).filter((item) => Number(item.qty) > 0)
-            const itemCount = filteredItems.length
-            const totalQty = filteredItems.reduce((sum, item) => sum + Number(item.qty || 0), 0)
-            return (
-              <div key={row.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
-                <Button
-                  variant='ghost'
-                  onClick={() => toggleExpand(row.id)}
-                  className='w-full flex items-center justify-between px-4 py-3 text-left h-auto rounded-none hover:bg-transparent'
-                >
-                  <div className='text-left'>
-                    <span className='font-semibold text-[#1F384C]'>{row.location}</span>
-                    <p className='text-xs text-[#6b7280] mt-0.5'>{itemCount} product{itemCount !== 1 ? 's' : ''} · {totalQty} total qty</p>
-                  </div>
-                  {isOpen ? (
-                    <ChevronUp size={18} className='text-[#6b7280] shrink-0' />
-                  ) : (
-                    <ChevronDown size={18} className='text-[#6b7280] shrink-0' />
-                  )}
-                </Button>
+            filteredRows.map((row) => {
+              const isOpen = expandedId === row.id
+              const filteredItems = (row.items ?? []).filter((item) => Number(item.qty) > 0)
+              const itemCount = filteredItems.length
+              const totalQty = filteredItems.reduce((sum, item) => sum + Number(item.qty || 0), 0)
+              return (
+                <div key={row.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
+                  <Button
+                    variant='ghost'
+                    onClick={() => toggleExpand(row.id)}
+                    className='w-full flex items-center justify-between px-4 py-3 text-left h-auto rounded-none hover:bg-transparent'
+                  >
+                    <div className='text-left'>
+                      <span className='font-semibold text-[#1F384C]'>{row.location}</span>
+                      <p className='text-xs text-[#6b7280] mt-0.5'>
+                        {itemCount} product{itemCount !== 1 ? 's' : ''} · {totalQty} total qty
+                      </p>
+                    </div>
+                    {isOpen ? (
+                      <ChevronUp size={18} className='text-[#6b7280] shrink-0' />
+                    ) : (
+                      <ChevronDown size={18} className='text-[#6b7280] shrink-0' />
+                    )}
+                  </Button>
 
-                {isOpen && (
-                  <div className='px-4 pb-4 space-y-3 text-sm border-t border-[#e5e7eb]'>
-                    <div className='pt-3'>
-                      <span className='text-[#6b7280] text-xs'>Products in this location</span>
-                      <div className='mt-2 space-y-2'>
-                        {filteredItems.map((item, idx) => (
-                          <div key={item.id || idx} className='flex justify-between items-center'>
-                            <span className='font-medium text-[#1F384C]'>{item.productName}</span>
-                            <span className='text-[#6b7280]'>{Number(item.qty).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-                          </div>
-                        ))}
+                  {isOpen && (
+                    <div className='px-4 pb-4 space-y-3 text-sm border-t border-[#e5e7eb]'>
+                      <div className='pt-3'>
+                        <span className='text-[#6b7280] text-xs'>Products in this location</span>
+                        <div className='mt-2 space-y-2'>
+                          {filteredItems.map((item, idx) => (
+                            <div key={item.id || idx} className='flex justify-between items-center'>
+                              <span className='font-medium text-[#1F384C]'>{item.productName}</span>
+                              <span className='text-[#6b7280]'>
+                                {Number(item.qty).toLocaleString('en-US', {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 2
+                                })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className='flex gap-2 pt-1'>
+                        <Button
+                          variant='outline'
+                          onClick={() => onEdit(row)}
+                          className='flex-1 border-[#e5e7eb] text-[#1F384C] hover:bg-[#f3f4f6]'
+                        >
+                          <Edit2 size={15} className='mr-1.5' />
+                          Edit
+                        </Button>
+                        <Button
+                          variant='outline'
+                          onClick={() => onDelete(row)}
+                          className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
+                        >
+                          <Trash2 size={15} className='mr-1.5' />
+                          Clear
+                        </Button>
                       </div>
                     </div>
-
-                    <div className='flex gap-2 pt-1'>
-                      <Button
-                        variant='outline'
-                        onClick={() => onEdit(row)}
-                        className='flex-1 border-[#e5e7eb] text-[#1F384C] hover:bg-[#f3f4f6]'
-                      >
-                        <Edit2 size={15} className='mr-1.5' />
-                        Edit
-                      </Button>
-                      <Button
-                        variant='outline'
-                        onClick={() => onDelete(row)}
-                        className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
-                      >
-                        <Trash2 size={15} className='mr-1.5' />
-                        Clear
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })
+                  )}
+                </div>
+              )
+            })
           )}
         </div>
       </div>

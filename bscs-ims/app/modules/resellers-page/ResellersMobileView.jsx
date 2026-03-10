@@ -251,7 +251,7 @@ export default function ResellersMobileView({ resellers, onEdit, onDelete, onCre
                       </Button>
                       <Button
                         variant='outline'
-                        onClick={() => onDelete(reseller.id)}
+                        onClick={() => onDelete(reseller)}
                         className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
                       >
                         <Trash2 size={15} className='mr-1.5' />

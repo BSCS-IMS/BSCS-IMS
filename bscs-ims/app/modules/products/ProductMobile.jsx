@@ -242,7 +242,7 @@ export default function ProductMobile({
                         </Button>
                         <Button
                           variant='outline'
-                          onClick={() => onDelete(product.id)}
+                          onClick={() => onDelete(product)}
                           className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
                         >
                           <Trash2 size={15} className='mr-1.5' />

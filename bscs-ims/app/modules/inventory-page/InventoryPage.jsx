@@ -40,28 +40,33 @@ export default function InventoryPage() {
   const [sortOrder, setSortOrder] = useState(urlSort || null)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const [rows, setRows] = useState([])
-  const [allRows, setAllRows] = useState([])  // unfiltered, for filter dialog options
+  const [allRows, setAllRows] = useState([]) // unfiltered, for filter dialog options
   const [loading, setLoading] = useState(true)
   const [locations, setLocations] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Update URL params
-  const updateUrlParams = useCallback((params) => {
-    const newSearchParams = new URLSearchParams(searchParams.toString())
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newSearchParams.set(key, value)
-      } else {
-        newSearchParams.delete(key)
-      }
-    })
-    const queryString = newSearchParams.toString()
-    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
-  }, [searchParams, router, pathname])
+  const updateUrlParams = useCallback(
+    (params) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newSearchParams.set(key, value)
+        } else {
+          newSearchParams.delete(key)
+        }
+      })
+      const queryString = newSearchParams.toString()
+      router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+    },
+    [searchParams, router, pathname]
+  )
 
   // Fetch inventory — backend handles filtering
   // Helper to group raw inventory data into rows
@@ -76,7 +81,7 @@ export default function InventoryPage() {
           id: loc.id,
           locationId: loc.id,
           location: loc.name,
-          items: [],
+          items: []
         }
       })
     }
@@ -89,14 +94,14 @@ export default function InventoryPage() {
           id: item.locationId,
           locationId: item.locationId,
           location: item.locationName,
-          items: [],
+          items: []
         }
       }
       grouped[item.locationId].items.push({
         id: item.id,
         productId: item.productId,
         productName: item.productName,
-        qty: item.quantity,
+        qty: item.quantity
       })
     })
 
@@ -159,8 +164,12 @@ export default function InventoryPage() {
   }, [])
 
   // Sync search + sort state with URL
-  useEffect(() => { setSearch(urlSearch) }, [urlSearch])
-  useEffect(() => { setSortOrder(urlSort || null) }, [urlSort])
+  useEffect(() => {
+    setSearch(urlSearch)
+  }, [urlSearch])
+  useEffect(() => {
+    setSortOrder(urlSort || null)
+  }, [urlSort])
 
   const handleSearchSubmit = () => {
     updateUrlParams({ search: search.trim(), page: '0' })
@@ -200,7 +209,7 @@ export default function InventoryPage() {
     setEditingEntry({
       locationId: row.locationId,
       locationName: row.location,
-      items: row.items.map((i) => ({ productId: i.productId, qty: i.qty })),
+      items: row.items.map((i) => ({ productId: i.productId, qty: i.qty }))
     })
     setModalOpen(true)
   }
@@ -260,20 +269,18 @@ export default function InventoryPage() {
   if (!isDesktop) {
     return (
       <>
-        <InventoryMobileView rows={rows} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+        <InventoryMobileView
+          rows={rows}
+          onCreate={openCreateModal}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
         {modalOpen && (
-          <InventoryLocationModal
-            onClose={closeModal}
-            entry={editingEntry}
-            onConfirm={handleModalConfirm}
-          />
+          <InventoryLocationModal onClose={closeModal} entry={editingEntry} onConfirm={handleModalConfirm} />
         )}
         {deleteTarget && (
-          <DeleteInventoryModal
-            onClose={closeDeleteModal}
-            location={deleteTarget}
-            onSuccess={handleDeleteSuccess}
-          />
+          <DeleteInventoryModal onClose={closeDeleteModal} location={deleteTarget} onSuccess={handleDeleteSuccess} />
         )}
       </>
     )
@@ -283,12 +290,12 @@ export default function InventoryPage() {
     <>
       <Box sx={{ minHeight: '100vh', py: 6 }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={5}>
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#1F384C' }}>
+          <Stack direction='row' justifyContent='space-between' alignItems='center' mb={5}>
+            <Typography variant='h4' fontWeight={700} sx={{ color: '#1F384C' }}>
               Inventory Locations
             </Typography>
             <Button
-              variant="text"
+              variant='text'
               onClick={openCreateModal}
               sx={{
                 color: '#1F384C',
@@ -297,7 +304,7 @@ export default function InventoryPage() {
                 textTransform: 'none',
                 px: 1.5,
                 py: 1,
-                '&:hover': { bgcolor: '#f3f4f6' },
+                '&:hover': { bgcolor: '#f3f4f6' }
               }}
             >
               <AddIcon sx={{ fontSize: 24 }} />
@@ -348,20 +355,10 @@ export default function InventoryPage() {
         rows={allRows}
       />
 
-      {modalOpen && (
-        <InventoryLocationModal
-          onClose={closeModal}
-          entry={editingEntry}
-          onConfirm={handleModalConfirm}
-        />
-      )}
+      {modalOpen && <InventoryLocationModal onClose={closeModal} entry={editingEntry} onConfirm={handleModalConfirm} />}
 
       {deleteTarget && (
-        <DeleteInventoryModal
-          onClose={closeDeleteModal}
-          location={deleteTarget}
-          onSuccess={handleDeleteSuccess}
-        />
+        <DeleteInventoryModal onClose={closeDeleteModal} location={deleteTarget} onSuccess={handleDeleteSuccess} />
       )}
     </>
   )
