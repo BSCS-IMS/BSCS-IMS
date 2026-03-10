@@ -113,6 +113,18 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 })
     }
 
+    // Check for duplicate product name (excluding current product)
+    const normalizedName = name.trim()
+    const nameQuery = query(collection(db, 'products'), where('name', '==', normalizedName))
+    const existingNames = await getDocs(nameQuery)
+    const hasDuplicate = existingNames.docs.some(doc => doc.id !== id)
+    if (hasDuplicate) {
+      return NextResponse.json(
+        { success: false, error: `Product name "${normalizedName}" already exists` },
+        { status: 409 }
+      )
+    }
+
     let imageUrl = existingProduct.imageUrl ?? null
     if (removeImage) {
       await deleteImage(existingProduct.imageUrl)

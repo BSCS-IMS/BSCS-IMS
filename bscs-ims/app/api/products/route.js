@@ -143,8 +143,19 @@ export async function POST(request) {
     const existingSKU = await getDocs(skuQuery)
     if (!existingSKU.empty) {
       return NextResponse.json(
-        { success: false, error: `SKU "${sku}" already exists` },
-        { status: 400 }
+        { success: false, error: `SKU "${sku.trim()}" already exists` },
+        { status: 409 }
+      )
+    }
+
+    // Product name uniqueness check
+    const normalizedName = name.trim()
+    const nameQuery = query(collection(db, 'products'), where('name', '==', normalizedName))
+    const existingName = await getDocs(nameQuery)
+    if (!existingName.empty) {
+      return NextResponse.json(
+        { success: false, error: `Product name "${normalizedName}" already exists` },
+        { status: 409 }
       )
     }
 

@@ -37,7 +37,7 @@ export async function PUT(req, { params }) {
       )
     }
 
-    const normalizedName = name.trim().charAt(0).toUpperCase() + name.trim().slice(1)
+    const trimmedName = name.trim()
 
     // Check location exists
     const locationRef = doc(db, 'locations', id)
@@ -48,19 +48,21 @@ export async function PUT(req, { params }) {
 
     const oldData = locationSnap.data()
 
-    // Check name uniqueness (excluding current doc)
-    const q = query(collection(db, 'locations'), where('name', '==', normalizedName))
-    const existing = await getDocs(q)
-    const conflict = existing.docs.find((d) => d.id !== id)
+    // Check name uniqueness (case-insensitive, excluding current doc)
+    const allLocationsSnapshot = await getDocs(collection(db, 'locations'))
+    const conflict = allLocationsSnapshot.docs.find(
+      doc => doc.id !== id && doc.data().name?.toLowerCase() === trimmedName.toLowerCase()
+    )
+
     if (conflict) {
       return NextResponse.json(
-        { success: false, error: `Location "${normalizedName}" already exists` },
+        { success: false, error: `Location "${trimmedName}" already exists` },
         { status: 409 }
       )
     }
 
     const updateData = {
-      name: normalizedName,
+      name: trimmedName,
       updatedAt: serverTimestamp(),
       updatedByEmail: session.email,
       updatedByUid: session.uid,
@@ -78,7 +80,7 @@ export async function PUT(req, { params }) {
     })
 
 
-    return NextResponse.json({ success: true, id, name: normalizedName })
+    return NextResponse.json({ success: true, id, name: trimmedName })
   } catch (error) {
     console.error('PUT /location/[id] error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })

@@ -7,7 +7,6 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowUpDown,
-  Calendar,
   TrendingUp,
   TrendingDown
 } from 'lucide-react'

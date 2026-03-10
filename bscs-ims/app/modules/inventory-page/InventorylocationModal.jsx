@@ -129,17 +129,8 @@ export default function InventoryLocationModal({ onClose, entry = null, onConfir
           locationId = locationRes.data.id
         } catch (err) {
           if (err.response?.status === 409) {
-            const listRes = await axios.get('/api/location')
-            if (!listRes.data?.success) {
-              toast.error('Failed to fetch existing locations')
-              return
-            }
-            const match = listRes.data.locations.find((l) => l.name.toLowerCase() === locationName.trim().toLowerCase())
-            if (!match) {
-              toast.error('Location already exists but could not be found')
-              return
-            }
-            locationId = match.id
+            toast.error(err.response?.data?.error || 'Location name already exists')
+            return
           } else {
             throw err
           }

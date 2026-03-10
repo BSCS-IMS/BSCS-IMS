@@ -60,21 +60,23 @@ export async function POST(req) {
       )
     }
 
-    // Normalize — capitalize first letter only, preserve the rest
-    const normalizedName = name.trim().charAt(0).toUpperCase() + name.trim().slice(1)
+    const trimmedName = name.trim()
 
-    // Check uniqueness
-    const q = query(collection(db, 'locations'), where('name', '==', normalizedName))
-    const existing = await getDocs(q)
-    if (!existing.empty) {
+    // Check uniqueness (case-insensitive)
+    const allLocationsSnapshot = await getDocs(collection(db, 'locations'))
+    const existingLocation = allLocationsSnapshot.docs.find(
+      doc => doc.data().name?.toLowerCase() === trimmedName.toLowerCase()
+    )
+
+    if (existingLocation) {
       return NextResponse.json(
-        { success: false, error: `Location "${normalizedName}" already exists` },
+        { success: false, error: `Location "${trimmedName}" already exists` },
         { status: 409 }
       )
     }
 
     const locationData = {
-      name: normalizedName,
+      name: trimmedName,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       createdByEmail: session.email,
@@ -96,7 +98,7 @@ export async function POST(req) {
       success: true,
       message: 'Location created successfully',
       id: docRef.id,
-      name: normalizedName,
+      name: trimmedName,
     }, { status: 201 })
 
   } catch (error) {

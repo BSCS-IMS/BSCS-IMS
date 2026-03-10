@@ -1,7 +1,7 @@
 export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
-import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { admin } from '@/app/lib/firebaseAdmin'
 import { supabase } from '@/app/lib/supabaseClient'
@@ -141,6 +141,21 @@ export async function PUT(req, context) {
 			return NextResponse.json(
 				{ success: false, error: 'Business name is required' },
 				{ status: 400 }
+			)
+		}
+
+		// Check for duplicate business name (excluding current reseller)
+		const normalizedBusinessName = businessName.trim()
+		const duplicateQuery = query(
+			collection(db, 'resellers'),
+			where('businessName', '==', normalizedBusinessName)
+		)
+		const existingResellers = await getDocs(duplicateQuery)
+		const hasDuplicate = existingResellers.docs.some(doc => doc.id !== resellerId)
+		if (hasDuplicate) {
+			return NextResponse.json(
+				{ success: false, error: `Reseller with business name "${normalizedBusinessName}" already exists` },
+				{ status: 409 }
 			)
 		}
 
