@@ -62,20 +62,23 @@ export default function ProductPage() {
   }, [])
 
   // Update URL params
-  const updateUrlParams = useCallback((params) => {
-    const newSearchParams = new URLSearchParams(searchParams.toString())
+  const updateUrlParams = useCallback(
+    (params) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString())
 
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        newSearchParams.set(key, value)
-      } else {
-        newSearchParams.delete(key)
-      }
-    })
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) {
+          newSearchParams.set(key, value)
+        } else {
+          newSearchParams.delete(key)
+        }
+      })
 
-    const queryString = newSearchParams.toString()
-    router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
-  }, [searchParams, router, pathname])
+      const queryString = newSearchParams.toString()
+      router.push(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+    },
+    [searchParams, router, pathname]
+  )
 
   // Fetch products with filters
   const fetchProducts = useCallback(async () => {
@@ -306,6 +309,10 @@ export default function ProductPage() {
           productModalInitialValues={productModalInitialValues}
           onConfirm={handleConfirm}
           loading={loading}
+          onSearchSubmit={handleSearchSubmit}
+          onSortSelect={handleSortSelect}
+          onFilterApply={handleFilterApply}
+          activeStatus={urlStatus}
         />
         {isInventoryModalOpen && inventoryModalProduct && (
           <InventoryAdjustModal
@@ -316,11 +323,7 @@ export default function ProductPage() {
           />
         )}
         {isDeleteModalOpen && deleteModalProduct && (
-          <DeleteProductModal
-            onClose={closeDeleteModal}
-            product={deleteModalProduct}
-            onSuccess={refreshData}
-          />
+          <DeleteProductModal onClose={closeDeleteModal} product={deleteModalProduct} onSuccess={refreshData} />
         )}
       </>
     )
@@ -420,11 +423,7 @@ export default function ProductPage() {
       )}
 
       {isDeleteModalOpen && deleteModalProduct && (
-        <DeleteProductModal
-          onClose={closeDeleteModal}
-          product={deleteModalProduct}
-          onSuccess={refreshData}
-        />
+        <DeleteProductModal onClose={closeDeleteModal} product={deleteModalProduct} onSuccess={refreshData} />
       )}
     </>
   )

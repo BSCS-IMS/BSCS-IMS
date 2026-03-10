@@ -45,7 +45,11 @@ export default function ProductMobile({
   productModalMode,
   productModalInitialValues,
   onConfirm,
-  loading = false
+  loading = false,
+  activeStatus = '',
+  onSearchSubmit, // ✅ add
+  onSortSelect, // ✅ add
+  onFilterApply
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -82,6 +86,7 @@ export default function ProductMobile({
             />
             <Button
               variant='ghost'
+              onClick={() => onSearchSubmit()}
               className='absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-auto w-auto text-white bg-[#1F384C] rounded hover:bg-[#162A3F]'
             >
               <Search size={14} />
@@ -123,13 +128,35 @@ export default function ProductMobile({
             <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
               <p className='text-xs text-[#6b7280] mb-2'>Filter by status</p>
               <div className='flex gap-2'>
-                <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
+                <Button
+                  onClick={() => onFilterApply({ status: '' })}
+                  variant='outline'
+                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] ${
+                    activeStatus === '' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
+                  }`}
+                >
                   All
                 </Button>
-                <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
+
+                <Button
+                  onClick={() => onFilterApply({ status: 'active' })}
+                  variant='outline'
+                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] ${
+                    activeStatus === 'active' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
+                  }`}
+                >
                   Available
                 </Button>
-                <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
+
+                <Button
+                  onClick={() => onFilterApply({ status: 'inactive' })}
+                  variant='outline'
+                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] ${
+                    activeStatus === 'inactive'
+                      ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
+                      : 'hover:bg-[#f3f4f6]'
+                  }`}
+                >
                   Not Available
                 </Button>
               </div>
@@ -143,7 +170,7 @@ export default function ProductMobile({
               <div className='flex gap-2'>
                 <Button
                   variant='outline'
-                  onClick={() => setSortOrder('asc')}
+                  onClick={() => onSortSelect('asc')}
                   className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
                     sortOrder === 'asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
                   }`}
@@ -152,7 +179,7 @@ export default function ProductMobile({
                 </Button>
                 <Button
                   variant='outline'
-                  onClick={() => setSortOrder('desc')}
+                  onClick={() => onSortSelect('desc')}
                   className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
                     sortOrder === 'desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
                   }`}
@@ -178,82 +205,85 @@ export default function ProductMobile({
                 No products found
               </div>
             ) : (
-            filteredProducts.map((product) => {
-              const isOpen = expandedId === product.id
-              return (
-                <div key={product.id} className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'>
-                  <Button
-                    variant='ghost'
-                    onClick={() => toggleExpand(product.id)}
-                    className='w-full flex items-center justify-between px-4 py-3 text-left h-auto rounded-none hover:bg-transparent'
+              filteredProducts.map((product) => {
+                const isOpen = expandedId === product.id
+                return (
+                  <div
+                    key={product.id}
+                    className='bg-white rounded-lg shadow-sm border border-[#e5e7eb] overflow-hidden'
                   >
-                    <div className='text-left'>
-                      <span className='font-semibold text-[#1F384C]'>{product.name}</span>
-                      <p className='text-xs text-[#6b7280] mt-0.5'>{product.sku}</p>
-                    </div>
-                    {isOpen ? (
-                      <ChevronUp size={18} className='text-[#6b7280] shrink-0' />
-                    ) : (
-                      <ChevronDown size={18} className='text-[#6b7280] shrink-0' />
-                    )}
-                  </Button>
-
-                  {isOpen && (
-                    <div className='px-4 pb-4 space-y-3 text-sm border-t border-[#e5e7eb]'>
-                      <div className='flex items-center gap-3 pt-3'>
-                        <img src={product.image} alt='' className='w-12 h-12 rounded-md object-cover' />
-                        <div>
-                          <div className='font-medium text-[#1F384C]'>{product.name}</div>
-                          <div className='text-xs text-[#6b7280]'>SKU: {product.sku}</div>
-                        </div>
+                    <Button
+                      variant='ghost'
+                      onClick={() => toggleExpand(product.id)}
+                      className='w-full flex items-center justify-between px-4 py-3 text-left h-auto rounded-none hover:bg-transparent'
+                    >
+                      <div className='text-left'>
+                        <span className='font-semibold text-[#1F384C]'>{product.name}</span>
+                        <p className='text-xs text-[#6b7280] mt-0.5'>{product.sku}</p>
                       </div>
+                      {isOpen ? (
+                        <ChevronUp size={18} className='text-[#6b7280] shrink-0' />
+                      ) : (
+                        <ChevronDown size={18} className='text-[#6b7280] shrink-0' />
+                      )}
+                    </Button>
 
-                      <div className='grid grid-cols-2 gap-y-2.5'>
-                        <div>
-                          <span className='text-[#6b7280]'>Unit</span>
-                          <p className='font-medium text-[#1F384C]'>{product.priceUnit}</p>
+                    {isOpen && (
+                      <div className='px-4 pb-4 space-y-3 text-sm border-t border-[#e5e7eb]'>
+                        <div className='flex items-center gap-3 pt-3'>
+                          <img src={product.image} alt='' className='w-12 h-12 rounded-md object-cover' />
+                          <div>
+                            <div className='font-medium text-[#1F384C]'>{product.name}</div>
+                            <div className='text-xs text-[#6b7280]'>SKU: {product.sku}</div>
+                          </div>
                         </div>
-                        <div>
-                          <span className='text-[#6b7280]'>Price</span>
-                          <p className='font-medium text-[#374151]'>₱{product.price}</p>
+
+                        <div className='grid grid-cols-2 gap-y-2.5'>
+                          <div>
+                            <span className='text-[#6b7280]'>Unit</span>
+                            <p className='font-medium text-[#1F384C]'>{product.priceUnit}</p>
+                          </div>
+                          <div>
+                            <span className='text-[#6b7280]'>Price</span>
+                            <p className='font-medium text-[#374151]'>₱{product.price}</p>
+                          </div>
+                          <div>
+                            <span className='text-[#6b7280]'>Status</span>
+                            <p
+                              className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                product.status === 'Active'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                            >
+                              {product.status}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <span className='text-[#6b7280]'>Status</span>
-                          <p
-                            className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-medium ${
-                              product.status === 'Active'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                            }`}
+
+                        <div className='flex gap-2 pt-1'>
+                          <Button
+                            variant='outline'
+                            onClick={() => onEdit(product)}
+                            className='flex-1 border-[#e5e7eb] text-[#1F384C] hover:bg-[#f3f4f6]'
                           >
-                            {product.status}
-                          </p>
+                            <Edit2 size={15} className='mr-1.5' />
+                            Edit
+                          </Button>
+                          <Button
+                            variant='outline'
+                            onClick={() => onDelete(product)}
+                            className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
+                          >
+                            <Trash2 size={15} className='mr-1.5' />
+                            Delete
+                          </Button>
                         </div>
                       </div>
-
-                      <div className='flex gap-2 pt-1'>
-                        <Button
-                          variant='outline'
-                          onClick={() => onEdit(product)}
-                          className='flex-1 border-[#e5e7eb] text-[#1F384C] hover:bg-[#f3f4f6]'
-                        >
-                          <Edit2 size={15} className='mr-1.5' />
-                          Edit
-                        </Button>
-                        <Button
-                          variant='outline'
-                          onClick={() => onDelete(product)}
-                          className='flex-1 border-[#e5e7eb] text-[#991b1b] hover:bg-[#991b1b]/8 hover:text-[#991b1b]'
-                        >
-                          <Trash2 size={15} className='mr-1.5' />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })
+                    )}
+                  </div>
+                )
+              })
             )}
           </div>
         </div>
