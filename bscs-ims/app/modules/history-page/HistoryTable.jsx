@@ -159,7 +159,7 @@ export default function HistoryTable({ history = [], loading, page, rowsPerPage,
                   >
                     <Typography
                       variant='body2'
-                      fontWeight={500}
+                      fontWeight={700}
                       onClick={() => handleProductClick(row.productId)}
                       sx={{
                         color: '#1F384C',
@@ -176,7 +176,7 @@ export default function HistoryTable({ history = [], loading, page, rowsPerPage,
                   </Tooltip>
                   <Typography
                     variant='caption'
-                    sx={{ color: '#9ca3af', fontFamily: 'monospace', fontSize: '0.7rem', display: 'block', mt: 0.25 }}
+                    sx={{ color: '#9ca3af', fontSize: '0.7rem', display: 'block', mt: 0.25 }}
                   >
                     {row.productSku}
                   </Typography>
