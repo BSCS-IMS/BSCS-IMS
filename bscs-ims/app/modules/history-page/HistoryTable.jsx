@@ -19,10 +19,10 @@ function formatDateTime(ts) {
   if (!ts) return '—'
   const d = new Date(ts)
   return d.toLocaleString('en-US', {
-    year:   'numeric',
-    month:  'short',
-    day:    'numeric',
-    hour:   '2-digit',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
     minute: '2-digit'
   })
 }
@@ -41,7 +41,7 @@ function AdjustmentText({ value }) {
       sx={{
         fontWeight: 600,
         fontSize: '0.8125rem',
-        color: isAdd ? '#2e7d32' : '#c62828',
+        color: isAdd ? '#2e7d32' : '#c62828'
       }}
     >
       {formatAdjustment(value)}
@@ -64,7 +64,7 @@ function CategoryChip({ category }) {
         py: 0.4,
         borderRadius: '16px',
         lineHeight: 1.5,
-        whiteSpace: 'nowrap',
+        whiteSpace: 'nowrap'
       }}
     >
       {category}
@@ -80,7 +80,7 @@ const headerCellSx = {
   borderRight: '1px solid #e5e7eb',
   borderBottom: '2px solid #e5e7eb',
   boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-  whiteSpace: 'nowrap',
+  whiteSpace: 'nowrap'
 }
 
 const bodyCellSx = {
@@ -88,17 +88,10 @@ const bodyCellSx = {
   color: '#374151',
   py: 2,
   borderRight: '1px solid #e5e7eb',
-  boxShadow: 'none',
+  boxShadow: 'none'
 }
 
-export default function HistoryTable({
-  history = [],
-  loading,
-  page,
-  rowsPerPage,
-  onChangePage,
-  onChangeRowsPerPage
-}) {
+export default function HistoryTable({ history = [], loading, page, rowsPerPage, onChangePage, onChangeRowsPerPage }) {
   const router = useRouter()
   const paginated = history.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
@@ -116,10 +109,16 @@ export default function HistoryTable({
           <TableRow>
             <TableCell sx={{ ...headerCellSx, width: '18%' }}>Product</TableCell>
             <TableCell sx={{ ...headerCellSx, width: '14%' }}>Location</TableCell>
-            <TableCell sx={{ ...headerCellSx, width: '10%' }} align='center'>Adjustment</TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '10%' }} align='center'>
+              Adjustment
+            </TableCell>
             <TableCell sx={{ ...headerCellSx, width: '16%' }}>Resulting Qty</TableCell>
-            <TableCell sx={{ ...headerCellSx, width: '16%' }} align='center'>Category</TableCell>
-            <TableCell sx={{ ...headerCellSx, width: '16%', borderRight: 'none' }} align='center'>Date & Time</TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '16%' }} align='center'>
+              Category
+            </TableCell>
+            <TableCell sx={{ ...headerCellSx, width: '16%', borderRight: 'none' }} align='center'>
+              Date & Time
+            </TableCell>
           </TableRow>
         </TableHead>
 
@@ -136,7 +135,11 @@ export default function HistoryTable({
             ))
           ) : history.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} align='center' sx={{ py: 6, color: '#6b7280', fontSize: '0.8125rem', boxShadow: 'none' }}>
+              <TableCell
+                colSpan={6}
+                align='center'
+                sx={{ py: 6, color: '#6b7280', fontSize: '0.8125rem', boxShadow: 'none' }}
+              >
                 No history records found
               </TableCell>
             </TableRow>
@@ -145,7 +148,15 @@ export default function HistoryTable({
               <TableRow key={row.id}>
                 {/* Product — name + SKU, clickable */}
                 <TableCell sx={bodyCellSx}>
-                  <Tooltip title={<span>View <strong>{row.productName}</strong> in Products</span>} arrow placement='top'>
+                  <Tooltip
+                    title={
+                      <span>
+                        View <strong>{row.productName}</strong> in Products
+                      </span>
+                    }
+                    arrow
+                    placement='top'
+                  >
                     <Typography
                       variant='body2'
                       fontWeight={500}
@@ -156,7 +167,7 @@ export default function HistoryTable({
                         lineHeight: 1.3,
                         cursor: 'pointer',
                         display: 'inline',
-                        '&:hover': { textDecoration: 'underline' },
+                        '&:hover': { textDecoration: 'underline' }
                       }}
                       noWrap
                     >
@@ -173,7 +184,9 @@ export default function HistoryTable({
 
                 {/* Location */}
                 <TableCell sx={bodyCellSx}>
-                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span
+                    style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
                     {row.locationName}
                   </span>
                 </TableCell>
@@ -186,10 +199,10 @@ export default function HistoryTable({
                 {/* Resulting Quantity — "previously" instead of "was" */}
                 <TableCell sx={bodyCellSx}>
                   <Typography component='span' sx={{ fontWeight: 600, fontSize: '0.8125rem', color: '#1F384C' }}>
-                    {row.resultingQuantity}
+                    {formatAdjustment(row.resultingQuantity)}
                   </Typography>
                   <Typography component='span' sx={{ fontSize: '0.7rem', color: '#9ca3af', ml: 0.75 }}>
-                    (previously {row.previousQuantity})
+                    (previously {formatAdjustment(row.previousQuantity)})
                   </Typography>
                 </TableCell>
 
