@@ -5,7 +5,7 @@ import axios from 'axios'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 import ResellerFormFields from './ResellerFormFields'
 
 const defaultValues = {
@@ -20,6 +20,7 @@ const defaultValues = {
 }
 
 export default function ResellerFormModal({ onClose, onSuccess, reseller = null }) {
+  const toast = useToast()
   const initialFormState = useMemo(() => {
     if (reseller) {
       return {

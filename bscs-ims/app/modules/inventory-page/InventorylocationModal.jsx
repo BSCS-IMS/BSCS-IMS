@@ -6,7 +6,7 @@ import { X, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -46,6 +46,7 @@ function buildInitialItems(entry) {
 // ---------------------------------------------------------------------------
 
 export default function InventoryLocationModal({ onClose, entry = null, onConfirm }) {
+  const toast = useToast()
   const [products, setProducts] = useState([])
   const [productsLoading, setProductsLoading] = useState(true)
 

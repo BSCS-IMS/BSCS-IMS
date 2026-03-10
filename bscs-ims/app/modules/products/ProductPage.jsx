@@ -312,7 +312,13 @@ export default function ProductPage() {
           onSearchSubmit={handleSearchSubmit}
           onSortSelect={handleSortSelect}
           onFilterApply={handleFilterApply}
-          activeStatus={urlStatus}
+          filters={{
+            status: urlStatus,
+            productId: urlProductId,
+            locationId: urlLocationId
+          }}
+          allProducts={allProducts}
+          locations={locations}
         />
         {isInventoryModalOpen && inventoryModalProduct && (
           <InventoryAdjustModal

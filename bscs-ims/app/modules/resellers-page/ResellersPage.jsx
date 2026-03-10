@@ -12,7 +12,6 @@ import ResellersMobileView from './ResellersMobileView'
 import CreateResellerModal from './ResellerFormModal'
 import DeleteResellerModal from './DeleteResellerModal'
 import ResellersFilterDialog from './ResellersFilterDialog'
-import { toast } from 'react-toastify'
 
 
 export default function ResellersPage() {
@@ -194,6 +193,7 @@ export default function ResellersPage() {
       <>
         <ResellersMobileView
           resellers={resellers}
+          allResellers={resellers}
           onEdit={handleEdit}
           onDelete={openDeleteModal}
           onCreate={() => {
@@ -201,6 +201,18 @@ export default function ResellersPage() {
             setOpenForm(true)
           }}
           loading={loading}
+          search={search}
+          setSearch={setSearch}
+          onSearchSubmit={handleSearchSubmit}
+          filters={{
+            status: urlStatus,
+            productId: urlProductId,
+            resellerId: urlResellerId
+          }}
+          onFilterApply={handleFilterApply}
+          sortOrder={sortOrder}
+          onSortSelect={handleSortSelect}
+          products={products}
         />
         {openForm && (
           <CreateResellerModal

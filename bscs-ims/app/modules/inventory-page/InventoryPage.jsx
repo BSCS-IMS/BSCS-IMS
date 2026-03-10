@@ -16,7 +16,6 @@ import InventoryMobileView from './InventoryMobileView'
 import InventoryLocationModal from './InventorylocationModal'
 import InventoryFilterDialog from './InventoryFilterDialog'
 import DeleteInventoryModal from './DeleteInventoryModal'
-import { toast } from 'react-toastify'
 
 export default function InventoryPage() {
   const theme = useTheme()
@@ -270,11 +269,21 @@ export default function InventoryPage() {
     return (
       <>
         <InventoryMobileView
-          rows={rows}
+          rows={sortedRows}
+          allRows={allRows}
           onCreate={openCreateModal}
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          search={search}
+          setSearch={setSearch}
+          onSearchSubmit={handleSearchSubmit}
+          filters={{ locationId: urlLocationId, productId: urlProductId }}
+          onFilterApply={handleFilterApply}
+          sortOrder={sortOrder}
+          onSortSelect={handleSortSelect}
+          locations={locations}
+          products={productOptions}
         />
         {modalOpen && (
           <InventoryLocationModal onClose={closeModal} entry={editingEntry} onConfirm={handleModalConfirm} />

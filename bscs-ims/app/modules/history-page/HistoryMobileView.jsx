@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import HistoryFilterDialog from './HistoryFilterDialog'
+import HistorySortDialog from './HistorySortDialog'
 
 function SkeletonCard() {
   return (
@@ -53,13 +55,25 @@ export default function HistoryMobileView({
   products  = [],
   locations = [],
 }) {
-  const [expandedId,   setExpandedId]   = useState(null)
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [isSortOpen,   setIsSortOpen]   = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+  const [isSortDialogOpen, setIsSortDialogOpen] = useState(false)
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id))
 
   const activeFilterCount = [productFilter, locationFilter, adjustmentFilter].filter(Boolean).length
+
+  // Handler for filter dialog
+  const handleFilterApply = (filters) => {
+    setProductFilter(filters.product)
+    setLocationFilter(filters.location)
+    setAdjustmentFilter(filters.adjustment)
+  }
+
+  // Handler for sort dialog
+  const handleSortSelect = (order) => {
+    setSortOrder(order)
+  }
 
   return (
     <div className='min-h-screen py-6 px-3 sm:px-6'>
@@ -90,9 +104,9 @@ export default function HistoryMobileView({
         <div className='flex gap-2 w-full'>
           <Button
             variant='outline'
-            onClick={() => { setIsFilterOpen((p) => !p); setIsSortOpen(false) }}
+            onClick={() => setIsFilterDialogOpen(true)}
             className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
-              isFilterOpen || activeFilterCount > 0 ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              activeFilterCount > 0 ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
             <Filter size={16} />
@@ -100,138 +114,15 @@ export default function HistoryMobileView({
           </Button>
           <Button
             variant='outline'
-            onClick={() => { setIsSortOpen((p) => !p); setIsFilterOpen(false) }}
+            onClick={() => setIsSortDialogOpen(true)}
             className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
-              isSortOpen || sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
             <ArrowUpDown size={16} />
             Sort
           </Button>
         </div>
-
-        {/* Filter panel */}
-        {isFilterOpen && (
-          <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb] space-y-3'>
-            {/* Adjustment */}
-            <div>
-              <p className='text-xs text-[#6b7280] mb-2 font-medium'>Adjustment Type</p>
-              <div className='flex gap-2'>
-                {[
-                  { label: 'All',           value: '' },
-                  { label: 'Add (+)',        value: 'add' },
-                  { label: 'Subtract (−)',   value: 'subtract' },
-                ].map(({ label, value }) => (
-                  <Button
-                    key={value}
-                    variant='outline'
-                    onClick={() => setAdjustmentFilter(adjustmentFilter === value ? '' : value)}
-                    className={`flex-1 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                      adjustmentFilter === value
-                        ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
-                        : 'hover:bg-[#f3f4f6]'
-                    }`}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Product */}
-            {products.length > 0 && (
-              <div>
-                <p className='text-xs text-[#6b7280] mb-2 font-medium'>Product</p>
-                <div className='grid grid-cols-2 gap-2'>
-                  <Button
-                    variant='outline'
-                    onClick={() => setProductFilter('')}
-                    className={`border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                      !productFilter
-                        ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
-                        : 'hover:bg-[#f3f4f6]'
-                    }`}
-                  >
-                    All Products
-                  </Button>
-                  {products.map((p) => (
-                    <Button
-                      key={p.id}
-                      variant='outline'
-                      onClick={() => setProductFilter(productFilter === p.id ? '' : p.id)}
-                      className={`border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs truncate ${
-                        productFilter === p.id
-                          ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
-                          : 'hover:bg-[#f3f4f6]'
-                      }`}
-                    >
-                      {p.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Location */}
-            {locations.length > 0 && (
-              <div>
-                <p className='text-xs text-[#6b7280] mb-2 font-medium'>Location</p>
-                <div className='grid grid-cols-2 gap-2'>
-                  <Button
-                    variant='outline'
-                    onClick={() => setLocationFilter('')}
-                    className={`border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                      !locationFilter
-                        ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
-                        : 'hover:bg-[#f3f4f6]'
-                    }`}
-                  >
-                    All Locations
-                  </Button>
-                  {locations.map((l) => (
-                    <Button
-                      key={l.id}
-                      variant='outline'
-                      onClick={() => setLocationFilter(locationFilter === l.id ? '' : l.id)}
-                      className={`border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs truncate ${
-                        locationFilter === l.id
-                          ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
-                          : 'hover:bg-[#f3f4f6]'
-                      }`}
-                    >
-                      {l.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Sort panel */}
-        {isSortOpen && (
-          <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-            <p className='text-xs text-[#6b7280] mb-2 font-medium'>Sort history</p>
-            <div className='space-y-2'>
-              {[
-                { label: 'Latest First', value: 'date-desc', icon: <Calendar size={14} /> },
-                { label: 'Oldest First', value: 'date-asc',  icon: <Calendar size={14} /> },
-              ].map(({ label, value, icon }) => (
-                <Button
-                  key={value}
-                  variant='outline'
-                  onClick={() => setSortOrder(sortOrder === value ? null : value)}
-                  className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                    sortOrder === value ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  {icon}
-                  {label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Cards */}
         <div className='space-y-3 pb-20'>
@@ -305,6 +196,28 @@ export default function HistoryMobileView({
           )}
         </div>
       </div>
+
+      {/* Filter Dialog */}
+      <HistoryFilterDialog
+        open={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        filters={{
+          product: productFilter,
+          location: locationFilter,
+          adjustment: adjustmentFilter
+        }}
+        products={products}
+        locations={locations}
+        onApply={handleFilterApply}
+      />
+
+      {/* Sort Dialog */}
+      <HistorySortDialog
+        open={isSortDialogOpen}
+        onClose={() => setIsSortDialogOpen(false)}
+        sortOrder={sortOrder}
+        onSortSelect={handleSortSelect}
+      />
     </div>
   )
 }

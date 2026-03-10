@@ -16,6 +16,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ProductFormModal from './ProductFormModal'
+import ProductFilterDialog from './ProductFilterDialog'
+import ProductSortDialog from './ProductSortDialog'
 
 function SkeletonCard() {
   return (
@@ -46,16 +48,21 @@ export default function ProductMobile({
   productModalInitialValues,
   onConfirm,
   loading = false,
-  activeStatus = '',
-  onSearchSubmit, // ✅ add
-  onSortSelect, // ✅ add
-  onFilterApply
+  filters = {},
+  onSearchSubmit,
+  onSortSelect,
+  onFilterApply,
+  allProducts = [],
+  locations = []
 }) {
   const [expandedId, setExpandedId] = useState(null)
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [isSortOpen, setIsSortOpen] = useState(false)
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+  const [isSortDialogOpen, setIsSortDialogOpen] = useState(false)
 
   const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id))
+
+  // Count active filters
+  const activeFilterCount = [filters?.status, filters?.productId, filters?.locationId].filter(Boolean).length
 
   const filteredProducts = products
 
@@ -97,98 +104,25 @@ export default function ProductMobile({
           <div className='flex gap-2 w-full'>
             <Button
               variant='outline'
-              onClick={() => {
-                setIsFilterOpen((prev) => !prev)
-                setIsSortOpen(false)
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] ${
-                isFilterOpen ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              onClick={() => setIsFilterDialogOpen(true)}
+              className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
+                activeFilterCount > 0 ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
               }`}
             >
               <Filter size={16} />
-              Filter
+              Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
             </Button>
             <Button
               variant='outline'
-              onClick={() => {
-                setIsSortOpen((prev) => !prev)
-                setIsFilterOpen(false)
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] ${
-                isSortOpen ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              onClick={() => setIsSortDialogOpen(true)}
+              className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
+                sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
               }`}
             >
               <ArrowUpDown size={16} />
               Sort
             </Button>
           </div>
-
-          {/* Filter Panel */}
-          {isFilterOpen && (
-            <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-              <p className='text-xs text-[#6b7280] mb-2'>Filter by status</p>
-              <div className='flex gap-2'>
-                <Button
-                  onClick={() => onFilterApply({ status: '' })}
-                  variant='outline'
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] ${
-                    activeStatus === '' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  All
-                </Button>
-
-                <Button
-                  onClick={() => onFilterApply({ status: 'active' })}
-                  variant='outline'
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] ${
-                    activeStatus === 'active' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  Available
-                </Button>
-
-                <Button
-                  onClick={() => onFilterApply({ status: 'inactive' })}
-                  variant='outline'
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] ${
-                    activeStatus === 'inactive'
-                      ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
-                      : 'hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  Not Available
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Sort Panel */}
-          {isSortOpen && (
-            <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-              <p className='text-xs text-[#6b7280] mb-2'>Sort products</p>
-              <div className='flex gap-2'>
-                <Button
-                  variant='outline'
-                  onClick={() => onSortSelect('asc')}
-                  className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
-                    sortOrder === 'asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  <ArrowUpAZ size={16} />A to Z
-                </Button>
-                <Button
-                  variant='outline'
-                  onClick={() => onSortSelect('desc')}
-                  className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
-                    sortOrder === 'desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                  }`}
-                >
-                  <ArrowDownAZ size={16} />Z to A
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Product Cards */}
           <div className='space-y-3 pb-20'>
@@ -296,6 +230,24 @@ export default function ProductMobile({
           onConfirm={onConfirm}
         />
       )}
+
+      {/* Filter Dialog */}
+      <ProductFilterDialog
+        open={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        filters={filters}
+        onApply={onFilterApply}
+        products={allProducts}
+        locations={locations}
+      />
+
+      {/* Sort Dialog */}
+      <ProductSortDialog
+        open={isSortDialogOpen}
+        onClose={() => setIsSortDialogOpen(false)}
+        sortOrder={sortOrder}
+        onSortSelect={onSortSelect}
+      />
     </>
   )
 }

@@ -14,6 +14,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import ResellersFilterDialog from './ResellersFilterDialog'
+import ResellersSortDialog from './ResellersSortDialog'
 
 function SkeletonCard() {
   return (
@@ -48,23 +50,32 @@ function AssignedProductsCell({ resellerId }) {
   return products.map((p) => p.name).join(', ')
 }
 
-export default function ResellersMobileView({ resellers, onEdit, onDelete, onCreate, loading = false }) {
-  const [search, setSearch] = useState('')
-  const [sortOrder, setSortOrder] = useState(null)
+export default function ResellersMobileView({
+  resellers,
+  onEdit,
+  onDelete,
+  onCreate,
+  loading = false,
+  search,
+  setSearch,
+  onSearchSubmit,
+  filters = {},
+  onFilterApply,
+  sortOrder,
+  onSortSelect,
+  products = [],
+  allResellers = []
+}) {
   const [expandedId, setExpandedId] = useState(null)
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [isSortOpen, setIsSortOpen] = useState(false)
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+  const [isSortDialogOpen, setIsSortDialogOpen] = useState(false)
 
   const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id))
 
+  // Count active filters
+  const activeFilterCount = [filters?.status, filters?.productId, filters?.resellerId].filter(Boolean).length
+
   const filteredResellers = resellers
-    .filter((r) => r.businessName?.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (!sortOrder) return 0
-      if (sortOrder === 'asc') return a.businessName.localeCompare(b.businessName)
-      if (sortOrder === 'desc') return b.businessName.localeCompare(a.businessName)
-      return 0
-    })
 
   return (
     <div className='min-h-screen py-6 px-3 sm:px-6'>
@@ -84,12 +95,14 @@ export default function ResellersMobileView({ resellers, onEdit, onDelete, onCre
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onSearchSubmit()}
             placeholder='Search reseller...'
             className='w-full pr-10 focus-visible:ring-[#1e40af]/30 focus-visible:ring-offset-0'
           />
           <Button
             variant='ghost'
-            className='absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-auto w-auto text-white bg-[#1F384C] rounded hover:bg-[#162A3F]'
+            onClick={onSearchSubmit}
+            className='absolute right-1 top-1/2 -translate-y-1/2 p-1.5 h-auto w-auto text-white bg-[#1F384C] rounded hover:bg-[#162A3F] cursor-pointer'
           >
             <Search size={14} />
           </Button>
@@ -98,74 +111,25 @@ export default function ResellersMobileView({ resellers, onEdit, onDelete, onCre
         <div className='flex gap-2 w-full'>
           <Button
             variant='outline'
-            onClick={() => {
-              setIsFilterOpen((prev) => !prev)
-              setIsSortOpen(false)
-            }}
-            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] ${
-              isFilterOpen ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+            onClick={() => setIsFilterDialogOpen(true)}
+            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
+              activeFilterCount > 0 ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
             <Filter size={16} />
-            Filter
+            Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
           <Button
             variant='outline'
-            onClick={() => {
-              setIsSortOpen((prev) => !prev)
-              setIsFilterOpen(false)
-            }}
-            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] ${
-              isSortOpen ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+            onClick={() => setIsSortDialogOpen(true)}
+            className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
+              sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
             <ArrowUpDown size={16} />
             Sort
           </Button>
         </div>
-
-        {isFilterOpen && (
-          <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-            <p className='text-xs text-[#6b7280] mb-2'>Filter by status</p>
-            <div className='flex gap-2'>
-              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
-                All
-              </Button>
-              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
-                Active
-              </Button>
-              <Button variant='outline' className='flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6]'>
-                Inactive
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {isSortOpen && (
-          <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-            <p className='text-xs text-[#6b7280] mb-2'>Sort resellers</p>
-            <div className='flex gap-2'>
-              <Button
-                variant='outline'
-                onClick={() => setSortOrder('asc')}
-                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
-                  sortOrder === 'asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                }`}
-              >
-                <ArrowUpAZ size={16} />A to Z
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => setSortOrder('desc')}
-                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] ${
-                  sortOrder === 'desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                }`}
-              >
-                <ArrowDownAZ size={16} />Z to A
-              </Button>
-            </div>
-          </div>
-        )}
 
         <div className='space-y-3 pb-20'>
           {loading ? (
@@ -266,6 +230,24 @@ export default function ResellersMobileView({ resellers, onEdit, onDelete, onCre
           )}
         </div>
       </div>
+
+      {/* Filter Dialog */}
+      <ResellersFilterDialog
+        open={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        filters={filters}
+        onApply={onFilterApply}
+        products={products}
+        resellers={allResellers}
+      />
+
+      {/* Sort Dialog */}
+      <ResellersSortDialog
+        open={isSortDialogOpen}
+        onClose={() => setIsSortDialogOpen(false)}
+        sortOrder={sortOrder}
+        onSortSelect={onSortSelect}
+      />
     </div>
   )
 }
