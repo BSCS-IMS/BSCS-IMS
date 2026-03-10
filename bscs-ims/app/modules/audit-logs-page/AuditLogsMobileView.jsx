@@ -120,6 +120,9 @@ export default function AuditLogsMobileView({
     setSortOrder(order === sortOrder ? null : order)
   }
 
+  const activeStyle = 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]'
+  const inactiveStyle = 'hover:bg-[#f3f4f6]'
+
   return (
     <div className='min-h-screen py-6 px-3 sm:px-6'>
       <div className='w-full max-w-6xl mx-auto space-y-4'>
@@ -152,7 +155,7 @@ export default function AuditLogsMobileView({
               setIsSortOpen(false)
             }}
             className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
-              isFilterOpen || actionFilter || moduleFilter ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              isFilterOpen || actionFilter || moduleFilter ? activeStyle : ''
             }`}
           >
             <Filter size={16} />
@@ -165,7 +168,7 @@ export default function AuditLogsMobileView({
               setIsFilterOpen(false)
             }}
             className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
-              isSortOpen || sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              isSortOpen || sortOrder ? activeStyle : ''
             }`}
           >
             <ArrowUpDown size={16} />
@@ -175,96 +178,56 @@ export default function AuditLogsMobileView({
 
         {isFilterOpen && (
           <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb] space-y-3'>
+            {/* Action filter */}
             <div>
               <p className='text-xs text-[#6b7280] mb-2 font-medium'>Filter by Action</p>
               <div className='flex gap-2'>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleActionFilter('')}
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    !actionFilter ? 'bg-[#1e40af] text-white hover:bg-[#1e40af]/90' : ''
-                  }`}
-                >
-                  All
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleActionFilter('CREATE')}
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    actionFilter === 'CREATE' ? 'bg-green-600 text-white hover:bg-green-700' : ''
-                  }`}
-                >
-                  Create
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleActionFilter('UPDATE')}
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    actionFilter === 'UPDATE' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''
-                  }`}
-                >
-                  Update
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleActionFilter('DELETE')}
-                  className={`flex-1 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    actionFilter === 'DELETE' ? 'bg-red-600 text-white hover:bg-red-700' : ''
-                  }`}
-                >
-                  Delete
-                </Button>
+                {[
+                  { label: 'All',    value: '' },
+                  { label: 'Create', value: 'CREATE' },
+                  { label: 'Update', value: 'UPDATE' },
+                  { label: 'Delete', value: 'DELETE' },
+                ].map(({ label, value }) => (
+                  <Button
+                    key={value}
+                    variant='outline'
+                    onClick={() => handleActionFilter(value)}
+                    className={`flex-1 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
+                      (value === '' ? !actionFilter : actionFilter === value)
+                        ? activeStyle
+                        : inactiveStyle
+                    }`}
+                  >
+                    {label}
+                  </Button>
+                ))}
               </div>
             </div>
-            
+
+            {/* Module filter */}
             <div>
               <p className='text-xs text-[#6b7280] mb-2 font-medium'>Filter by Module</p>
               <div className='grid grid-cols-2 gap-2'>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleModuleFilter('')}
-                  className={`border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    !moduleFilter ? 'bg-[#1e40af] text-white hover:bg-[#1e40af]/90' : ''
-                  }`}
-                >
-                  All Modules
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleModuleFilter('announcement')}
-                  className={`border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    moduleFilter === 'announcement' ? 'bg-[#1e40af] text-white hover:bg-[#1e40af]/90' : ''
-                  }`}
-                >
-                  Announcement
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleModuleFilter('product')}
-                  className={`border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    moduleFilter === 'product' ? 'bg-[#1e40af] text-white hover:bg-[#1e40af]/90' : ''
-                  }`}
-                >
-                  Product
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleModuleFilter('reseller')}
-                  className={`border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    moduleFilter === 'reseller' ? 'bg-[#1e40af] text-white hover:bg-[#1e40af]/90' : ''
-                  }`}
-                >
-                  Reseller
-                </Button>
-                <Button 
-                  variant='outline' 
-                  onClick={() => handleModuleFilter('inventory')}
-                  className={`border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer text-xs ${
-                    moduleFilter === 'inventory' ? 'bg-[#1e40af] text-white hover:bg-[#1e40af]/90' : ''
-                  }`}
-                >
-                  Inventory
-                </Button>
+                {[
+                  { label: 'All Modules',   value: '' },
+                  { label: 'Announcement',  value: 'announcement' },
+                  { label: 'Product',       value: 'product' },
+                  { label: 'Reseller',      value: 'reseller' },
+                  { label: 'Inventory',     value: 'inventory' },
+                ].map(({ label, value }) => (
+                  <Button
+                    key={value}
+                    variant='outline'
+                    onClick={() => handleModuleFilter(value)}
+                    className={`border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
+                      (value === '' ? !moduleFilter : moduleFilter === value)
+                        ? activeStyle
+                        : inactiveStyle
+                    }`}
+                  >
+                    {label}
+                  </Button>
+                ))}
               </div>
             </div>
           </div>
@@ -274,46 +237,24 @@ export default function AuditLogsMobileView({
           <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
             <p className='text-xs text-[#6b7280] mb-2 font-medium'>Sort audit logs</p>
             <div className='space-y-2'>
-              <Button
-                variant='outline'
-                onClick={() => handleSort('date-desc')}
-                className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                  sortOrder === 'date-desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                }`}
-              >
-                <Calendar size={14} />
-                Newest First
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => handleSort('date-asc')}
-                className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                  sortOrder === 'date-asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                }`}
-              >
-                <Calendar size={14} />
-                Oldest First
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => handleSort('module-asc')}
-                className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                  sortOrder === 'module-asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                }`}
-              >
-                <ArrowUpAZ size={14} />
-                Module (A to Z)
-              </Button>
-              <Button
-                variant='outline'
-                onClick={() => handleSort('module-desc')}
-                className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
-                  sortOrder === 'module-desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
-                }`}
-              >
-                <ArrowDownAZ size={14} />
-                Module (Z to A)
-              </Button>
+              {[
+                { label: 'Newest First',   value: 'date-desc',   icon: <Calendar size={14} /> },
+                { label: 'Oldest First',   value: 'date-asc',    icon: <Calendar size={14} /> },
+                { label: 'Module (A to Z)', value: 'module-asc', icon: <ArrowUpAZ size={14} /> },
+                { label: 'Module (Z to A)', value: 'module-desc', icon: <ArrowDownAZ size={14} /> },
+              ].map(({ label, value, icon }) => (
+                <Button
+                  key={value}
+                  variant='outline'
+                  onClick={() => handleSort(value)}
+                  className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
+                    sortOrder === value ? activeStyle : inactiveStyle
+                  }`}
+                >
+                  {icon}
+                  {label}
+                </Button>
+              ))}
             </div>
           </div>
         )}

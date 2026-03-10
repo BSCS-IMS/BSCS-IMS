@@ -12,6 +12,7 @@ export function ConditionalLayout({ children }) {
     '/announcements',
     '/inventory',
     '/resellers',
+    '/history',
     '/audit-logs'
   ]
 
