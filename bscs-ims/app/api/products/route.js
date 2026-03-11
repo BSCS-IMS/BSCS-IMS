@@ -169,21 +169,44 @@ export async function POST(request) {
         )
       }
 
-      const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('productimages')
-        .upload(fileName, file, { contentType: file.type })
-
-      if (uploadError) {
+      // Validate Supabase configuration
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.error('Supabase environment variables are not set')
         return NextResponse.json(
-          { success: false, error: `Image upload failed: ${uploadError.message}` },
+          { success: false, error: 'Image upload is not configured. Please contact administrator.' },
           { status: 500 }
         )
       }
 
-      const { data } = supabase.storage.from('productimages').getPublicUrl(fileName)
-      imageUrl = data.publicUrl
+      try {
+        // Sanitize filename: remove spaces and special characters
+        const sanitizedName = file.name
+          .replace(/\s+/g, '_')  // Replace spaces with underscores
+          .replace(/[^a-zA-Z0-9._-]/g, '')  // Remove special characters except dots, dashes, underscores
+
+        const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${sanitizedName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('productimages')
+          .upload(fileName, file, { contentType: file.type })
+
+        if (uploadError) {
+          console.error('Supabase upload error:', uploadError)
+          return NextResponse.json(
+            { success: false, error: `Image upload failed: ${uploadError.message}` },
+            { status: 500 }
+          )
+        }
+
+        const { data } = supabase.storage.from('productimages').getPublicUrl(fileName)
+        imageUrl = data.publicUrl
+      } catch (uploadErr) {
+        console.error('Image upload exception:', uploadErr)
+        return NextResponse.json(
+          { success: false, error: `Image upload failed: ${uploadErr.message}` },
+          { status: 500 }
+        )
+      }
     }
 
     // Build product object

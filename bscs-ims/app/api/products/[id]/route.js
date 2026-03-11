@@ -34,15 +34,33 @@ async function uploadImage(file) {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return { error: 'Invalid file type. Allowed: JPEG, PNG, WEBP, GIF' }
   }
-  const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`
-  const { error: uploadError } = await supabase.storage
-    .from('productimages')
-    .upload(fileName, file, { contentType: file.type })
-  if (uploadError) {
-    return { error: `Image upload failed: ${uploadError.message}` }
+
+  // Validate Supabase configuration
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Supabase environment variables are not set')
+    return { error: 'Image upload is not configured. Please contact administrator.' }
   }
-  const { data } = supabase.storage.from('productimages').getPublicUrl(fileName)
-  return { imageUrl: data.publicUrl }
+
+  try {
+    // Sanitize filename: remove spaces and special characters
+    const sanitizedName = file.name
+      .replace(/\s+/g, '_')  // Replace spaces with underscores
+      .replace(/[^a-zA-Z0-9._-]/g, '')  // Remove special characters except dots, dashes, underscores
+
+    const fileName = `products/${Date.now()}-${Math.random().toString(36).slice(2)}-${sanitizedName}`
+    const { error: uploadError } = await supabase.storage
+      .from('productimages')
+      .upload(fileName, file, { contentType: file.type })
+    if (uploadError) {
+      console.error('Supabase upload error:', uploadError)
+      return { error: `Image upload failed: ${uploadError.message}` }
+    }
+    const { data } = supabase.storage.from('productimages').getPublicUrl(fileName)
+    return { imageUrl: data.publicUrl }
+  } catch (uploadErr) {
+    console.error('Image upload exception:', uploadErr)
+    return { error: `Image upload failed: ${uploadErr.message}` }
+  }
 }
 
 async function deleteImage(imageUrl) {
