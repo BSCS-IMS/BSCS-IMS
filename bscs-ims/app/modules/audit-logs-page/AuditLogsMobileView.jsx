@@ -7,7 +7,8 @@ import {
   ArrowUpDown,
   ArrowUpAZ,
   ArrowDownAZ,
-  Calendar
+  Calendar,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -255,6 +256,16 @@ export default function AuditLogsMobileView({
                   {label}
                 </Button>
               ))}
+              {sortOrder && (
+                <Button
+                  variant='outline'
+                  onClick={() => setSortOrder(null)}
+                  className='w-full flex items-center justify-center gap-2 border-[#e5e7eb] text-[#6b7280] hover:bg-[#f3f4f6] cursor-pointer text-xs'
+                >
+                  <X size={14} />
+                  Clear
+                </Button>
+              )}
             </div>
           </div>
         )}

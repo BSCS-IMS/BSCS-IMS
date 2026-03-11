@@ -8,12 +8,13 @@ import {
   ChevronUp,
   ArrowUpDown,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Calendar,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import HistoryFilterDialog from './HistoryFilterDialog'
-import HistorySortDialog from './HistorySortDialog'
 
 function SkeletonCard() {
   return (
@@ -56,7 +57,7 @@ export default function HistoryMobileView({
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
-  const [isSortDialogOpen, setIsSortDialogOpen] = useState(false)
+  const [isSortOpen, setIsSortOpen] = useState(false)
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id))
 
@@ -113,15 +114,57 @@ export default function HistoryMobileView({
           </Button>
           <Button
             variant='outline'
-            onClick={() => setIsSortDialogOpen(true)}
+            onClick={() => {
+              setIsSortOpen((prev) => !prev)
+              setIsFilterDialogOpen(false)
+            }}
             className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
-              sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              isSortOpen || sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
             <ArrowUpDown size={16} />
             Sort
           </Button>
         </div>
+
+        {/* Sort Dropdown */}
+        {isSortOpen && (
+          <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
+            <p className='text-xs text-[#6b7280] mb-2 font-medium'>Sort history</p>
+            <div className='space-y-2'>
+              <Button
+                variant='outline'
+                onClick={() => handleSortSelect('date-desc')}
+                className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
+                  sortOrder === 'date-desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
+                }`}
+              >
+                <Calendar size={14} />
+                Latest First
+              </Button>
+              <Button
+                variant='outline'
+                onClick={() => handleSortSelect('date-asc')}
+                className={`w-full flex items-center justify-start gap-2 border-[#e5e7eb] text-[#4A5568] cursor-pointer text-xs ${
+                  sortOrder === 'date-asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
+                }`}
+              >
+                <Calendar size={14} />
+                Oldest First
+              </Button>
+              {sortOrder && (
+                <Button
+                  variant='outline'
+                  onClick={() => handleSortSelect(null)}
+                  className='w-full flex items-center justify-center gap-2 border-[#e5e7eb] text-[#6b7280] hover:bg-[#f3f4f6] cursor-pointer text-xs'
+                >
+                  <X size={14} />
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Cards */}
         <div className='space-y-3 pb-20'>
@@ -208,14 +251,6 @@ export default function HistoryMobileView({
         products={products}
         locations={locations}
         onApply={handleFilterApply}
-      />
-
-      {/* Sort Dialog */}
-      <HistorySortDialog
-        open={isSortDialogOpen}
-        onClose={() => setIsSortDialogOpen(false)}
-        sortOrder={sortOrder}
-        onSortSelect={handleSortSelect}
       />
     </div>
   )

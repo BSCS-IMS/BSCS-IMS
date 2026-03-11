@@ -9,13 +9,13 @@ import {
   ArrowDownAZ,
   ChevronDown,
   ChevronUp,
-  ArrowUpDown
+  ArrowUpDown,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import ResellersFilterDialog from './ResellersFilterDialog'
-import ResellersSortDialog from './ResellersSortDialog'
 
 function SkeletonCard() {
   return (
@@ -68,7 +68,7 @@ export default function ResellersMobileView({
 }) {
   const [expandedId, setExpandedId] = useState(null)
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
-  const [isSortDialogOpen, setIsSortDialogOpen] = useState(false)
+  const [isSortOpen, setIsSortOpen] = useState(false)
 
   const toggleExpand = (id) => setExpandedId((prev) => (prev === id ? null : id))
 
@@ -121,15 +121,57 @@ export default function ResellersMobileView({
           </Button>
           <Button
             variant='outline'
-            onClick={() => setIsSortDialogOpen(true)}
+            onClick={() => {
+              setIsSortOpen((prev) => !prev)
+              setIsFilterDialogOpen(false)
+            }}
             className={`flex-1 flex items-center justify-center gap-1.5 border-[#e5e7eb] text-[#4A5568] hover:bg-[#f3f4f6] cursor-pointer ${
-              sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
+              isSortOpen || sortOrder ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : ''
             }`}
           >
             <ArrowUpDown size={16} />
             Sort
           </Button>
         </div>
+
+        {/* Sort Dropdown */}
+        {isSortOpen && (
+          <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
+            <p className='text-xs text-[#6b7280] mb-2 font-medium'>Sort resellers</p>
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                onClick={() => onSortSelect('asc')}
+                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] cursor-pointer ${
+                  sortOrder === 'asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
+                }`}
+              >
+                <ArrowUpAZ size={16} />
+                A to Z
+              </Button>
+              <Button
+                variant='outline'
+                onClick={() => onSortSelect('desc')}
+                className={`flex-1 flex items-center justify-center gap-1 border-[#e5e7eb] text-[#4A5568] cursor-pointer ${
+                  sortOrder === 'desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
+                }`}
+              >
+                <ArrowDownAZ size={16} />
+                Z to A
+              </Button>
+              {sortOrder && (
+                <Button
+                  variant='outline'
+                  onClick={() => onSortSelect(null)}
+                  className='flex items-center justify-center gap-1 border-[#e5e7eb] text-[#6b7280] hover:bg-[#f3f4f6] cursor-pointer px-3'
+                >
+                  <X size={16} />
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className='space-y-3 pb-20'>
           {loading ? (
@@ -239,14 +281,6 @@ export default function ResellersMobileView({
         onApply={onFilterApply}
         products={products}
         resellers={allResellers}
-      />
-
-      {/* Sort Dialog */}
-      <ResellersSortDialog
-        open={isSortDialogOpen}
-        onClose={() => setIsSortDialogOpen(false)}
-        sortOrder={sortOrder}
-        onSortSelect={onSortSelect}
       />
     </div>
   )

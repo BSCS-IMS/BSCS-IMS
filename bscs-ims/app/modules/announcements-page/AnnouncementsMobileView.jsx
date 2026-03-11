@@ -9,7 +9,8 @@ import {
   ArrowDownAZ,
   ChevronDown,
   ChevronUp,
-  ArrowUpDown
+  ArrowUpDown,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -139,7 +140,7 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
 
         {isSortOpen && (
           <div className='bg-white rounded-lg p-3 shadow-sm border border-[#e5e7eb]'>
-            <p className='text-xs text-[#6b7280] mb-2'>Sort announcements</p>
+            <p className='text-xs text-[#6b7280] mb-2 font-medium'>Sort announcements</p>
             <div className='flex gap-2'>
               <Button
                 variant='outline'
@@ -148,7 +149,8 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
                   sortOrder === 'asc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
                 }`}
               >
-                <ArrowUpAZ size={16} />A to Z
+                <ArrowUpAZ size={16} />
+                A to Z
               </Button>
               <Button
                 variant='outline'
@@ -157,8 +159,19 @@ export default function AnnouncementsMobileView({ announcements, onEdit, onDelet
                   sortOrder === 'desc' ? 'bg-[#1e40af]/10 border-[#1e40af] text-[#1e40af]' : 'hover:bg-[#f3f4f6]'
                 }`}
               >
-                <ArrowDownAZ size={16} />Z to A
+                <ArrowDownAZ size={16} />
+                Z to A
               </Button>
+              {sortOrder && (
+                <Button
+                  variant='outline'
+                  onClick={() => setSortOrder(null)}
+                  className='flex items-center justify-center gap-1 border-[#e5e7eb] text-[#6b7280] hover:bg-[#f3f4f6] cursor-pointer px-3'
+                >
+                  <X size={16} />
+                  Clear
+                </Button>
+              )}
             </div>
           </div>
         )}
