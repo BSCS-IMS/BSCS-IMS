@@ -24,7 +24,15 @@ export default function ProductFormFields({
           <Input
             placeholder='Enter product name'
             value={form.productName || ''}
-            onChange={(e) => setForm({ ...form, productName: e.target.value })}
+onChange={(e) => {
+  let value = e.target.value
+
+  if (value.length > 50) {
+    value = value.slice(0, 50)
+  }
+
+  setForm({ ...form, productName: value })
+}}
             className='border-[#e5e7eb] h-8 text-xs'
           />
         </div>
@@ -36,7 +44,15 @@ export default function ProductFormFields({
           <Input
             placeholder='e.g. RICE-5KG-001'
             value={form.sku || ''}
-            onChange={(e) => setForm({ ...form, sku: e.target.value })}
+onChange={(e) => {
+  let value = e.target.value
+
+  if (value.length > 50) {
+    value = value.slice(0, 50)
+  }
+
+  setForm({ ...form, sku: value })
+}}
             disabled={isEditMode}
             className={`border-[#e5e7eb] h-8 text-xs ${isEditMode ? 'bg-[#f3f4f6] cursor-not-allowed opacity-70' : ''}`}
           />
@@ -55,15 +71,25 @@ export default function ProductFormFields({
           <Input
             placeholder='0'
             value={form.amount || ''}
-            onChange={(e) => {
-              let value = e.target.value.replace(/[^\d.]/g, '')
-              // Only allow one decimal point
-              const parts = value.split('.')
-              if (parts.length > 2) {
-                value = parts[0] + '.' + parts.slice(1).join('')
-              }
-              setForm({ ...form, amount: value })
-            }}
+              onChange={(e) => {
+                let value = e.target.value.replace(/[^\d.]/g, '')
+
+                // allow only one decimal point
+                const parts = value.split('.')
+                if (parts.length > 2) {
+                  value = parts[0] + '.' + parts.slice(1).join('')
+                }
+
+                // clamp max
+                if (value !== '') {
+                  const num = Number(value)
+                  if (num > 99999) {
+                    value = '99999'
+                  }
+                }
+
+                setForm({ ...form, amount: value })
+              }}
             className='border-[#e5e7eb] h-8 text-xs'
           />
         </div>
@@ -133,7 +159,15 @@ export default function ProductFormFields({
           className='min-h-24 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]'
           placeholder='Write a short description...'
           value={form.description || ''}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
+onChange={(e) => {
+  let value = e.target.value
+
+  if (value.length > 500) {
+    value = value.slice(0, 500)
+  }
+
+  setForm({ ...form, description: value })
+}}
         />
       </div>
 

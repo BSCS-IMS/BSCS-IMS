@@ -183,6 +183,7 @@ export default function InventoryAdjustModal({ onClose, product, mode = 'add', o
               min="0.01"
               step="any"
               value={quantity}
+              max={99999}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Enter quantity"
               className="w-full h-9 px-3 rounded-md border border-[#e5e7eb] bg-white text-[#374151] text-xs focus:outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]"

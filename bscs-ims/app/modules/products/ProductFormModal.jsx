@@ -174,7 +174,7 @@ export default function ProductFormModal({ onClose, product = null, onConfirm })
           isEditMode={!!product}
           showAsteriskFields={['productName', 'sku']}
         />
-
+ 
         <Separator />
 
         {/* Footer */}
