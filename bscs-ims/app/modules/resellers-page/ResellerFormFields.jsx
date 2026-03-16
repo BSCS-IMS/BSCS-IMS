@@ -28,7 +28,15 @@ export default function ResellerFormFields({
         <Input
           placeholder='Enter reseller name'
           value={form.businessName || ''}
-          onChange={(e) => setForm({ ...form, businessName: e.target.value })}
+            onChange={(e) => {
+              let value = e.target.value
+
+              if (value.length > 50) {
+                value = value.slice(0, 50)
+              }
+
+              setForm({ ...form, businessName: value })
+            }}
           className={`h-8 text-xs border ${errors?.businessName ? 'border-red-500' : 'border-[#e5e7eb]'}`}
         />
         {errors?.businessName && (
@@ -45,10 +53,11 @@ export default function ResellerFormFields({
           <Input
             placeholder='e.g. 09123456789'
             value={form.contactNumber || ''}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '')
-              setForm({ ...form, contactNumber: value })
-            }}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\D/g, '') // digits only
+                if (value.length > 11) value = value.slice(0, 11)
+                setForm({ ...form, contactNumber: value })
+              }}
             className={`h-8 text-xs border ${errors?.contactNumber ? 'border-red-500' : 'border-[#e5e7eb]'}`}
           />
           {errors?.contactNumber && (
@@ -60,7 +69,15 @@ export default function ResellerFormFields({
           <Input
             placeholder='Enter address'
             value={form.address || ''}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
+              onChange={(e) => {
+                let value = e.target.value
+
+                if (value.length > 255) {
+                  value = value.slice(0, 255)
+                }
+
+                setForm({ ...form, address: value })
+              }}
             className='h-8 text-xs border-[#e5e7eb]'
           />
         </div>
@@ -175,7 +192,16 @@ export default function ResellerFormFields({
         <textarea
           className='min-h-20 w-full resize-none rounded-md border border-[#e5e7eb] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:ring-1 focus:ring-[#1F384C]/20 focus:border-[#1F384C]'
           value={form.description || ''}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
+onChange={(e) => {
+  let value = e.target.value
+
+  if (value.length > 500) {
+    value = value.slice(0, 500)
+  }
+
+  setForm({ ...form, description: value })
+}}
+          
           placeholder='Write a short description...'
         />
       </div>

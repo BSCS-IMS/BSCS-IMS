@@ -105,7 +105,11 @@ export default function AnnouncementFormModal({ announcement = null, onSuccess, 
             <Input
               id='title'
               value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                onChange={(e) => {
+                  let value = e.target.value
+                  if (value.length > 150) value = value.slice(0, 150)
+                  setForm((p) => ({ ...p, title: value }))
+                }}
               placeholder='Enter announcement title'
               className='focus-visible:ring-[#1F384C]/30 focus-visible:ring-offset-0'
             />
@@ -118,7 +122,11 @@ export default function AnnouncementFormModal({ announcement = null, onSuccess, 
             <Textarea
               id='content'
               value={form.content}
-              onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
+                onChange={(e) => {
+                  let value = e.target.value
+                  if (value.length > 1000) value = value.slice(0, 1000)
+                  setForm((p) => ({ ...p, content: value }))
+                }}
               placeholder='Enter announcement content'
               rows={6}
               className='resize-none focus-visible:ring-[#1F384C]/30 focus-visible:ring-offset-0'

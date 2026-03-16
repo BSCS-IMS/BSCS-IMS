@@ -238,7 +238,11 @@ export default function InventoryLocationModal({ onClose, entry = null, onConfir
             <input
               type='text'
               value={locationName}
-              onChange={(e) => setLocationName(e.target.value)}
+                onChange={(e) => {
+                  let value = e.target.value
+                  if (value.length > 100) value = value.slice(0, 100)
+                  setLocationName(value)
+                }}
               placeholder='e.g. Warehouse A – Shelf 1'
               className='w-full h-9 rounded-md border border-[#d1d5db] bg-white px-3 text-xs text-[#1F384C] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#1F384C]/20 focus:border-[#1F384C] transition-colors'
             />
@@ -284,8 +288,16 @@ export default function InventoryLocationModal({ onClose, entry = null, onConfir
                       type='number'
                       min='1'
                       step='1'
+                      max={99999}
                       value={row.qty}
-                      onChange={(e) => updateItem(row.id, 'qty', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9]/g, '') // digits only
+                        if (val !== '') {
+                          const num = Number(val)
+                          if (num > 99999) val = '99999' // hard clamp
+                        }
+                        updateItem(row.id, 'qty', val)
+                      }}
                       placeholder='0'
                       className='w-full h-9 rounded-md border border-[#d1d5db] bg-white px-3 text-xs text-[#1F384C] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#1F384C]/20 focus:border-[#1F384C] transition-colors'
                     />
