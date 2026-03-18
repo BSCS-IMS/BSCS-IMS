@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button'
 import { LOGIN_STATIC_DATA } from '@/app/constants/navbar-login/constants'
 import { Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 import { LoginLoader } from '@/app/components/Loader'
 
 export default function LoginPage() {
+  const toast = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -29,67 +30,27 @@ export default function LoginPage() {
 
     // Client-side validation with toast errors
     if (!email.trim() && !password.trim()) {
-      toast.error('Please enter your email and password', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Please enter your email and password')
       return
     }
 
     if (!email.trim()) {
-      toast.error('Please enter your email address', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Please enter your email address')
       return
     }
 
     if (!validateEmail(email.trim())) {
-      toast.error('Please enter a valid email address', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Please enter a valid email address')
       return
     }
 
     if (!password.trim()) {
-      toast.error('Please enter your password', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Please enter your password')
       return
     }
 
     if (password.trim().length < 6) {
-      toast.error('Password must be at least 6 characters', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Password must be at least 6 characters')
       return
     }
 
@@ -101,16 +62,7 @@ export default function LoginPage() {
         password: password.trim()
       })
 
-      // Success toast
-      toast.success('Login Successful', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: false,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.success('Login Successful')
 
       // Artificial delay for better UX (1.5 seconds)
       setTimeout(() => {
@@ -121,16 +73,7 @@ export default function LoginPage() {
       console.error('Error logging in:', err)
       setIsLoading(false)
 
-      // Error toast with user-friendly message
-      toast.error('Incorrect email or password. Please try again.', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Incorrect email or password. Please try again.')
     }
   }
 
