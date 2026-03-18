@@ -5,9 +5,10 @@ import axios from 'axios'
 import { X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 
 export default function DeleteResellerModal({ onClose, reseller, onSuccess }) {
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
 
   async function handleDelete() {

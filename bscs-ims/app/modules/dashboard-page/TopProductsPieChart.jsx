@@ -28,7 +28,7 @@ export default function TopProductsPieChart({ data = [] }) {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 6 }}>
         <Typography variant="body2" fontWeight={500} sx={{ color: PRIMARY_COLOR }}>
           Top 5 Products by Quantity
         </Typography>

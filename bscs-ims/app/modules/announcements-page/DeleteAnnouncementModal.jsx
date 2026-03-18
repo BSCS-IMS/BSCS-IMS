@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import axios from 'axios'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 import { X, Loader2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
 export default function DeleteAnnouncementModal({ announcement, onSuccess, onClose }) {
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
 
   const handleDelete = async () => {

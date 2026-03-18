@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import axios from 'axios'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ const defaultValues = {
 }
 
 export default function AnnouncementFormModal({ announcement = null, onSuccess, onClose }) {
+  const toast = useToast()
   const initialFormState = useMemo(() => {
     if (announcement) {
       return {
