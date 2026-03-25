@@ -5,10 +5,11 @@ import axios from 'axios'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { toast } from 'react-toastify'
 import { FormControl, Select, MenuItem } from '@mui/material'
+import { useToast } from '@/app/components/ToastProvider'
 
 export default function InventoryAdjustModal({ onClose, product, mode = 'add', onSuccess }) {
+  const toast = useToast()
   const [locations, setLocations] = useState([])
   const [inventory, setInventory] = useState([])
   const [locationId, setLocationId] = useState('')

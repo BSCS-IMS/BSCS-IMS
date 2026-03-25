@@ -86,12 +86,12 @@ export async function GET(req) {
       const data = doc.data()
 
       // Filter by today's date in JavaScript
-      const createdAt = data.createdAt
+      const createdAt = data.timestamp
       if (createdAt) {
         const createdMs = createdAt.toMillis ? createdAt.toMillis() : (createdAt.seconds * 1000)
         if (createdMs < todayMs) return // Skip if not today
       } else {
-        return // Skip if no createdAt
+        return // Skip if no timestamp
       }
 
       const entityId = data.entityId // format: productId_locationId
