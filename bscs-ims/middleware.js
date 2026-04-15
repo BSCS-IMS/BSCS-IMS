@@ -19,6 +19,12 @@ export function middleware(req) {
     return NextResponse.next();
   }
 
+  const authRedirectRoutes = ["/", "/login", "/register"];
+
+  if (session && authRedirectRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
   
   if (!isPublic && !session) {
