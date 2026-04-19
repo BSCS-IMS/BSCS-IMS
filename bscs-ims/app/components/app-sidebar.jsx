@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import { usePathname, useRouter } from 'next/navigation'
-import { toast } from 'react-toastify'
+import { useToast } from '@/app/components/ToastProvider'
 import { LogoutLoader } from '@/app/components/Loader'
 import {
   Sidebar,
@@ -63,39 +63,19 @@ const otheritems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const toast = useToast()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true)
       await axios.post('/api/logout')
-
-      toast.success('Logged out successfully.', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: false,
-        draggable: true,
-        theme: "colored",
-      })
-
-      setTimeout(() => {
-        router.push('/login')
-      }, 1500)
+      toast.success('Logged out successfully.')
+      router.push('/login')
     } catch (error) {
       console.error('Logout failed:', error)
       setIsLoggingOut(false)
-
-      toast.error('Logout failed. Please try again.', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: true,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        theme: "colored",
-      })
+      toast.error('Logout failed. Please try again.')
     }
   }
 
